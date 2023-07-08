@@ -1,4 +1,6 @@
 import React from 'react';
+import '@arco-design/web-react/dist/css/arco.css';
+import { Button } from '@arco-design/web-react';
 import logo from './logo.svg';
 import './App.css';
 
@@ -19,6 +21,7 @@ function App() {
           Learn React
         </a>
       </header>
+      <Button type="primary">Hello Arco</Button>
     </div>
   );
 }
