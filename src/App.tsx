@@ -1,27 +1,20 @@
 import React from 'react';
 import '@arco-design/web-react/dist/css/arco.css';
-import { Button } from '@arco-design/web-react';
-import logo from './logo.svg';
+import { Layout } from '@arco-design/web-react';
+import { MainForm } from './component/mainForm';
 import './App.css';
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-      <Button type="primary">Hello Arco</Button>
+      <Layout style={{ maxWidth: 800, margin: '0 auto' }}>
+        <Layout.Header>
+          <h1>AMP Generator</h1>
+        </Layout.Header>
+        <Layout.Content>
+          <MainForm />
+        </Layout.Content>
+      </Layout>
     </div>
   );
 }

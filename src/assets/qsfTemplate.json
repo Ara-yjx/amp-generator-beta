@@ -1,0 +1,444 @@
+{
+  "SurveyEntry": {
+    "SurveyID": "SV_dnAkDKOddKsPTpQ",
+    "SurveyName": "AMP_Gen_7.0",
+    "SurveyDescription": null,
+    "SurveyOwnerID": "UR_8qrlYLU2jfq7Cqa",
+    "SurveyBrandID": "upenn",
+    "DivisionID": null,
+    "SurveyLanguage": "EN",
+    "SurveyActiveResponseSet": "RS_6zXdxkXXWoWLKL4",
+    "SurveyStatus": "Inactive",
+    "SurveyStartDate": "0000-00-00 00:00:00",
+    "SurveyExpirationDate": "0000-00-00 00:00:00",
+    "SurveyCreationDate": "2023-07-08 05:22:35",
+    "CreatorID": "UR_8qrlYLU2jfq7Cqa",
+    "LastModified": "2023-07-08 11:05:27",
+    "LastAccessed": "0000-00-00 00:00:00",
+    "LastActivated": "0000-00-00 00:00:00",
+    "Deleted": null
+  },
+  "SurveyElements": [
+    {
+      "SurveyID": "SV_dnAkDKOddKsPTpQ",
+      "Element": "BL",
+      "PrimaryAttribute": "Survey Blocks",
+      "SecondaryAttribute": null,
+      "TertiaryAttribute": null,
+      "Payload": [
+        {
+          "Type": "Default",
+          "Description": "Default Question Block",
+          "ID": "BL_cJgbZWbXtlZwIQe",
+          "BlockElements": [
+            {
+              "Type": "Question",
+              "QuestionID": "QID1"
+            }
+          ]
+        },
+        {
+          "Type": "Trash",
+          "Description": "Trash \/ Unused Questions",
+          "ID": "BL_3FesUeo9uvib7y6"
+        },
+        {
+          "Type": "Standard",
+          "SubType": "",
+          "Description": "Block 1",
+          "ID": "BL_3EDLHCLtBlrl7oO",
+          "BlockElements": [
+            {
+              "Type": "Question",
+              "QuestionID": "QID2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "SurveyID": "SV_dnAkDKOddKsPTpQ",
+      "Element": "FL",
+      "PrimaryAttribute": "Survey Flow",
+      "SecondaryAttribute": null,
+      "TertiaryAttribute": null,
+      "Payload": {
+        "Type": "Root",
+        "FlowID": "FL_1",
+        "Flow": [
+          {
+            "Type": "EmbeddedData",
+            "FlowID": "FL_3",
+            "EmbeddedData": [
+              {
+                "Description": "stimuli_1_items",
+                "Type": "Custom",
+                "Field": "stimuli_1_items",
+                "VariableType": "String",
+                "DataVisibility": [],
+                "AnalyzeText": false,
+                "Value": "[{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_zANlu6B1UFbcflF\",\"count\":5},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_vQzlOEGBXbnuhSn\",\"count\":5},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_XJw0GZWrbUlfyOI\",\"count\":5},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_E72k4fxbh7Zxw7e\",\"count\":5},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_RFsC6tV9IGidru4\",\"count\":5},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_M4wae3Z0GjWQRkD\",\"count\":5},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_F9fpRim5SiLGU8t\",\"count\":5},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_xLUoASyb57j7ezR\",\"count\":5}]"
+              },
+              {
+                "Description": "stimuli_1_shuffle",
+                "Type": "Custom",
+                "Field": "stimuli_1_shuffle",
+                "VariableType": "String",
+                "DataVisibility": [],
+                "AnalyzeText": false,
+                "Value": "true"
+              },
+              {
+                "Description": "stimuli_1_shuffle_max_repeat",
+                "Type": "Custom",
+                "Field": "stimuli_1_shuffle_max_repeat",
+                "VariableType": "String",
+                "DataVisibility": [],
+                "AnalyzeText": false,
+                "Value": "2"
+              },
+              {
+                "Description": "stimuli_2_items",
+                "Type": "Custom",
+                "Field": "stimuli_2_items",
+                "VariableType": "String",
+                "DataVisibility": [],
+                "AnalyzeText": false,
+                "Value": "[{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_3jUT9yhSx8mI5wy\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_25WNyckTIXiv4bQ\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_9HRiGBCgN50xZI2\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_bqP6msi7K3SPhPM\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_8q8uD7MVCDyWdzo\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_5jy9Uo2ZV2BaPki\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_3KIqzYFkmmCv3cq\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_2lYARTfPvNPiwF8\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_8CagBSGuqa3103k\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_eXWu2juJ3IFpiia\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_9t0w55KTUPY9uK2\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_5jo1Wq1EpYoas3s\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_81blvWQpZDlael8\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_0U7PxswipvQuNrU\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_2gZtO50zqBd39B4\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_2aQYOy04gO7kx4G\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_9yt21bg0o84Tt9c\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_03srJoTDehJb2V8\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_4YIfcyT8d1xghlI\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_8qUdZ0CwAXeCKxM\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_6QCRchjKW1dGhcG\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_4HLhYK2seAX1opw\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_2gF10eQOSwdHxfo\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_8qucEPy2K0oFkWy\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_2tULPzYl2dk6eiO\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_3r3a5Z2Ruguka7s\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_3en7w39WHobUvoW\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_abX7fBDnVzvPSjc\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_dnUHxQckvLbEV4a\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_agwjmD9fGQMcawK\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_3OjfkCyc7ZmCBym\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_eP6i52QjuzksfRA\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_1HeeVDSoYiQspE2\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_7X1IdJXN98qbVhI\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_e8rwUgorjxXXSuy\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_9poogxcVq9oAkQe\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_d73fKrvvmZqxFn8\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_8ogT3ozEpraFUto\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_0roC8vKyNFfu8wS\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_bIb0xXbDx6JVL5Y\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_3QxQYuy313umdmu\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_e3F1LOHphmo0w98\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_8kwWckkggPMtpWe\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_0MoXFM69zQnFxEq\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_0pkHgkE3ck2IaOO\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_2f0J3X3u1gVwoBg\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_b88sQUZ7HZURpdQ\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_cN0xpyB0oYo4rVs\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_9vk06qTobnmwRlc\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_1ZIuviqhK3uETBA\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_ePDdYlUD7iHUx7g\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_eRJnNWh2BpJfv5c\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_0GSkjfufXlNmYpU\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_afpeLjDOMD1i3Hw\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_6Lm9B6qm4EgmO0u\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_82s7sXnHN1InklE\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_6thdUpsXpgOQefs\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_0SzgDcIaL7N8EZw\",\"count\":\"1\"},{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/ControlPanel\/Graphic.php?IM=IM_8I0kGbUUJ1U3HRI\",\"count\":\"1\"}]"
+              },
+              {
+                "Description": "stimuli_2_shuffle",
+                "Type": "Custom",
+                "Field": "stimuli_2_shuffle",
+                "VariableType": "String",
+                "DataVisibility": [],
+                "AnalyzeText": false,
+                "Value": "true"
+              },
+              {
+                "Description": "stimuli_2_shuffle_max_repeat",
+                "Type": "Custom",
+                "Field": "stimuli_2_shuffle_max_repeat",
+                "VariableType": "String",
+                "DataVisibility": [],
+                "AnalyzeText": false,
+                "Value": "null"
+              },
+              {
+                "Description": "stimuli_3_items",
+                "Type": "Custom",
+                "Field": "stimuli_3_items",
+                "VariableType": "String",
+                "DataVisibility": [],
+                "AnalyzeText": false,
+                "Value": "[{\"content\":\"https:\/\/upenn.co1.qualtrics.com\/CP\/Graphic.php?IM=IM_bQlal1oB5kyb60m\",\"count\":\"40\"}]"
+              },
+              {
+                "Description": "stimuli_3_shuffle",
+                "Type": "Custom",
+                "Field": "stimuli_3_shuffle",
+                "VariableType": "String",
+                "DataVisibility": [],
+                "AnalyzeText": false,
+                "Value": "false"
+              },
+              {
+                "Description": "stimuli_3_shuffle_max_repeat",
+                "Type": "Custom",
+                "Field": "stimuli_3_shuffle_max_repeat",
+                "VariableType": "String",
+                "DataVisibility": [],
+                "AnalyzeText": false,
+                "Value": "null"
+              },
+              {
+                "Description": "stimuli_1_duration",
+                "Type": "Custom",
+                "Field": "stimuli_1_duration",
+                "VariableType": "String",
+                "DataVisibility": [],
+                "AnalyzeText": false,
+                "Value": "75"
+              },
+              {
+                "Description": "stimuli_1_interval",
+                "Type": "Custom",
+                "Field": "stimuli_1_interval",
+                "VariableType": "String",
+                "DataVisibility": [],
+                "AnalyzeText": false,
+                "Value": "125"
+              },
+              {
+                "Description": "stimuli_2_duration",
+                "Type": "Custom",
+                "Field": "stimuli_2_duration",
+                "VariableType": "String",
+                "DataVisibility": [],
+                "AnalyzeText": false,
+                "Value": "100"
+              },
+              {
+                "Description": "stimuli_2_interval",
+                "Type": "Custom",
+                "Field": "stimuli_2_interval",
+                "VariableType": "String",
+                "DataVisibility": [],
+                "AnalyzeText": false,
+                "Value": "125"
+              },
+              {
+                "Description": "keyboard_delay",
+                "Type": "Custom",
+                "Field": "keyboard_delay",
+                "VariableType": "String",
+                "DataVisibility": [],
+                "AnalyzeText": false,
+                "Value": "100"
+              },
+              {
+                "Description": "accepted_keys",
+                "Type": "Custom",
+                "Field": "accepted_keys",
+                "VariableType": "String",
+                "DataVisibility": [],
+                "AnalyzeText": false,
+                "Value": "d,k"
+              },
+              {
+                "Description": "total_trials",
+                "Type": "Custom",
+                "Field": "total_trials",
+                "VariableType": "String",
+                "DataVisibility": [],
+                "AnalyzeText": false,
+                "Value": "40"
+              }
+            ]
+          },
+          {
+            "Type": "EmbeddedData",
+            "FlowID": "FL_4",
+            "EmbeddedData": [
+              {
+                "Description": "stimuli_1_shuffle_result",
+                "Type": "Recipient",
+                "Field": "stimuli_1_shuffle_result",
+                "VariableType": "String",
+                "DataVisibility": [],
+                "AnalyzeText": false
+              },
+              {
+                "Description": "stimuli_2_shuffle_result",
+                "Type": "Recipient",
+                "Field": "stimuli_2_shuffle_result",
+                "VariableType": "String",
+                "DataVisibility": [],
+                "AnalyzeText": false
+              },
+              {
+                "Description": "stimuli_3_shuffle_result",
+                "Type": "Recipient",
+                "Field": "stimuli_3_shuffle_result",
+                "VariableType": "String",
+                "DataVisibility": [],
+                "AnalyzeText": false
+              },
+              {
+                "Description": "trial_responses",
+                "Type": "Recipient",
+                "Field": "trial_responses",
+                "VariableType": "String",
+                "DataVisibility": [],
+                "AnalyzeText": false
+              }
+            ]
+          },
+          {
+            "Type": "Block",
+            "ID": "BL_cJgbZWbXtlZwIQe",
+            "FlowID": "FL_2",
+            "Autofill": []
+          },
+          {
+            "Type": "Standard",
+            "ID": "BL_3EDLHCLtBlrl7oO",
+            "FlowID": "FL_5",
+            "Autofill": []
+          }
+        ],
+        "Properties": {
+          "Count": 5,
+          "RemovedFieldsets": []
+        }
+      }
+    },
+    {
+      "SurveyID": "SV_dnAkDKOddKsPTpQ",
+      "Element": "PL",
+      "PrimaryAttribute": "Preview Link",
+      "SecondaryAttribute": null,
+      "TertiaryAttribute": null,
+      "Payload": {
+        "PreviewType": "Brand",
+        "PreviewID": "6115033c-b61a-4566-9c05-d218626bb355"
+      }
+    },
+    {
+      "SurveyID": "SV_dnAkDKOddKsPTpQ",
+      "Element": "SO",
+      "PrimaryAttribute": "Survey Options",
+      "SecondaryAttribute": null,
+      "TertiaryAttribute": null,
+      "Payload": {
+        "BackButton": "false",
+        "SaveAndContinue": "true",
+        "SurveyProtection": "PublicSurvey",
+        "BallotBoxStuffingPrevention": "false",
+        "NoIndex": "Yes",
+        "SecureResponseFiles": "true",
+        "SurveyExpiration": "None",
+        "SurveyTermination": "DefaultMessage",
+        "Header": "",
+        "Footer": "",
+        "ProgressBarDisplay": "None",
+        "PartialData": "+1 week",
+        "ValidationMessage": "",
+        "PreviousButton": "",
+        "NextButton": "",
+        "SurveyTitle": "Qualtrics Survey | Qualtrics Experience Management",
+        "SkinLibrary": "upenn",
+        "SkinType": "templated",
+        "Skin": {
+          "brandingId": "4812671909",
+          "templateId": "*base",
+          "overrides": null
+        },
+        "NewScoring": 1,
+        "SurveyMetaDescription": "The most powerful, simple and trusted way to gather experience data. Start your journey to experience management and try a free account today."
+      }
+    },
+    {
+      "SurveyID": "SV_dnAkDKOddKsPTpQ",
+      "Element": "SCO",
+      "PrimaryAttribute": "Scoring",
+      "SecondaryAttribute": null,
+      "TertiaryAttribute": null,
+      "Payload": {
+        "ScoringCategories": [],
+        "ScoringCategoryGroups": [],
+        "ScoringSummaryCategory": null,
+        "ScoringSummaryAfterQuestions": 0,
+        "ScoringSummaryAfterSurvey": 0,
+        "DefaultScoringCategory": null,
+        "AutoScoringCategory": null
+      }
+    },
+    {
+      "SurveyID": "SV_dnAkDKOddKsPTpQ",
+      "Element": "PROJ",
+      "PrimaryAttribute": "CORE",
+      "SecondaryAttribute": null,
+      "TertiaryAttribute": "1.1.0",
+      "Payload": {
+        "ProjectCategory": "CORE",
+        "SchemaVersion": "1.1.0"
+      }
+    },
+    {
+      "SurveyID": "SV_dnAkDKOddKsPTpQ",
+      "Element": "STAT",
+      "PrimaryAttribute": "Survey Statistics",
+      "SecondaryAttribute": null,
+      "TertiaryAttribute": null,
+      "Payload": {
+        "MobileCompatible": true,
+        "ID": "Survey Statistics"
+      }
+    },
+    {
+      "SurveyID": "SV_dnAkDKOddKsPTpQ",
+      "Element": "QC",
+      "PrimaryAttribute": "Survey Question Count",
+      "SecondaryAttribute": "2",
+      "TertiaryAttribute": null,
+      "Payload": null
+    },
+    {
+      "SurveyID": "SV_dnAkDKOddKsPTpQ",
+      "Element": "SQ",
+      "PrimaryAttribute": "QID2",
+      "SecondaryAttribute": "\u00a0 \u00a0 \u00a0 \u00a0 \u00a0 \u00a0 d key = less pleasant k key = more pleasant",
+      "TertiaryAttribute": null,
+      "Payload": {
+        "QuestionText": "<!DOCTYPE html>\n<html>\n\n<head>\n<\/head>\n\n<body>\n  <div style=\"text-align: center;\">\n    <img id=\"amp-trial-img\" style=\"width: 300px; height: 300px;\"><\/img>\n  <\/div>\n  <div>&nbsp;<\/div>\n  <div>&nbsp;<\/div>\n  <div>&nbsp;<\/div>\n  <div>&nbsp;<\/div>\n  <div>&nbsp;<\/div>\n  <div>&nbsp;<\/div>\n  <div style=\"display: flex; font-size: 90%;\">\n    <div style=\"width: 50%; text-align: center;\">\n      <b><i>d key = less pleasant<\/i><\/b>\n    <\/div>\n    <div style=\"width: 50%; text-align: center;\">\n      <b><i>k key = more pleasant<\/i><\/b>\n    <\/div>\n  <\/div>\n<\/body>\n\n<\/html>",
+        "DefaultChoices": false,
+        "DataExportTag": "Q2",
+        "QuestionType": "DB",
+        "Selector": "TB",
+        "Configuration": {
+          "QuestionDescriptionOption": "UseText"
+        },
+        "QuestionDescription": "\u00a0 \u00a0 \u00a0 \u00a0 \u00a0 \u00a0 d key = less pleasant k key = more pleasant",
+        "ChoiceOrder": [],
+        "Validation": {
+          "Settings": {
+            "Type": "None"
+          }
+        },
+        "GradingData": [],
+        "Language": [],
+        "NextChoiceId": 4,
+        "NextAnswerId": 1,
+        "QuestionID": "QID2",
+        "QuestionJS": "const myGlobalThis = window.top;\n\n\n\/** \n * @typedef {Object} StimuliPoolConfig\n * @property {{content:string, count:number}[]} items\n * @property {boolean} shuffle\n * @property {number} shuffleMaxRepeat\n *\/\n\n\/**\n * @typedef {Object} Params\n * @property {StimuliPoolConfig[]} stimuli\n * @property {number[]} timeline\n * @property {string[]} acceptedKeys\n * @property {number} totalTrials\n *\/\n\nif (!myGlobalThis.params) {\n  alert('Sorry. Critical error occured in the survey webpage. Please restart survey or contact the survey conductor.')\n}\n\nconst { stimuli, timeline, acceptedKeys, totalTrials } = myGlobalThis.params;\n\nmyGlobalThis.responses = [];\n\nQualtrics.SurveyEngine.addOnload(function () {\n  const thisQultricsQuestion = this;\n  this.hideNextButton();\n  this.hidePreviousButton();\n  this.hideChoices();\n\n  const questionContainer = thisQultricsQuestion.questionContainer;\n  \/** @return { ImageElement } *\/\n  const imgEl = questionContainer.querySelector('#amp-trial-img');\n\n  let currentTrial = -1;\n  function nextTrial() {\n    currentTrial++;\n    if (currentTrial >= totalTrials) {\n      console.log('[AMP] => trial_responses', myGlobalThis.responses.join(','));\n      thisQultricsQuestion.clickNextButton();\n      return;\n    };\n    startTrial(currentTrial);\n  }\n  nextTrial();\n\n  const onKeydown = (key, removeListener) => {\n    key = key.toLowerCase();\n    if (!acceptedKeys.includes(key)) return;\n\n    myGlobalThis.responses.push(key);\n    const responsesString = myGlobalThis.responses.join(',');\n    Qualtrics.SurveyEngine.setEmbeddedData('trial_responses', responsesString);\n    console.debug('trial_responses', responsesString);\n    removeListener();\n\n    nextTrial();\n  }\n\n  function startTrial(i) {\n    setTimeout(() => {\n      imgEl.src = getContent(0, i);\n    }, 0);\n    setTimeout(() => {\n      imgEl.style.visibility = 'hidden';\n    }, sliceSum(timeline, 1));\n    setTimeout(() => {\n      imgEl.style.visibility = 'visible';\n      imgEl.src = getContent(1, i);\n    }, sliceSum(timeline, 2));\n    setTimeout(() => {\n      imgEl.style.visibility = 'hidden';\n    }, sliceSum(timeline, 3));\n    setTimeout(() => {\n      imgEl.style.visibility = 'visible';\n      imgEl.src = getContent(2, i);\n    }, sliceSum(timeline, 4));\n    setTimeout(() => {\n      observeKeydownOnce(onKeydown);\n    }, sliceSum(timeline, 5));\n  }\n});\n\n\n\/**\n * Get content from stimuli or preload\n * @param {number} stimuliIndex \n * @param {number} trialIndex \n *\/\nfunction getContent(stimuliIndex, trialIndex) {\n  const contentIndex = stimuli[stimuliIndex].shuffledIndexes[trialIndex];\n  const content = stimuli[stimuliIndex].items[contentIndex].content;\n  const preload = myGlobalThis.preload[content];\n  return preload || content; \/\/ better use ?? here\n}\n\n\n\/**\n * Return true to stop\n * @param {(key: string, removeListener: () => void) -> void} callback \n *\/\nfunction observeKeydownOnce(callback) {\n  function handleKeyDown(event) {\n    callback(\n      event.key,\n      () => {\n        window.top.removeEventListener('keydown', handleKeyDown)\n        window.top.removeEventListener('message', handleMessage)\n      }\n    );\n  }\n  function handleMessage(event) {\n    if (event.data.type != 'iframe-keydown') {\n      return;\n    }\n    callback(\n      event.data.key,\n      () => {\n        window.top.removeEventListener('keydown', handleKeyDown)\n        window.top.removeEventListener('message', handleMessage)\n      }\n    );\n  }\n  window.top.addEventListener('keydown', handleKeyDown);\n  window.top.addEventListener('message', handleMessage);\n}\n\n\n\/**\n * Pass keydown event from iframe to top window. \n * Otherwise, in Qualtrics Preview, top window cannot receive keydown event if focus is on iframe\n *\/\nfunction passKeydownToTopWindow() {\n  window.addEventListener('keydown', e => {\n    window.top.postMessage({\n      type: 'iframe-keydown',\n      key: e.key,\n    })\n  });\n}\npassKeydownToTopWindow();\n\n\nfunction sliceSum(array, end) {\n  return array.slice(0, end).reduce((a, b) => a + b, 0);\n}",
+        "DataVisibility": {
+          "Private": false,
+          "Hidden": false
+        }
+      }
+    },
+    {
+      "SurveyID": "SV_dnAkDKOddKsPTpQ",
+      "Element": "RS",
+      "PrimaryAttribute": "RS_6zXdxkXXWoWLKL4",
+      "SecondaryAttribute": "Default Response Set",
+      "TertiaryAttribute": null,
+      "Payload": null
+    },
+    {
+      "SurveyID": "SV_dnAkDKOddKsPTpQ",
+      "Element": "SQ",
+      "PrimaryAttribute": "QID1",
+      "SecondaryAttribute": "This loads parameters.",
+      "TertiaryAttribute": null,
+      "Payload": {
+        "QuestionText": "This loads parameters.<br>",
+        "DefaultChoices": false,
+        "DataExportTag": "Q1",
+        "QuestionID": "QID1",
+        "QuestionType": "DB",
+        "Selector": "TB",
+        "DataVisibility": {
+          "Private": false,
+          "Hidden": false
+        },
+        "Configuration": {
+          "QuestionDescriptionOption": "UseText"
+        },
+        "QuestionDescription": "This loads parameters.",
+        "ChoiceOrder": [],
+        "Validation": {
+          "Settings": {
+            "Type": "None"
+          }
+        },
+        "GradingData": [],
+        "Language": [],
+        "NextChoiceId": 4,
+        "NextAnswerId": 1,
+        "QuestionJS": "\"use strict\";\n\nfunction _typeof(obj) { \"@babel\/helpers - typeof\"; return _typeof = \"function\" == typeof Symbol && \"symbol\" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && \"function\" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? \"symbol\" : typeof obj; }, _typeof(obj); }\nfunction _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== \"undefined\" && o[Symbol.iterator] || o[\"@@iterator\"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === \"number\") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError(\"Invalid attempt to iterate non-iterable instance.\\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.\"); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it[\"return\"] != null) it[\"return\"](); } finally { if (didErr) throw err; } } }; }\nfunction _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === \"string\") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === \"Object\" && o.constructor) n = o.constructor.name; if (n === \"Map\" || n === \"Set\") return Array.from(o); if (n === \"Arguments\" || \/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$\/.test(n)) return _arrayLikeToArray(o, minLen); }\nfunction _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }\nvar myGlobalThis = window.top;\nmyGlobalThis.params = loadParams();\nconsole.log('[AMP] Loaded parameters', myGlobalThis.params);\nmyGlobalThis.params.stimuli.forEach(function (stimuli, stimuliIndex) {\n  stimuli.shuffledIndexes = applyShuffle(stimuli);\n  outputShuffle(stimuli.shuffledIndexes, stimuliIndex + 1);\n  applyPreload(stimuli.items.map(function (_ref) {\n    var content = _ref.content;\n    return content;\n  }));\n});\nmyGlobalThis.qs = Qualtrics.SurveyEngine;\n\n\/** \n * @typedef {Object} StimuliPoolConfig\n * @property {{content:string, count:number}[]} items\n * @property {boolean} shuffle\n * @property {number|null} shuffleMaxRepeat\n *\/\n\n\/**\n * @typedef {Object} Params\n * @property {StimuliPoolConfig[]} stimuli\n * @property {number[]} timeline\n * @property {string[]} acceptedKeys\n * @property {number} totalTrials\n *\/\n\n\/**\n * @returns {Params}\n *\/\nfunction loadParams() {\n  return {\n    stimuli: ['1', '2', '3'].map(loadStimuliPoolConfig),\n    timeline: [parseFloat(_(\"stimuli_1_duration\")) || 0, parseFloat(_(\"stimuli_1_interval\")) || 0, parseFloat(_(\"stimuli_2_duration\")) || 0, parseFloat(_(\"stimuli_2_interval\")) || 0, parseFloat(_(\"keyboard_delay\")) || 0],\n    acceptedKeys: _('accepted_keys').split(','),\n    totalTrials: parseInt(_('total_trials'))\n  };\n\n  \/**\n   * @param {string} stimuliIndex \n   * @returns {StimuliPoolConfig}\n   *\/\n  function loadStimuliPoolConfig(stimuliIndex) {\n    console.debug(\"stimuli_\".concat(stimuliIndex, \"_items\"));\n    var json = _(\"stimuli_\".concat(stimuliIndex, \"_items\"));\n    console.debug(json);\n    var items = JSON.parse(json);\n    console.debug(items);\n    \/\/ TODO: param validation here\n    var shuffle = _(\"stimuli_\".concat(stimuliIndex, \"_shuffle\")) === 'true';\n    var shuffleMaxRepeat = parseInt(_(\"stimuli_\".concat(stimuliIndex, \"_shuffle_max_repeat\"))) || null;\n    return {\n      items: items,\n      shuffle: shuffle,\n      shuffleMaxRepeat: shuffleMaxRepeat\n    };\n  }\n\n  \/**\n   * @param {string} stimuliIndex \n   * @returns {number}\n   *\/\n  function loadStimuliDuration(stimuliIndex) {\n    var duration = parseFloat(_(\"stimuli_\".concat(stimuliIndex, \"_duration\")));\n    return duration;\n  }\n}\n\n\/**\n * @param {StimuliPoolConfig} stimuli  \n * @returns {number[]}\n *\/\nfunction applyShuffle(stimuli) {\n  var items = stimuli.items,\n    shuffle = stimuli.shuffle,\n    shuffleMaxRepeat = stimuli.shuffleMaxRepeat;\n  var indexes = getIndexesRepresentation(items);\n  if (shuffle) {\n    if (shuffleMaxRepeat >= 1) {\n      \/\/ also check whether type is number\n      shuffleWithMaxRepeat(indexes, shuffleMaxRepeat);\n    } else {\n      shuffleArray(indexes);\n    }\n  }\n  return indexes;\n\n  \/\/ Represent pool with indexes rather than the actual content\n  \/\/ Return [\"count[0]\" of 0's, \"count[1]\" of 1's, ...]\n  function getIndexesRepresentation(items) {\n    var indexes = [];\n    for (var i = 0; i < items.length; i++) {\n      for (var j = 0; j < items[i].count; j++) {\n        indexes.push(i);\n      }\n    }\n    return indexes;\n  }\n  function shuffleArray(array) {\n    for (var i = array.length - 1; i > 0; i--) {\n      var j = Math.floor(Math.random() * (i + 1));\n      var temp = array[i];\n      array[i] = array[j];\n      array[j] = temp;\n    }\n  }\n\n  \/\/ This function shuffles \"array\" in situ, with promise that no item will repeat \"maxRepeat\" times successively\n  function shuffleWithMaxRepeat(array, maxRepeat) {\n    var MAX_TRY = 10000; \/\/ stop if still unsatisfied after too many trial\n    var validate = function validate() {\n      var repeatItem, repeatTimes;\n      var _iterator = _createForOfIteratorHelper(array),\n        _step;\n      try {\n        for (_iterator.s(); !(_step = _iterator.n()).done;) {\n          var i = _step.value;\n          if (i === repeatItem) {\n            if (repeatTimes === maxRepeat) {\n              return false;\n            } else {\n              repeatTimes++;\n            }\n          } else {\n            repeatItem = i;\n            repeatTimes = 1;\n          }\n        }\n      } catch (err) {\n        _iterator.e(err);\n      } finally {\n        _iterator.f();\n      }\n      return true;\n    };\n    for (var i = 0; i < MAX_TRY; i++) {\n      shuffleArray(array);\n      if (validate()) return;\n    }\n  }\n}\n\n\/**\n * @param {number[]} indexes \n * @param {string} stimuliIndex \n * @return {void}\n *\/\nfunction outputShuffle(indexes, stimuliIndex) {\n  var shuffleResult = indexes.join(',');\n  var shuffleResultName = \"stimuli_\".concat(stimuliIndex, \"_shuffle_result\");\n  console.log(\"[AMP] => \".concat(shuffleResultName), shuffleResult);\n  Qualtrics.SurveyEngine.setEmbeddedData(shuffleResultName, shuffleResult);\n}\n\n\/**\n * Preload images. Return a copy of the array but the items will be replaced with preloaded blobs asynchronously.\n * Preloaded images are stored in object `myGlobalThis.preload`\n * (We cannot directly use http cache to preload image, because Qualtrics sets the cache to expire in 60s (`cache-control: max-age=60`))\n * (Thus, use blobs.)\n * @param {string[]} urls\n * @returns {void}\n *\/\nfunction applyPreload(contents) {\n  if (myGlobalThis.preload === undefined) {\n    myGlobalThis.preload = {};\n  }\n  var _iterator2 = _createForOfIteratorHelper(contents),\n    _step2;\n  try {\n    var _loop = function _loop() {\n      var content = _step2.value;\n      \/\/ if already preloaded, skip\n      if (myGlobalThis.preload[content] !== undefined) return {\n        v: void 0\n      };\n      \/\/ if content starts with 'http(s):\/\/'\n      if (\/^https?:\\\/\\\/\/.test(content)) {\n        createImageBlob(content, function (e, blob) {\n          if (blob) {\n            console.debug('Preload blob created:', blob);\n            myGlobalThis.preload[content] = blob;\n          } else {\n            console.debug('Preload blob error:', e);\n          }\n        });\n      } else {\n        console.debug('Skip preloading for content', content);\n      }\n    };\n    for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {\n      var _ret = _loop();\n      if (_typeof(_ret) === \"object\") return _ret.v;\n    }\n  } catch (err) {\n    _iterator2.e(err);\n  } finally {\n    _iterator2.f();\n  }\n  ;\n  function createImageBlob(url, callback) {\n    var xhr = new XMLHttpRequest();\n    xhr.open('GET', url, true);\n    xhr.responseType = 'blob';\n    xhr.onload = function () {\n      if (this.status === 200 || this.status === 304) {\n        callback(null, URL.createObjectURL(this.response));\n      } else {\n        callback(new Error('Request failed with status ' + this.status));\n      }\n    };\n    xhr.onerror = function () {\n      callback(new Error('Network error'));\n    };\n    xhr.send();\n  }\n}\nfunction _(name) {\n  return Qualtrics.SurveyEngine.getEmbeddedData(name);\n}"
+      }
+    }
+  ]
+}
