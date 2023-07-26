@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/static/css/main.eddf750b.css",
-    "main.js": "/static/js/main.6094b2ca.js",
-    "static/js/787.028f531c.chunk.js": "/static/js/787.028f531c.chunk.js",
-    "index.html": "/index.html",
-    "main.eddf750b.css.map": "/static/css/main.eddf750b.css.map",
-    "main.6094b2ca.js.map": "/static/js/main.6094b2ca.js.map",
-    "787.028f531c.chunk.js.map": "/static/js/787.028f531c.chunk.js.map"
+    "main.css": "/amp-generator-beta/static/css/main.c6f94cf4.css",
+    "main.js": "/amp-generator-beta/static/js/main.ba1ae8dd.js",
+    "static/js/787.028f531c.chunk.js": "/amp-generator-beta/static/js/787.028f531c.chunk.js",
+    "index.html": "/amp-generator-beta/index.html",
+    "main.c6f94cf4.css.map": "/amp-generator-beta/static/css/main.c6f94cf4.css.map",
+    "main.ba1ae8dd.js.map": "/amp-generator-beta/static/js/main.ba1ae8dd.js.map",
+    "787.028f531c.chunk.js.map": "/amp-generator-beta/static/js/787.028f531c.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.eddf750b.css",
-    "static/js/main.6094b2ca.js"
+    "static/css/main.c6f94cf4.css",
+    "static/js/main.ba1ae8dd.js"
   ]
 }
