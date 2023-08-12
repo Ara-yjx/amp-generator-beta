@@ -4,7 +4,7 @@ import qsfTemplate from '../assets/qsfTemplate.json';
 interface EmbeddedDataTemplate {
   Description: string;
   Field: string;
-  Value: string;
+  Value?: string;
 }
 export function hydrateQsf(params: AmpParams) {
   const template = qsfTemplate;
@@ -13,14 +13,16 @@ export function hydrateQsf(params: AmpParams) {
   function setEd(name: string, value: any) {
     const ed = embeddedData.find(ed => ed.Field === name);
     if (ed) {
-      ed.Value = `${value}`;
+      if (value === null) {
+        ed.Value = undefined; // Value field will be removed when stringify. That's how Qualtrics represents empty value.
+      } else {
+        ed.Value = `${value}`; // (undefined, true, false...) are parsed to strings
+      }
     }
   }
   params.stimuli.map((stimuli, index) => {
     setEd(`stimuli_${index + 1}_items`, JSON.stringify(stimuli.items));
     setEd(`stimuli_${index + 1}_shuffle`, stimuli.shuffle);
-    setEd(`stimuli_${index + 1}_shuffle_max_repeat`, null);
-    // setEd(`stimuli_${index + 1}_shuffle_max_repeat`, stimuli.shuffleMaxRepeat);
   });
   setEd('stimuli_1_duration', params.timeline[0]);
   setEd('stimuli_1_interval', params.timeline[1]);

@@ -9,8 +9,7 @@ export const defaultAmpParams: AmpParams = {
         { content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_XJw0GZWrbUlfyOI', count: 5 },
         { content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_E72k4fxbh7Zxw7e', count: 5 },
       ],
-      shuffle: true,
-      shuffleMaxRepeat: 2,
+      shuffle: 2,
     },
     {
       items: [
@@ -36,14 +35,12 @@ export const defaultAmpParams: AmpParams = {
         { content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_8qUdZ0CwAXeCKxM', count: 1 },
       ],
       shuffle: true,
-      shuffleMaxRepeat: null,
     },
     {
       items: [
         { content: 'https://upenn.co1.qualtrics.com/CP/Graphic.php?IM=IM_bQlal1oB5kyb60m', count: 20 },
       ],
       shuffle: false,
-      shuffleMaxRepeat: null,
     },
   ],
   timeline: [75, 125, 100, 125, 0],

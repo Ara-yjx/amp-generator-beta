@@ -42,7 +42,7 @@ export const MainForm: React.FC<{}> = ({ }) => {
       >
         <Item label={<h3>Stimuli Images</h3>}>
           <Card>
-            <Tabs defaultActiveTab='1'>
+            <Tabs defaultActiveTab='0'>
               <TabPane key='0' title='Stimuli 1'>
                 <StimuliImage field={`stimuli[0]`} />
               </TabPane>

@@ -1,7 +1,6 @@
 export interface AmpStimuli {
   items: {content:string, count:number}[];
-  shuffle: boolean;
-  shuffleMaxRepeat: number | null;
+  shuffle: boolean | number;
 }
 
 export interface AmpParams {

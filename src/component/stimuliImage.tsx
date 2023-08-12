@@ -1,23 +1,29 @@
 import { Button, Form, Grid, Image, Input, InputNumber, Space, Switch, Typography } from '@arco-design/web-react';
 import { IconArrowDown, IconArrowUp, IconDelete, IconPlus } from '@arco-design/web-react/icon';
+import sumBy from 'lodash/sumBy';
 import React from 'react';
 
 const { Item, List } = Form;
 const { Row, Col } = Grid;
 const { Text } = Typography;
 
-const Shuffle: React.FC<{ field: string }> = ({ field }) => (
-  <Space style={{ display: 'flex' }}>
-    <Text type='secondary'>Shuffle</Text>
-    <Item field={field + '.shuffle'} noStyle>
-      <Switch />
-    </Item>
-    {/* <Text type='secondary'>Max repeat when shuffle</Text>
-    <Item field={field + '.shuffleMaxRepeat'} noStyle>
-      <InputNumber min={0} style={{ width: 200 }} />
-    </Item> */}
-  </Space>
-)
+const InputShuffle: React.FC<{ value?: any, onChange?: (v: any) => any }> = ({ value, onChange }) => {
+  const onShuffleSwitchChange = (v: boolean) => { onChange?.(v); }
+  const onMaxRepeatSwitchChange = (v: boolean) => { v ? onChange?.(1) : onChange?.(true); }
+  const onMaxRepeatNumberChange = (v: number) => { onChange?.(v); }
+  const isShuffleEnabled = value === true || typeof value === 'number';
+  const isMaxRepeatEnabled = typeof value === 'number';
+  const maxRepeatValue = typeof value === 'number' ? value : undefined;
+  return (
+    <Space style={{ display: 'flex' }}>
+      <Text type='secondary'>Shuffle</Text>
+      <Switch checked={isShuffleEnabled} onChange={onShuffleSwitchChange} />
+      <Text type='secondary'>Restrict max repeat</Text>
+      <Switch disabled={!isShuffleEnabled} checked={isMaxRepeatEnabled} onChange={onMaxRepeatSwitchChange} />
+      <InputNumber min={1} disabled={!isMaxRepeatEnabled} value={maxRepeatValue} onChange={onMaxRepeatNumberChange} />
+    </Space>
+  )
+}
 
 const ImagePreview: React.FC<{ value?: string }> = ({ value }) => (
   <Image src={value} width='32px' height='32px' />
@@ -66,6 +72,12 @@ const ImageItem: React.FC<{
   )
 }
 
+const TotalImagesCount = ({value}: {value?: any[]}) => (
+  <Text type='secondary'>
+    Total Images Count: {sumBy(value, i => i.count)}
+  </Text>
+);
+
 export const StimuliImage: React.FC<{ field: string }> = ({ field }) => {
   return (
     <>
@@ -89,10 +101,15 @@ export const StimuliImage: React.FC<{ field: string }> = ({ field }) => {
                     return <ImageItem field={field} index={index} key={key} length={fields.length} operation={operation} />
                   })
                 }
-                <Row>
-                  <Col style={{ marginLeft: 40 }} flex='none' >
-                    <Button shape='round' onClick={onClickAdd} type='outline'><IconPlus />Add Image</Button>
-                  </Col>
+                <Row style={{ paddingLeft: 40 }}>
+                  <Space>
+                    <Button shape='round' onClick={onClickAdd} type='outline'>
+                      <IconPlus />Add Image
+                    </Button>
+                    <Item field={field + '.items'} noStyle>
+                      <TotalImagesCount />
+                    </Item>
+                  </Space>
                 </Row>
               </>
             )
@@ -100,7 +117,9 @@ export const StimuliImage: React.FC<{ field: string }> = ({ field }) => {
         }
       </List>
       <br/>
-      <Shuffle field={field} />
+      <Item field={field + '.shuffle'}>
+        <InputShuffle />
+      </Item>
     </>
   );
 }
