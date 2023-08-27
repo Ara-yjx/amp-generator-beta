@@ -9,6 +9,7 @@ import { Timeline } from './timeline';
 import { StimuliImage } from './stimuliImage';
 import { TrialHtml } from './trialHtml';
 import { WarnTrialNumber } from './warnTrialNumber';
+import { AcceptedKeys } from './acceptedKeys';
 
 const { Item } = Form;
 const { TabPane } = Tabs;
@@ -66,14 +67,12 @@ export const MainForm: React.FC<{}> = ({ }) => {
         <Item shouldUpdate noStyle>
           { values => <WarnTrialNumber values={values} />}
         </Item>
-        <Item label='Accepted keyboard responses' field='acceptedKeys'>
-          <InputTag
-            labelInValue
-            tokenSeparators={[' ']}
-            validate={v => v.length === 1}
-            allowClear
-            saveOnBlur
-          />
+        <Item 
+          label='Accepted keyboard responses' field='acceptedKeys' 
+          extra='Letters (case insensitive), Number digits, Arrow keys.'
+          style={{ textAlign: 'left' }}
+        >
+          <AcceptedKeys />
         </Item>
         <Collapse bordered={false} style={{ marginBottom: 20 }}>
           <Collapse.Item name='0' header={<h3>Trial Block HTML</h3>}>

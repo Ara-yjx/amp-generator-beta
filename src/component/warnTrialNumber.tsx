@@ -19,12 +19,12 @@ export const WarnTrialNumber: React.FC<{ values: AmpParams }> = ({ values }) => 
   return (
     <div style={{ textAlign: 'left', transform: 'translateY(-16px)' }}>
       <Typography.Text type='warning'>
-        {`The number of trials does match the total image count of stimuli `}
+        {'The number of trials does match the total image count of stimuli '}
         {mismatchStimuli.map(([stimuliIndex]) => stimuliIndex + 1).join(',')}
         .<br />
         {
           mismatchStimuli.map(([stimuliIndex, count]) => (
-            <>- Total image count of simuli {stimuliIndex + 1}: {count} <br/></>
+            <span key={stimuliIndex}>- Total image count of simuli {stimuliIndex + 1}: {count} <br/></span>
           ))
         }
       </Typography.Text>
