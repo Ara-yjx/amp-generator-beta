@@ -17,7 +17,7 @@ export const WarnTrialNumber: React.FC<{ values: AmpParams }> = ({ values }) => 
 
   if (!mismatchStimuli.length) return null;
   return (
-    <div style={{ textAlign: 'left', transform: 'translateY(-16px)' }}>
+    <div style={{ transform: 'translateY(-16px)' }}>
       <Typography.Text type='warning'>
         {'The number of trials does match the total image count of stimuli '}
         {mismatchStimuli.map(([stimuliIndex]) => stimuliIndex + 1).join(',')}

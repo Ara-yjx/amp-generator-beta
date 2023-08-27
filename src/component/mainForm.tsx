@@ -10,6 +10,7 @@ import { StimuliImage } from './stimuliImage';
 import { TrialHtml } from './trialHtml';
 import { WarnTrialNumber } from './warnTrialNumber';
 import { AcceptedKeys } from './acceptedKeys';
+import { NextTrialTimeout } from './nextTrialTimeout';
 
 const { Item } = Form;
 const { TabPane } = Tabs;
@@ -58,22 +59,29 @@ export const MainForm: React.FC<{}> = ({ }) => {
             </Tabs>
           </Card>
         </Item>
+
         <Item label={<h3>Trial timeline</h3>} field='timeline'>
           <Timeline />
         </Item>
-        <Item label='Number of total trials' field='totalTrials' style={{ textAlign: 'left' }}>
-          <InputNumber min={0} style={{ width: 200 }} />
-        </Item>
-        <Item shouldUpdate noStyle>
-          { values => <WarnTrialNumber values={values} />}
-        </Item>
-        <Item 
-          label='Accepted keyboard responses' field='acceptedKeys' 
-          extra='Letters (case insensitive), Number digits, Arrow keys.'
-          style={{ textAlign: 'left' }}
-        >
-          <AcceptedKeys />
-        </Item>
+
+        <span style={{ textAlign: 'left' }}>
+          <Item label='Number of total trials' field='totalTrials' >
+            <InputNumber min={0} style={{ width: 200 }} />
+          </Item>
+          <Item shouldUpdate noStyle>
+            { values => <WarnTrialNumber values={values} />}
+          </Item>
+          <Item 
+            label='Accepted keyboard responses' field='acceptedKeys' 
+            extra='Letters (case insensitive), Number digits, Arrow keys.'
+          >
+            <AcceptedKeys />
+          </Item>
+          <Item field='nextTrialTimeout'>
+            <NextTrialTimeout />
+          </Item>
+        </span>
+
         <Collapse bordered={false} style={{ marginBottom: 20 }}>
           <Collapse.Item name='0' header={<h3>Trial Block HTML</h3>}>
             <Item field='trialHtml'>

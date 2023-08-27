@@ -33,6 +33,7 @@ export function hydrateQsf(params: AmpParams) {
   setEd('keyboard_delay', params.timeline[4]);
   setEd('accepted_keys', params.acceptedKeys.join(','));
   setEd('total_trials', params.totalTrials);
+  setEd('next_trial_timeout', params.nextTrialTimeout);
 
   const trialSurveyElement = template.SurveyElements.find(e => e.Element === 'SQ')
   if (trialSurveyElement) {

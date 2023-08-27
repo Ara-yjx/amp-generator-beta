@@ -15,5 +15,6 @@ export interface AmpParams {
   timeline: [number, number, number, number, number];
   acceptedKeys: string[];
   totalTrials: number;
+  nextTrialTimeout: number | null;
   trialHtml: AmpTrialHtml;
 }

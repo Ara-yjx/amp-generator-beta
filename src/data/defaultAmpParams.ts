@@ -46,6 +46,7 @@ export const defaultAmpParams: AmpParams = {
   timeline: [75, 125, 100, 125, 0],
   acceptedKeys: ['d', 'k'],
   totalTrials: 20,
+  nextTrialTimeout: null,
   trialHtml: {
     width: 300,
     height: 300,
