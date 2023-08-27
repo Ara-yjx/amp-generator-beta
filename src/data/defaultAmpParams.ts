@@ -46,4 +46,9 @@ export const defaultAmpParams: AmpParams = {
   timeline: [75, 125, 100, 125, 0],
   acceptedKeys: ['d', 'k'],
   totalTrials: 20,
+  trialHtml: {
+    width: 300,
+    height: 300,
+    text: '<b><i>d key = less pleasant</i></b>\n<b><i>k key = more pleasant</i></b>',
+  }
 }

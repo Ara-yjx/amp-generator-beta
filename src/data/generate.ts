@@ -1,5 +1,6 @@
 import type { AmpParams } from './ampTypes';
 import qsfTemplate from '../assets/qsfTemplate.json';
+import { renderTrialHtml } from './renderTrialHtml';
 
 interface EmbeddedDataTemplate {
   Description: string;
@@ -20,6 +21,7 @@ export function hydrateQsf(params: AmpParams) {
       }
     }
   }
+
   params.stimuli.map((stimuli, index) => {
     setEd(`stimuli_${index + 1}_items`, JSON.stringify(stimuli.items));
     setEd(`stimuli_${index + 1}_shuffle`, stimuli.shuffle);
@@ -31,6 +33,13 @@ export function hydrateQsf(params: AmpParams) {
   setEd('keyboard_delay', params.timeline[4]);
   setEd('accepted_keys', params.acceptedKeys.join(','));
   setEd('total_trials', params.totalTrials);
+
+  const trialSurveyElement = template.SurveyElements.find(e => e.Element === 'SQ')
+  if (trialSurveyElement) {
+    const trialHtml = typeof params.trialHtml === 'object' ? renderTrialHtml(params.trialHtml) : params.trialHtml;
+    // @ts-ignore
+    trialSurveyElement.Payload.QuestionText = trialHtml;
+  }
 
   return template;
 }

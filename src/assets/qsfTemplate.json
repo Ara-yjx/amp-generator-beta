@@ -13,7 +13,7 @@
     "SurveyExpirationDate": "0000-00-00 00:00:00",
     "SurveyCreationDate": "2023-07-08 05:22:35",
     "CreatorID": "UR_8qrlYLU2jfq7Cqa",
-    "LastModified": "2023-08-26 02:36:12",
+    "LastModified": "2023-08-27 05:17:20",
     "LastAccessed": "0000-00-00 00:00:00",
     "LastActivated": "0000-00-00 00:00:00",
     "Deleted": null
@@ -349,19 +349,20 @@
         "ProgressBarDisplay": "None",
         "PartialData": "+1 week",
         "ValidationMessage": "",
-        "PreviousButton": "",
-        "NextButton": "",
+        "PreviousButton": " \u2190 ",
+        "NextButton": " \u2192 ",
         "SurveyTitle": "Qualtrics Survey | Qualtrics Experience Management",
         "SkinLibrary": "upenn",
         "SkinType": "templated",
         "Skin": {
-          "brandingId": "4812671909",
+          "brandingId": null,
           "templateId": "*base",
           "overrides": null
         },
         "NewScoring": 1,
         "SurveyMetaDescription": "The most powerful, simple and trusted way to gather experience data. Start your journey to experience management and try a free account today.",
-        "SurveyName": "AMP_Gen_7.0"
+        "SurveyName": "AMP_Gen_7.0",
+        "CustomStyles": []
       }
     },
     {
@@ -417,7 +418,7 @@
       "SecondaryAttribute": "d key = less pleasant k key = more pleasant",
       "TertiaryAttribute": null,
       "Payload": {
-        "QuestionText": "<img id=\"amp-trial-img\" style=\"display: block; margin: 0 auto; width: 300px; height: 300px;\">\n\n<div style=\"display: flex; justify-content: space-around; margin-top: 6em;\">\n  <b><i>d key = less pleasant<\/i><\/b>\n  <b><i>k key = more pleasant<\/i><\/b>\n<\/div>",
+        "QuestionText": "<img style=\"display: block; margin: 0 auto; width: 300px; height: 300px;\" id=\"amp-trial-img\"\/>\n<div style=\"display: flex; justify-content: space-around; margin-top: 6em;\">\n  <b><i>d key = less pleasant<\/i><\/b>\n  <b><i>k key = more pleasant<\/i><\/b>\n<\/div>",
         "DefaultChoices": false,
         "DataExportTag": "Q2",
         "QuestionType": "DB",

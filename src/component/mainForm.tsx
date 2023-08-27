@@ -1,12 +1,13 @@
 
 import React, { useRef, useEffect, useState } from 'react';
-import { Form, Input, Button, Checkbox, InputNumber, InputTag, FormInstance, Tabs, Switch, Card } from '@arco-design/web-react';
+import { Form, Input, Button, Checkbox, InputNumber, InputTag, type FormInstance, Tabs, Switch, Card, Collapse } from '@arco-design/web-react';
 import { defaultAmpParams } from '../data/defaultAmpParams';
 import type { AmpParams } from '../data/ampTypes';
 import { generateBlob, generateQsfString } from '../data/generate';
 import { useBlobUrl } from '../hooks/useBlobUrl';
 import { Timeline } from './timeline';
 import { StimuliImage } from './stimuliImage';
+import { TrialHtml } from './trialHtml';
 
 const { Item } = Form;
 const { TabPane } = Tabs;
@@ -70,6 +71,13 @@ export const MainForm: React.FC<{}> = ({ }) => {
             saveOnBlur
           />
         </Item>
+        <Collapse bordered={false} style={{ marginBottom: 20 }}>
+          <Collapse.Item name='0' header={<h3>Trial Block HTML</h3>}>
+            <Item field='trialHtml'>
+              <TrialHtml />
+            </Item>
+          </Collapse.Item>
+        </Collapse>
 
         <Item shouldUpdate>
           {
