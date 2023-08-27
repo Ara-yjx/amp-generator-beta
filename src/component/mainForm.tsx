@@ -8,6 +8,7 @@ import { useBlobUrl } from '../hooks/useBlobUrl';
 import { Timeline } from './timeline';
 import { StimuliImage } from './stimuliImage';
 import { TrialHtml } from './trialHtml';
+import { WarnTrialNumber } from './warnTrialNumber';
 
 const { Item } = Form;
 const { TabPane } = Tabs;
@@ -61,6 +62,9 @@ export const MainForm: React.FC<{}> = ({ }) => {
         </Item>
         <Item label='Number of total trials' field='totalTrials' style={{ textAlign: 'left' }}>
           <InputNumber min={0} style={{ width: 200 }} />
+        </Item>
+        <Item shouldUpdate noStyle>
+          { values => <WarnTrialNumber values={values} />}
         </Item>
         <Item label='Accepted keyboard responses' field='acceptedKeys'>
           <InputTag
