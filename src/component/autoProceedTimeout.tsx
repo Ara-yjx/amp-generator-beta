@@ -4,7 +4,7 @@ import { AmpParams } from '../data/ampTypes';
 import type { ArcoFormItem } from '../util/arco';
 
 
-export const NextTrialTimeout: React.FC<ArcoFormItem<AmpParams['nextTrialTimeout']>> = ({ value, onChange }) => {
+export const AutoProceedTimeout: React.FC<ArcoFormItem<AmpParams['autoProceedTimeout']>> = ({ value, onChange }) => {
 
   return (
     <Space>

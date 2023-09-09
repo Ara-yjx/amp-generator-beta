@@ -43,10 +43,10 @@ export const defaultAmpParams: AmpParams = {
       shuffle: false,
     },
   ],
-  timeline: [75, 125, 100, 125, 0],
+  timeline: [75, 125, 100, 125, 0, 0],
   acceptedKeys: ['d', 'k'],
   totalTrials: 20,
-  nextTrialTimeout: null,
+  autoProceedTimeout: null,
   trialHtml: {
     width: 300,
     height: 300,

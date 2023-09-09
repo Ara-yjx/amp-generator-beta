@@ -30,10 +30,11 @@ export function hydrateQsf(params: AmpParams) {
   setEd('stimuli_1_interval', params.timeline[1]);
   setEd('stimuli_2_duration', params.timeline[2]);
   setEd('stimuli_2_interval', params.timeline[3]);
-  setEd('keyboard_delay', params.timeline[4]);
+  setEd('delay_before_keyboard', params.timeline[4]);
+  setEd('delay_after_keyboard', params.timeline[5]);
   setEd('accepted_keys', params.acceptedKeys.join(','));
   setEd('total_trials', params.totalTrials);
-  setEd('next_trial_timeout', params.nextTrialTimeout);
+  setEd('auto_proceed_timeout', params.autoProceedTimeout);
 
   const trialSurveyElement = template.SurveyElements.find(e => e.Element === 'SQ')
   if (trialSurveyElement) {

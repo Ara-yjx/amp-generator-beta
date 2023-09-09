@@ -7,7 +7,7 @@ import './App.css';
 function App() {
   return (
     <div className="App">
-      <Layout style={{ maxWidth: 800, margin: '0 auto' }}>
+      <Layout style={{ maxWidth: 1080, margin: '0 auto' }}>
         <Layout.Header>
           <h1>AMP Generator</h1>
         </Layout.Header>

@@ -12,9 +12,9 @@ export type AmpTrialHtml = AmpTrialHtmlParams | string;
 
 export interface AmpParams {
   stimuli: [AmpStimuli, AmpStimuli, AmpStimuli];
-  timeline: [number, number, number, number, number];
+  timeline: [number, number, number, number, number, number];
   acceptedKeys: string[];
   totalTrials: number;
-  nextTrialTimeout: number | null;
+  autoProceedTimeout: number | null;
   trialHtml: AmpTrialHtml;
 }

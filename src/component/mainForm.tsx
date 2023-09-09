@@ -10,7 +10,7 @@ import { StimuliImage } from './stimuliImage';
 import { TrialHtml } from './trialHtml';
 import { WarnTrialNumber } from './warnTrialNumber';
 import { AcceptedKeys } from './acceptedKeys';
-import { NextTrialTimeout } from './nextTrialTimeout';
+import { AutoProceedTimeout } from './autoProceedTimeout';
 
 const { Item } = Form;
 const { TabPane } = Tabs;
@@ -77,8 +77,8 @@ export const MainForm: React.FC<{}> = ({ }) => {
           >
             <AcceptedKeys />
           </Item>
-          <Item field='nextTrialTimeout'>
-            <NextTrialTimeout />
+          <Item field='autoProceedTimeout'>
+            <AutoProceedTimeout />
           </Item>
         </span>
 
