@@ -1,7 +1,7 @@
 {
   "SurveyEntry": {
     "SurveyID": "SV_dnAkDKOddKsPTpQ",
-    "SurveyName": "AMP_Gen_7.0",
+    "SurveyName": "SPT",
     "SurveyDescription": null,
     "SurveyOwnerID": "UR_8qrlYLU2jfq7Cqa",
     "SurveyBrandID": "upenn",
@@ -13,7 +13,7 @@
     "SurveyExpirationDate": "0000-00-00 00:00:00",
     "SurveyCreationDate": "2023-07-08 05:22:35",
     "CreatorID": "UR_8qrlYLU2jfq7Cqa",
-    "LastModified": "2023-09-09 07:27:34",
+    "LastModified": "2023-09-11 03:20:47",
     "LastAccessed": "0000-00-00 00:00:00",
     "LastActivated": "2023-09-09 05:47:48",
     "Deleted": null
@@ -28,7 +28,7 @@
       "Payload": [
         {
           "Type": "Default",
-          "Description": "Default Question Block",
+          "Description": "Load parameters",
           "ID": "BL_cJgbZWbXtlZwIQe",
           "BlockElements": [
             {
@@ -45,7 +45,7 @@
         {
           "Type": "Standard",
           "SubType": "",
-          "Description": "Block 1",
+          "Description": "Run Trials",
           "ID": "BL_3EDLHCLtBlrl7oO",
           "BlockElements": [
             {
@@ -209,78 +209,6 @@
           },
           {
             "Type": "EmbeddedData",
-            "FlowID": "FL_6",
-            "EmbeddedData": [
-              {
-                "Description": "learned_stimulus",
-                "Type": "Custom",
-                "Field": "learned_stimulus",
-                "VariableType": "String",
-                "DataVisibility": [],
-                "AnalyzeText": false,
-                "Value": "random"
-              },
-              {
-                "Description": "learned_stimulus_index",
-                "Type": "Recipient",
-                "Field": "learned_stimulus_index",
-                "VariableType": "String",
-                "DataVisibility": [],
-                "AnalyzeText": false
-              },
-              {
-                "Description": "learned_stimulus_content",
-                "Type": "Recipient",
-                "Field": "learned_stimulus_content",
-                "VariableType": "String",
-                "DataVisibility": [],
-                "AnalyzeText": false
-              },
-              {
-                "Description": "learned_stimulus_count_override",
-                "Type": "Recipient",
-                "Field": "learned_stimulus_count_override",
-                "VariableType": "String",
-                "DataVisibility": [],
-                "AnalyzeText": false
-              },
-              {
-                "Description": "control_stimulus",
-                "Type": "Custom",
-                "Field": "control_stimulus",
-                "VariableType": "String",
-                "DataVisibility": [],
-                "AnalyzeText": false,
-                "Value": "distinct"
-              },
-              {
-                "Description": "control_stimulus_index",
-                "Type": "Recipient",
-                "Field": "control_stimulus_index",
-                "VariableType": "String",
-                "DataVisibility": [],
-                "AnalyzeText": false
-              },
-              {
-                "Description": "control_stimulus_content",
-                "Type": "Recipient",
-                "Field": "control_stimulus_content",
-                "VariableType": "String",
-                "DataVisibility": [],
-                "AnalyzeText": false
-              },
-              {
-                "Description": "control_stimulus_count_override",
-                "Type": "Recipient",
-                "Field": "control_stimulus_count_override",
-                "VariableType": "String",
-                "DataVisibility": [],
-                "AnalyzeText": false
-              }
-            ]
-          },
-          {
-            "Type": "EmbeddedData",
             "FlowID": "FL_4",
             "EmbeddedData": [
               {
@@ -311,6 +239,14 @@
                 "Description": "trial_responses",
                 "Type": "Recipient",
                 "Field": "trial_responses",
+                "VariableType": "String",
+                "DataVisibility": [],
+                "AnalyzeText": false
+              },
+              {
+                "Description": "trial_response_durations",
+                "Type": "Recipient",
+                "Field": "trial_response_durations",
                 "VariableType": "String",
                 "DataVisibility": [],
                 "AnalyzeText": false
@@ -379,7 +315,7 @@
         },
         "NewScoring": 1,
         "SurveyMetaDescription": "The most powerful, simple and trusted way to gather experience data. Start your journey to experience management and try a free account today.",
-        "SurveyName": "AMP_Gen_7.0",
+        "SurveyName": "SPT",
         "CustomStyles": [],
         "ProtectSelectionIds": true
       }
@@ -449,7 +385,7 @@
       "Payload": {
         "QuestionText": "<img style=\"display: block; margin: 0 auto; width: 300px; height: 300px;\" id=\"amp-trial-img\"\/>\n<div style=\"display: flex; justify-content: space-around; margin-top: 6em;\">\n  <b><i>d key = less pleasant<\/i><\/b>\n  <b><i>k key = more pleasant<\/i><\/b>\n<\/div>",
         "DefaultChoices": false,
-        "DataExportTag": "Q2",
+        "DataExportTag": "SPT",
         "QuestionType": "DB",
         "Selector": "TB",
         "Configuration": {
@@ -504,9 +440,9 @@
       "SecondaryAttribute": "This loads parameters.",
       "TertiaryAttribute": null,
       "Payload": {
-        "QuestionText": "This loads parameters.<br>",
+        "QuestionText": "This loads parameters.",
         "DefaultChoices": false,
-        "DataExportTag": "Q1",
+        "DataExportTag": "LoadParameters",
         "QuestionID": "QID1",
         "QuestionType": "DB",
         "Selector": "TB",
