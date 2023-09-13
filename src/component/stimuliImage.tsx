@@ -1,7 +1,9 @@
-import { Button, Form, Grid, Image, Input, InputNumber, Space, Switch, Typography } from '@arco-design/web-react';
+import { Button, Divider, Form, Grid, Image, Input, InputNumber, Space, Switch, Typography } from '@arco-design/web-react';
 import { IconArrowDown, IconArrowUp, IconDelete, IconPlus } from '@arco-design/web-react/icon';
 import sumBy from 'lodash/sumBy';
 import React from 'react';
+import { Prime } from './prime';
+import { uid } from '../data/uid';
 
 const { Item, List } = Form;
 const { Row, Col } = Grid;
@@ -43,7 +45,7 @@ const ImageItem: React.FC<{
     <div>
       <Row gutter={10} align='center' style={{ margin: 10 }}>
         <Col flex='none' style={{ width: 40 }}>
-          <Text>{index}</Text>
+          <Text>{index + 1}</Text>
         </Col>
         <Col flex={1}>
           <Item field={field + '.content'} noStyle required>
@@ -70,9 +72,9 @@ const ImageItem: React.FC<{
       </Row>
     </div>
   )
-}
+};
 
-const TotalImagesCount = ({value}: {value?: any[]}) => (
+const TotalImagesCount = ({ value }: { value?: any[] }) => (
   <Text type='secondary'>
     Total Images Count: {sumBy(value, i => i.count)}
   </Text>
@@ -93,7 +95,7 @@ export const StimuliImage: React.FC<{ field: string }> = ({ field }) => {
         {
           (fields, operation) => {
             const { add } = operation;
-            const onClickAdd = () => { add({ content: '', count: 1 }) };
+            const onClickAdd = () => { add({ content: '', count: 1, uid: uid() }) };
             return (
               <>
                 {
@@ -116,10 +118,12 @@ export const StimuliImage: React.FC<{ field: string }> = ({ field }) => {
           }
         }
       </List>
-      <br/>
+      <br />
       <Item field={field + '.shuffle'}>
         <InputShuffle />
       </Item>
+      <Divider />
+      <Prime field={field} />
     </>
   );
 }

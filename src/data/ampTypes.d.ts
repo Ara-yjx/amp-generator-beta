@@ -1,6 +1,23 @@
+export interface AmpStimuliItem {
+  uid: number;
+  content: string; 
+  count: number;
+}
+
+export type AmpStimuliPrimeItem = {
+  uid: number;
+  name: string;
+  itemType: 'static' | 'randomExclude';
+  staticItemUid?: number;
+  randomItemExcludeUid?: number[];
+  isEnableOverrideCount: boolean;
+  overrideCount?: number;
+};
+
 export interface AmpStimuli {
-  items: {content:string, count:number}[];
+  items: AmpStimuliItem[];
   shuffle: boolean | number;
+  prime: AmpStimuliPrimeItem[];
 }
 
 export interface AmpTrialHtmlParams {

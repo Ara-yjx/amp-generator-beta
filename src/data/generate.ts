@@ -1,4 +1,4 @@
-import type { AmpParams } from './ampTypes';
+import type { AmpParams, AmpStimuli } from './ampTypes';
 import qsfTemplate from '../assets/qsfTemplate.json';
 import { renderTrialHtml } from './renderTrialHtml';
 
@@ -25,6 +25,7 @@ export function hydrateQsf(params: AmpParams) {
   params.stimuli.map((stimuli, index) => {
     setEd(`stimuli_${index + 1}_items`, JSON.stringify(stimuli.items));
     setEd(`stimuli_${index + 1}_shuffle`, stimuli.shuffle);
+    setEd(`stimuli_${index + 1}_prime`, JSON.stringify(exportPrime(stimuli)));
   });
   setEd('stimuli_1_duration', params.timeline[0]);
   setEd('stimuli_1_interval', params.timeline[1]);
@@ -54,4 +55,26 @@ export function generateQsfString(params: AmpParams) {
 
 export function generateBlob(str: string) {
   return new Blob([str], { type: 'text/plain' });
+}
+
+function exportPrime(stimuli: AmpStimuli) {
+  const { items, prime } = stimuli;
+  return Object.fromEntries(prime.map(p => {
+    const static_item = p.itemType === 'static' ? (
+      items.findIndex(({ uid }) => uid === p.staticItemUid) + 1
+    ) : undefined;
+    const random_item_exclude = p.itemType === 'randomExclude' ? (
+      p.randomItemExcludeUid?.map(excludedUid => prime.find(({ uid }) => excludedUid === uid)?.name).filter(x => x !== undefined)
+    ) : undefined;
+    const override_count = p.isEnableOverrideCount ? p.overrideCount : undefined;
+    const entry = [
+      p.name,
+      {
+        static_item,
+        random_item_exclude,
+        override_count,
+      }
+    ];
+    return entry;
+  }));
 }
