@@ -19,7 +19,7 @@ const DownloadButton: React.FC<{ blob?: Blob }> = ({ blob }) => {
   const href = useBlobUrl(blob);
   console.log('href', href);
   return (
-    <Button type='primary' href={href} download='amp.qsf'>
+    <Button type='primary' href={href} download='spt.qsf'>
       Generate Qualtrics qsf File
     </Button>
   );

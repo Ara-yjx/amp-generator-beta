@@ -11,7 +11,7 @@ function App() {
       <div className="App">
         <Layout style={{ maxWidth: 1080, margin: '0 auto' }}>
           <Layout.Header>
-            <h1>AMP Generator</h1>
+            <h1>SPT Generator</h1>
           </Layout.Header>
           <Layout.Content>
             <MainForm />
