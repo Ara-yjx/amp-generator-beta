@@ -16,9 +16,10 @@ export const defaultAmpParams: AmpParams = {
         { content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_E72k4fxbh7Zxw7e', count: 5, uid: uid() },
       ],
       shuffle: 2,
+      isEnablePriming: true,
       prime: [
-        { name: 'learned_1', itemType: 'static', staticItemUid: uidRef['stimuli[0].items[0]'], isEnableOverrideCount: false, overrideCount: 0, uid: uidRef['stimuli[0].prime[0]'] },
-        { name: 'control_1', itemType: 'randomExclude', randomItemExcludeUid: [uidRef['stimuli[0].prime[0]']], isEnableOverrideCount: true, overrideCount: 20, uid: uid() },
+        { name: 'learned_1', includeUids: [uidRef['stimuli[0].items[0]']], excludeUids: [], isEnableOverrideCount: false, overrideCount: 0, uid: uidRef['stimuli[0].prime[0]'] },
+        { name: 'control_1', includeUids: [], excludeUids: [uidRef['stimuli[0].prime[0]']], isEnableOverrideCount: true, overrideCount: 20, uid: uid() },
       ],
     },
     {
@@ -45,6 +46,7 @@ export const defaultAmpParams: AmpParams = {
         { content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_8qUdZ0CwAXeCKxM', count: 1, uid: uid() },
       ],
       shuffle: true,
+      isEnablePriming: false,
       prime: [],
     },
     {
@@ -52,6 +54,7 @@ export const defaultAmpParams: AmpParams = {
         { content: 'https://upenn.co1.qualtrics.com/CP/Graphic.php?IM=IM_bQlal1oB5kyb60m', count: 20, uid: uid() },
       ],
       shuffle: false,
+      isEnablePriming: false,
       prime: [],
     },
   ],

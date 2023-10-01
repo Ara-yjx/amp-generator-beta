@@ -7,9 +7,8 @@ export interface AmpStimuliItem {
 export type AmpStimuliPrimeItem = {
   uid: number;
   name: string;
-  itemType: 'static' | 'randomExclude';
-  staticItemUid?: number;
-  randomItemExcludeUid?: number[];
+  includeUids: number[];
+  excludeUids: number[];
   isEnableOverrideCount: boolean;
   overrideCount?: number;
 };
@@ -17,6 +16,7 @@ export type AmpStimuliPrimeItem = {
 export interface AmpStimuli {
   items: AmpStimuliItem[];
   shuffle: boolean | number;
+  isEnablePriming: boolean;
   prime: AmpStimuliPrimeItem[];
 }
 

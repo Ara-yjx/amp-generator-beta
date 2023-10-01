@@ -1,6 +1,7 @@
 import type { AmpParams, AmpStimuli } from './ampTypes';
 import qsfTemplate from '../assets/qsfTemplate.json';
 import { renderTrialHtml } from './renderTrialHtml';
+import { findPrimeRepresentationFromUid } from '../util/util';
 
 interface EmbeddedDataTemplate {
   Description: string;
@@ -59,22 +60,23 @@ export function generateBlob(str: string) {
 
 function exportPrime(stimuli: AmpStimuli) {
   const { items, prime } = stimuli;
-  return Object.fromEntries(prime.map(p => {
-    const static_item = p.itemType === 'static' ? (
-      items.findIndex(({ uid }) => uid === p.staticItemUid) + 1
-    ) : undefined;
-    const random_item_exclude = p.itemType === 'randomExclude' ? (
-      p.randomItemExcludeUid?.map(excludedUid => prime.find(({ uid }) => excludedUid === uid)?.name).filter(x => x !== undefined)
-    ) : undefined;
+  return prime.map(p => {
+    const include = p.includeUids?.map(
+      uid => findPrimeRepresentationFromUid(uid, stimuli)
+    ).filter(
+      x => x !== undefined
+    );
+    const exclude = p.excludeUids?.map(
+      uid => findPrimeRepresentationFromUid(uid, stimuli)
+    ).filter(
+      x => x !== undefined
+    );
     const override_count = p.isEnableOverrideCount ? p.overrideCount : undefined;
-    const entry = [
-      p.name,
-      {
-        static_item,
-        random_item_exclude,
-        override_count,
-      }
-    ];
-    return entry;
-  }));
+    return {
+      name: p.name,
+      include: include?.length ? include : undefined,
+      exclude: exclude?.length ? exclude : undefined,
+      override_count
+    };
+  });
 }
