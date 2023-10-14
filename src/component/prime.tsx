@@ -8,18 +8,24 @@ import { findPrimeRepresentationFromUid } from '../util/util';
 const { Item, List } = Form;
 const { Row, Col } = Grid;
 const { Option, OptGroup } = Select;
+const { Text } = Typography;
 
 
 const PrimeItemOptions = (stimuliItems: AmpStimuliItem[], primeItems: AmpStimuliPrimeItem[], hiddenUids: number[] = []) => ([
   // Hiding inside instead of filtering outside, because displayed stimuliItems depend on their index in original array
   <OptGroup label='Stimuli items' key='stimuli'>
     {
-      stimuliItems.map(({ uid, content }, index) => (
+      stimuliItems.map(({ uid, type, content }, index) => (
         hiddenUids.includes(uid) ? null :
           <Option value={uid} key={uid}>
-            <div style={{ display: 'flex' }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
               {index + 1}
-              <img src={content} style={{ width: 32, height: 32 }} />
+              {
+                type === 'image' ?
+                  <img src={content} style={{ width: 32, height: 32 }} />
+                  :
+                  <Text ellipsis style={{ marginBottom: 0, marginLeft: 4 }}>{content}</Text>
+              }
             </div>
           </Option>
       ))

@@ -19,7 +19,7 @@ const DownloadButton: React.FC<{ blob?: Blob }> = ({ blob }) => {
   const href = useBlobUrl(blob);
   console.log('href', href);
   return (
-    <Button type='primary' href={href} download='spt.qsf'>
+    <Button type='primary' href={href} download='spt-generator.qsf'>
       Generate Qualtrics qsf File
     </Button>
   );
@@ -44,7 +44,7 @@ export const MainForm: React.FC<{}> = ({ }) => {
         initialValues={defaultAmpParams}
         onValuesChange={onValuesChange}
       >
-        <Item label={<h3>Stimuli Images</h3>}>
+        <Item label={<h3>Stimuli List</h3>}>
           <Card>
             <Tabs defaultActiveTab='0'>
               <TabPane key='0' title='Stimuli 1'>

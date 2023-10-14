@@ -1,6 +1,7 @@
 export interface AmpStimuliItem {
   uid: number;
-  content: string; 
+  type: 'image' | 'text';
+  content: string;
   count: number;
 }
 

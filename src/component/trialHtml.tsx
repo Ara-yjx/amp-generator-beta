@@ -1,4 +1,4 @@
-import { Form, Input, InputNumber, Radio } from '@arco-design/web-react';
+import { Form, Input, InputNumber, Radio, Space } from '@arco-design/web-react';
 import React, { useEffect, useRef, useState } from 'react';
 import type { AmpTrialHtml, AmpTrialHtmlParams } from '../data/ampTypes';
 import { defaultAmpParams } from '../data/defaultAmpParams';
@@ -55,20 +55,26 @@ export const TrialHtml: React.FC<ArcoFormItem<AmpTrialHtml>> = ({ value, onChang
       onValuesChange={onParamsFormChange}
       layout='vertical'
     >
-      <Item field='width' label='Image Width' style={{width: 200}}>
-        <InputNumber suffix='px' />
-      </Item>
-      <Item field='height' label='Image Height' style={{width: 200}}>
-        <InputNumber suffix='px' />
-      </Item>
-      <Item field='text' label='Text' layout='vertical'>
+      <Space size='large'>
+        <Item field='width' label='Image Width' style={{ width: 200 }}>
+          <InputNumber suffix='px' />
+        </Item>
+        <Item field='height' label='Image Height' style={{ width: 200 }}>
+          <InputNumber suffix='px' />
+        </Item>
+      </Space>
+      <Item field='text' label='Instruction Text' layout='vertical'>
         <Input.TextArea style={{ minHeight: '6em' }} />
       </Item>
     </Form>
   );
 
   const htmlComponent = (
-    <Input.TextArea style={{ minHeight: '8em' }} value={bulk} onChange={onBulkChange} />
+    <Input.TextArea
+      style={{ minHeight: '8em', fontFamily: 'Inconsolata, Consolas, monospace' }}
+      value={bulk}
+      onChange={onBulkChange}
+    />
   );
 
   return (

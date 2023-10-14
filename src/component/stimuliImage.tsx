@@ -1,13 +1,19 @@
-import { Button, Divider, Form, Grid, Image, Input, InputNumber, Space, Switch, Typography } from '@arco-design/web-react';
+import { Button, Divider, Form, Grid, Image, Input, InputNumber, Select, Space, Switch, Typography } from '@arco-design/web-react';
 import { IconArrowDown, IconArrowUp, IconDelete, IconPlus } from '@arco-design/web-react/icon';
 import sumBy from 'lodash/sumBy';
 import React from 'react';
 import { Prime } from './prime';
 import { uid } from '../data/uid';
+import { AmpStimuliItem } from '../data/ampTypes';
 
 const { Item, List } = Form;
 const { Row, Col } = Grid;
 const { Text } = Typography;
+
+const WIDTH_INDEX_COL = 40;
+const WIDTH_TYPE_SELECTOR = 110;
+const WIDTH_IMAGE_PREVIEW = 32;
+const GUTTER = 10;
 
 const InputShuffle: React.FC<{ value?: any, onChange?: (v: any) => any }> = ({ value, onChange }) => {
   const onShuffleSwitchChange = (v: boolean) => { onChange?.(v); }
@@ -27,8 +33,8 @@ const InputShuffle: React.FC<{ value?: any, onChange?: (v: any) => any }> = ({ v
   )
 }
 
-const ImagePreview: React.FC<{ value?: string }> = ({ value }) => (
-  <Image src={value} width='32px' height='32px' />
+const ImagePreview: React.FC<{ value?: AmpStimuliItem }> = ({ value }) => (
+  value?.type === 'image' ? <Image src={value?.content} width={`${WIDTH_IMAGE_PREVIEW}px`} height={`${WIDTH_IMAGE_PREVIEW}px`} /> : null
 );
 
 const ImageItem: React.FC<{
@@ -43,17 +49,24 @@ const ImageItem: React.FC<{
   const onClickDown = () => { move(index, index + 1); };
   return (
     <div>
-      <Row gutter={10} align='center' style={{ margin: 10 }}>
-        <Col flex='none' style={{ width: 40 }}>
+      <Row gutter={GUTTER} align='start' style={{ margin: 10 }}>
+        <Col flex={`${WIDTH_INDEX_COL}px`}>
           <Text>{index + 1}</Text>
         </Col>
-        <Col flex={1}>
-          <Item field={field + '.content'} noStyle required>
-            <Input required />
+        <Col flex={`${WIDTH_TYPE_SELECTOR + GUTTER}px`}>
+          <Item field={field + '.type'} noStyle>
+            <Select options={['image', 'text']} style={{ width: WIDTH_TYPE_SELECTOR }} />
           </Item>
         </Col>
-        <Col flex='none'>
-          <Item shouldUpdate field={field + '.content'} noStyle>
+        <Col flex={1}>
+          <Item field={field + '.content'} noStyle shouldUpdate>
+            {
+              (value, form) => form.getFieldValue(field + '.type') === 'image' ? <Input/> : <Input.TextArea autoSize/>
+            }
+          </Item>
+        </Col>
+        <Col flex={`${WIDTH_IMAGE_PREVIEW + GUTTER}px`}>
+          <Item shouldUpdate field={field} noStyle>
             <ImagePreview />
           </Item>
         </Col>
@@ -74,28 +87,38 @@ const ImageItem: React.FC<{
   )
 };
 
-const TotalImagesCount = ({ value }: { value?: any[] }) => (
+const TotalItemsCount = ({ value }: { value?: any[] }) => (
   <Text type='secondary'>
-    Total Images Count: {sumBy(value, i => i.count)}
+    Total Items Count: {sumBy(value, i => i.count)}
   </Text>
 );
 
 export const StimuliImage: React.FC<{ field: string }> = ({ field }) => {
+  const { form } = Form.useFormContext();
+
   return (
     <>
-      <Row justify='space-between'>
-        <Col style={{ marginLeft: 40 }} flex='none'>
-          Image URL
+      <Row gutter={GUTTER} align='center' style={{ margin: 10, textAlign: 'left' }}>
+        <Col flex={`${WIDTH_INDEX_COL}px`} />
+        <Col flex={`${WIDTH_TYPE_SELECTOR + GUTTER}px`}>
+          Type
         </Col>
-        <Col style={{ width: 212, textAlign: 'left' }} flex='none'>
+        <Col flex={1}>
+          Image URL or Text Content
+        </Col>
+        <Col flex='100px'>
           Count
         </Col>
+        <Col flex='122px' />
       </Row>
       <List field={field + '.items'}>
         {
           (fields, operation) => {
             const { add } = operation;
-            const onClickAdd = () => { add({ content: '', count: 1, uid: uid() }) };
+            const onClickAdd = () => { 
+              const lastItem = form.getFieldValue(fields[fields.length - 1].field);
+              add({ ...lastItem, uid: uid() })
+            };
             return (
               <>
                 {
@@ -103,13 +126,13 @@ export const StimuliImage: React.FC<{ field: string }> = ({ field }) => {
                     return <ImageItem field={field} index={index} key={key} length={fields.length} operation={operation} />
                   })
                 }
-                <Row style={{ paddingLeft: 40 }}>
+                <Row style={{ paddingLeft: WIDTH_INDEX_COL }}>
                   <Space>
                     <Button shape='round' onClick={onClickAdd} type='outline'>
-                      <IconPlus />Add Image
+                      <IconPlus />Add Item
                     </Button>
                     <Item field={field + '.items'} noStyle>
-                      <TotalImagesCount />
+                      <TotalItemsCount />
                     </Item>
                   </Space>
                 </Row>
