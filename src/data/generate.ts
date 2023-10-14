@@ -6,6 +6,7 @@ import { findPrimeRepresentationFromUid } from '../util/util';
 interface EmbeddedDataTemplate {
   Description: string;
   Field: string;
+  Type: string;
   Value?: string;
 }
 export function hydrateQsf(params: AmpParams) {
@@ -16,6 +17,7 @@ export function hydrateQsf(params: AmpParams) {
     const ed = embeddedData.find(ed => ed.Field === name);
     if (ed) {
       if (value === null) {
+        ed.Type = 'Recipient';
         ed.Value = undefined; // Value field will be removed when stringify. That's how Qualtrics represents empty value.
       } else {
         ed.Value = `${value}`; // (undefined, true, false...) are parsed to strings
@@ -26,7 +28,7 @@ export function hydrateQsf(params: AmpParams) {
   params.stimuli.map((stimuli, index) => {
     setEd(`stimuli_${index + 1}_items`, JSON.stringify(stimuli.items));
     setEd(`stimuli_${index + 1}_shuffle`, stimuli.shuffle);
-    setEd(`stimuli_${index + 1}_prime`, JSON.stringify(exportPrime(stimuli)));
+    setEd(`stimuli_${index + 1}_prime`, exportPrime(stimuli));
   });
   setEd('stimuli_1_duration', params.timeline[0]);
   setEd('stimuli_1_interval', params.timeline[1]);
@@ -59,24 +61,28 @@ export function generateBlob(str: string) {
 }
 
 function exportPrime(stimuli: AmpStimuli) {
-  const { items, prime } = stimuli;
-  return prime.map(p => {
-    const include = p.includeUids?.map(
-      uid => findPrimeRepresentationFromUid(uid, stimuli)
-    ).filter(
-      x => x !== undefined
-    );
-    const exclude = p.excludeUids?.map(
-      uid => findPrimeRepresentationFromUid(uid, stimuli)
-    ).filter(
-      x => x !== undefined
-    );
-    const override_count = p.isEnableOverrideCount ? p.overrideCount : undefined;
-    return {
-      name: p.name,
-      include: include?.length ? include : undefined,
-      exclude: exclude?.length ? exclude : undefined,
-      override_count
-    };
-  });
+  const { prime, isEnablePriming } = stimuli;
+  if (!isEnablePriming) {
+    return null;
+  }
+  return JSON.stringify(
+    prime.map(p => {
+      const include = p.includeUids?.map(
+        uid => findPrimeRepresentationFromUid(uid, stimuli)
+      ).filter(
+        x => x !== undefined
+      );
+      const exclude = p.excludeUids?.map(
+        uid => findPrimeRepresentationFromUid(uid, stimuli)
+      ).filter(
+        x => x !== undefined
+      );
+      return {
+        name: p.name,
+        include: include?.length ? include : undefined,
+        exclude: exclude?.length ? exclude : undefined,
+        override_count: p.isEnableOverrideCount ? p.overrideCount : undefined,
+      };
+    })
+  );
 }
