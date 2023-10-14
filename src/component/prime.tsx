@@ -1,7 +1,7 @@
 import { Button, Form, Grid, Input, InputNumber, Select, Space, Switch, Typography } from '@arco-design/web-react';
 import { IconDelete, IconPlus } from '@arco-design/web-react/icon';
 import React, { useEffect } from 'react';
-import type { AmpStimuli, AmpStimuliPrimeItem } from '../data/ampTypes';
+import type { AmpStimuli, AmpStimuliItem, AmpStimuliPrimeItem } from '../data/ampTypes';
 import { uid } from '../data/uid';
 import { findPrimeRepresentationFromUid } from '../util/util';
 
@@ -10,6 +10,34 @@ const { Row, Col } = Grid;
 const { Option, OptGroup } = Select;
 
 
+const PrimeItemOptions = (stimuliItems: AmpStimuliItem[], primeItems: AmpStimuliPrimeItem[], hiddenUids: number[] = []) => ([
+  // Hiding inside instead of filtering outside, because displayed stimuliItems depend on their index in original array
+  <OptGroup label='Stimuli items' key='stimuli'>
+    {
+      stimuliItems.map(({ uid, content }, index) => (
+        hiddenUids.includes(uid) ? null :
+          <Option value={uid} key={uid}>
+            <div style={{ display: 'flex' }}>
+              {index + 1}
+              <img src={content} style={{ width: 32, height: 32 }} />
+            </div>
+          </Option>
+      ))
+    }
+  </OptGroup>
+  ,
+  <OptGroup label='Primings above' key='priming'>
+    {
+      primeItems.map(({ uid, name }) => (
+        hiddenUids.includes(uid) ? null :
+          <Option value={uid} key={uid}>
+            {name}
+          </Option>
+      ))
+    }
+  </OptGroup>
+])
+
 interface PrimeItemProps {
   field: string,
   index: number,
@@ -17,11 +45,11 @@ interface PrimeItemProps {
   stimuliField: string,
   isEnablePriming: boolean,
 }
-export const PrimeItem: React.FC<PrimeItemProps> = ({ field, index, remove, stimuliField, isEnablePriming }) => {
+const PrimeItem: React.FC<PrimeItemProps> = ({ field, index, remove, stimuliField, isEnablePriming }) => {
   const { form } = Form.useFormContext();
   const itemsWatch = Form.useWatch(stimuliField + '.items', form) as AmpStimuli['items'];
   const primeWatch = Form.useWatch(stimuliField + '.prime', form) as AmpStimuli['prime'];
-
+  const includeUidsWatch = Form.useWatch(field + '.includeUids', form) as number[];
 
   // When option changes, remove invalid options
   const optionUids = [...itemsWatch, ...primeWatch].map(({ uid }) => uid);
@@ -46,31 +74,6 @@ export const PrimeItem: React.FC<PrimeItemProps> = ({ field, index, remove, stim
   const renderFormat = (option: any, value: any) => {
     return findPrimeRepresentationFromUid(value, form.getFieldValue(stimuliField));
   };
-
-  const options = [
-    <OptGroup label='Stimuli items' key='stimuli'>
-      {
-        itemsWatch.map(({ uid, content }, index) => (
-          <Option value={uid} key={uid}>
-            <div style={{ display: 'flex' }}>
-              {index + 1}
-              <img src={content} style={{ width: 32, height: 32 }} />
-            </div>
-          </Option>
-        ))
-      }
-    </OptGroup>
-    ,
-    <OptGroup label='Primings above' key='priming'>
-      {
-        primeWatch.slice(0, index).map(({ uid, name }) => (
-          <Option value={uid} key={uid}>
-            {name}
-          </Option>
-        ))
-      }
-    </OptGroup>
-  ];
 
   return (
     <Row gutter={24} style={{ width: '100%' }}>
@@ -97,7 +100,7 @@ export const PrimeItem: React.FC<PrimeItemProps> = ({ field, index, remove, stim
             mode='multiple' style={{ width: 240 }} renderFormat={renderFormat}
             placeholder='All stimuli items'
           >
-            {options}
+            {PrimeItemOptions(itemsWatch, primeWatch.slice(0, index))}
           </Select>
         </Item>
       </Col>
@@ -112,7 +115,7 @@ export const PrimeItem: React.FC<PrimeItemProps> = ({ field, index, remove, stim
           <Select
             mode='multiple' style={{ width: 240 }} renderFormat={renderFormat}
           >
-            {options}
+            {PrimeItemOptions(itemsWatch, primeWatch.slice(0, index), includeUidsWatch)}
           </Select>
         </Item>
       </Col>
