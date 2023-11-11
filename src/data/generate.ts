@@ -1,4 +1,4 @@
-import type { AmpParams, AmpStimuli } from './ampTypes';
+import type { AmpParams, AmpStimuli, AmpStimuliPrimeItem } from './ampTypes';
 import qsfTemplate from '../assets/qsfTemplate.json';
 import { renderTrialHtml } from './renderTrialHtml';
 import { findPrimeRepresentationFromUid } from '../util/util';
@@ -19,26 +19,32 @@ export function hydrateQsf(params: AmpParams) {
       if (value === null) {
         ed.Type = 'Recipient';
         ed.Value = undefined; // Value field will be removed when stringify. That's how Qualtrics represents empty value.
+      } else if (typeof value === 'object') {
+        ed.Value = JSON.stringify(value);
       } else {
         ed.Value = `${value}`; // (undefined, true, false...) are parsed to strings
       }
     }
   }
 
-  params.stimuli.map((stimuli, index) => {
-    setEd(`stimuli_${index + 1}_items`, JSON.stringify(stimuli.items));
-    setEd(`stimuli_${index + 1}_shuffle`, stimuli.shuffle);
-    setEd(`stimuli_${index + 1}_prime`, exportPrime(stimuli));
+  const stimuliItems = [{
+    pools: params.stimuli.map(({ items, shuffle }) => ({
+      items: items.map(({ type, content, count }) => ({ type, content, count })),
+      shuffle: shuffle,
+    })),
+    totalTrials: params.totalTrials,
+  }];
+  setEd('stimuliItems', stimuliItems);
+  setEd('numOfRounds', 1);
+  setEd('timeline', {
+    durationsAndIntervals: [[params.timeline[0], params.timeline[1]], [params.timeline[2], params.timeline[3]]],
+    delayBeforeKeyboard: params.timeline[4],
+    delayAfterKeyboard: params.timeline[5],
+    autoProceedTimeout: params.autoProceedTimeout,
   });
-  setEd('stimuli_1_duration', params.timeline[0]);
-  setEd('stimuli_1_interval', params.timeline[1]);
-  setEd('stimuli_2_duration', params.timeline[2]);
-  setEd('stimuli_2_interval', params.timeline[3]);
-  setEd('delay_before_keyboard', params.timeline[4]);
-  setEd('delay_after_keyboard', params.timeline[5]);
-  setEd('accepted_keys', params.acceptedKeys.join(','));
-  setEd('total_trials', params.totalTrials);
-  setEd('auto_proceed_timeout', params.autoProceedTimeout);
+  setEd('primes', exportPrime(params));
+  console.log('exportPrime', exportPrime(params))
+  setEd('acceptedKeys', params.acceptedKeys.join(','));
 
   const trialSurveyElement = template.SurveyElements.find(e => e.Element === 'SQ')
   if (trialSurveyElement) {
@@ -60,29 +66,28 @@ export function generateBlob(str: string) {
   return new Blob([str], { type: 'text/plain' });
 }
 
-function exportPrime(stimuli: AmpStimuli) {
-  const { prime, isEnablePriming } = stimuli;
-  if (!isEnablePriming) {
-    return null;
-  }
-  return JSON.stringify(
-    prime.map(p => {
-      const include = p.includeUids?.map(
-        uid => findPrimeRepresentationFromUid(uid, stimuli)
-      ).filter(
-        x => x !== undefined
-      );
-      const exclude = p.excludeUids?.map(
-        uid => findPrimeRepresentationFromUid(uid, stimuli)
-      ).filter(
-        x => x !== undefined
-      );
-      return {
-        name: p.name,
-        include: include?.length ? include : undefined,
-        exclude: exclude?.length ? exclude : undefined,
-        override_count: p.isEnableOverrideCount ? p.overrideCount : undefined,
-      };
-    })
-  );
+function exportPrime(params: AmpParams) {
+  const primes = params.stimuli.flatMap((stimuli, poolIndex) => (
+    stimuli.prime.map(primeItem => ({ ...primeItem, stimuli, poolIndex, roundIndex: 0 }))
+  ))
+  return primes.map(({ uid, name, includeUids, excludeUids, overrideCount, isEnableOverrideCount, stimuli, poolIndex, roundIndex }) => {
+    const include = includeUids?.map(
+      uid => { 
+        const rep = findPrimeRepresentationFromUid(uid, stimuli);
+        return typeof rep === 'number' ? [roundIndex + 1, poolIndex + 1, rep] : rep;
+      }
+    ).filter(x => x !== undefined);
+    const exclude = excludeUids?.map(
+      uid => { 
+        const rep = findPrimeRepresentationFromUid(uid, stimuli);
+        return typeof rep === 'number' ? [roundIndex + 1, poolIndex + 1, rep] : rep;
+      }
+    ).filter(x => x !== undefined);
+    return {
+      name,
+      include: include?.length ? include : undefined,
+      exclude: exclude?.length ? exclude : undefined,
+      overrideCount: isEnableOverrideCount ? overrideCount : undefined,
+    }
+  });
 }
