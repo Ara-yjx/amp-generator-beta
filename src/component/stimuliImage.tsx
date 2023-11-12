@@ -5,6 +5,8 @@ import React from 'react';
 import { Prime } from './prime';
 import { uid } from '../data/uid';
 import { AmpStimuliItem } from '../data/ampTypes';
+import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
+
 
 const { Item, List } = Form;
 const { Row, Col } = Grid;
@@ -87,14 +89,9 @@ const ImageItem: React.FC<{
   )
 };
 
-const TotalItemsCount = ({ value }: { value?: any[] }) => (
-  <Text type='secondary'>
-    Total Items Count: {sumBy(value, i => i.count)}
-  </Text>
-);
-
 export const StimuliImage: React.FC<{ field: string }> = ({ field }) => {
   const { form } = Form.useFormContext();
+  const totalItems = useWatch(field + '.items', form) as AmpStimuliItem[];
 
   return (
     <>
@@ -131,9 +128,9 @@ export const StimuliImage: React.FC<{ field: string }> = ({ field }) => {
                     <Button shape='round' onClick={onClickAdd} type='outline'>
                       <IconPlus />Add Item
                     </Button>
-                    <Item field={field + '.items'} noStyle>
-                      <TotalItemsCount />
-                    </Item>
+                    <Text type='secondary'>
+                      Total Items Count: {sumBy(totalItems, i => i.count)}
+                    </Text>
                   </Space>
                 </Row>
               </>
