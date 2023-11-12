@@ -24,6 +24,7 @@ export interface AmpStimuli {
 export interface AmpTrialHtmlParams {
   width: number;
   height: number;
+  marginTop: number;
   text: string;
 }
 export type AmpTrialHtml = AmpTrialHtmlParams | string;

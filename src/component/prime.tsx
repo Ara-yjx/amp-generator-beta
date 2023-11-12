@@ -1,6 +1,7 @@
-import { Button, Form, Grid, Input, InputNumber, Select, Space, Switch, Typography } from '@arco-design/web-react';
+import { Button, Form, Grid, Input, InputNumber, Select, Space, Switch } from '@arco-design/web-react';
 import { IconDelete, IconPlus } from '@arco-design/web-react/icon';
 import React, { useEffect } from 'react';
+import { StimuliThumbnail } from './stimuliThumbnail';
 import type { AmpStimuli, AmpStimuliItem, AmpStimuliPrimeItem } from '../data/ampTypes';
 import { uid } from '../data/uid';
 import { findPrimeRepresentationFromUid } from '../util/util';
@@ -8,7 +9,6 @@ import { findPrimeRepresentationFromUid } from '../util/util';
 const { Item, List } = Form;
 const { Row, Col } = Grid;
 const { Option, OptGroup } = Select;
-const { Text } = Typography;
 
 
 const PrimeItemOptions = (stimuliItems: AmpStimuliItem[], primeItems: AmpStimuliPrimeItem[], hiddenUids: number[] = []) => ([
@@ -18,15 +18,7 @@ const PrimeItemOptions = (stimuliItems: AmpStimuliItem[], primeItems: AmpStimuli
       stimuliItems.map(({ uid, type, content }, index) => (
         hiddenUids.includes(uid) ? null :
           <Option value={uid} key={uid}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              {index + 1}
-              {
-                type === 'image' ?
-                  <img src={content} style={{ width: 32, height: 32 }} />
-                  :
-                  <Text ellipsis style={{ marginBottom: 0, marginLeft: 4 }}>{content}</Text>
-              }
-            </div>
+            <StimuliThumbnail index={index + 1} type={type} content={content} />
           </Option>
       ))
     }

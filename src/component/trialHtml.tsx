@@ -1,26 +1,58 @@
-import { Form, Input, InputNumber, Radio, Space } from '@arco-design/web-react';
 import React, { useEffect, useRef, useState } from 'react';
-import type { AmpTrialHtml, AmpTrialHtmlParams } from '../data/ampTypes';
+import { Form, Input, InputNumber, Radio, Select, Space, Typography } from '@arco-design/web-react';
+import type { AmpParams, AmpStimuliItem, AmpTrialHtml, AmpTrialHtmlParams } from '../data/ampTypes';
 import { defaultAmpParams } from '../data/defaultAmpParams';
 import { renderTrialHtml } from '../data/renderTrialHtml';
 import type { ArcoFormItem } from '../util/arco';
+import { StimuliThumbnail } from './stimuliThumbnail';
 
 const { Item } = Form;
+const { Option } = Select;
+const { Text } = Typography;
 
-const initialParams = defaultAmpParams.trialHtml as AmpTrialHtmlParams;
-const initialHtml = renderTrialHtml(initialParams);
+const defaultParams = defaultAmpParams.trialHtml as AmpTrialHtmlParams;
+const defaultHtml = renderTrialHtml(defaultParams);
+
+// const QUALTRICS_DEFAULT_SKIN = {
+//   fontSize: '24',
+//   fontWeight: '400',
+//   fontFamily: 'Poppins,Arial,sans-serif',
+//   color: '#757575',
+//   lineHeight: '1.5em',
+// } as const; // as Partial<CSSStyleDeclaration>;
+const QUALTRICS_STYLE = `
+# @font-face {
+#   font-family: Poppins;
+#   src: url(/fonts/poppinslight.ttf);
+#   font-style: normal;
+#   font-weight: 400
+# }
+# @font-face {
+#   font-family: Poppins;
+#   src: url(/fonts/poppinslight.ttf);
+#   font-style: italic;
+#   font-weight: 400
+# }
+body {
+  font-size: 24px;
+  font-weight: 400px;
+  font-family: Poppins,Arial,sans-serif;
+  color: #757575;
+  line-height: 1.5em;
+}
+`;
+
 
 export const TrialHtml: React.FC<ArcoFormItem<AmpTrialHtml>> = ({ value, onChange }) => {
 
+
   const [isUsingParams, setIsUsingParams] = useState<boolean>(typeof value === 'object');
   const [params, setParams] = useState<AmpTrialHtmlParams>(
-    typeof value === 'object' ? value : initialParams
+    typeof value === 'object' ? value : defaultParams
   );
   const [bulk, setBulk] = useState<string>(
-    typeof value === 'string' ? value : initialHtml
+    typeof value === 'string' ? value : defaultHtml
   );
-
-  // const { TabPane } = Tabs;
 
   const onParamsFormChange = (change: Partial<AmpTrialHtmlParams>, values: Partial<AmpTrialHtmlParams>) => {
     const newParams = { ...params, ...values };
@@ -34,20 +66,46 @@ export const TrialHtml: React.FC<ArcoFormItem<AmpTrialHtml>> = ({ value, onChang
   };
 
 
+  // Preview
+
+  const [previewStimuliItem, setPreviewStimuliItem] = useState<AmpStimuliItem>();
+
   const previewRef = useRef<HTMLIFrameElement | null>(null);
   const previewInnerHtml = isUsingParams ? renderTrialHtml(params) : bulk;
   useEffect(() => {
     const iframeDocument = previewRef.current?.contentDocument;
     if (iframeDocument) {
+      // Set style once 
+      if (!iframeDocument.getElementById('preview-style')) {
+        const styleEl = iframeDocument.createElement('style');
+        styleEl.id = 'preview-style';
+        styleEl.appendChild(iframeDocument.createTextNode(QUALTRICS_STYLE));
+        iframeDocument.head.appendChild(styleEl);
+      }
+      // Set body html
       iframeDocument.body.innerHTML = previewInnerHtml;
+      // Simulate stimuli preview
+      const imageEl = iframeDocument.getElementById('spt-trial-image') as HTMLImageElement;
+      const textEl = iframeDocument.getElementById('spt-trial-text') as HTMLElement;
+      if (imageEl && textEl && previewStimuliItem) {
+        imageEl.style.visibility = '';
+        textEl.style.visibility = '';
+        if (previewStimuliItem.type === 'image') {
+          imageEl.src = previewStimuliItem.content;
+          textEl.style.visibility = 'hidden';
+        } else if (previewStimuliItem.type === 'text') {
+          textEl.innerText = previewStimuliItem.content;
+          imageEl.style.visibility = 'hidden';
+        }
+      }
+      // Border for visibility
+      if (isUsingParams) {
+        if (textEl.parentElement) {
+          textEl.parentElement.style.border = '1px solid grey';
+        }
+      }
     }
-  }, [[previewInnerHtml]]);
-
-  const radioOptions = [
-    { value: true, label: 'Using Parameters' },
-    { value: false, label: 'Customize HTML' },
-  ];
-
+  });
 
   const paramsComponent = (
     <Form
@@ -63,11 +121,15 @@ export const TrialHtml: React.FC<ArcoFormItem<AmpTrialHtml>> = ({ value, onChang
           <InputNumber suffix='px' />
         </Item>
       </Space>
+      <Item field='marginTop' label='Blank space at page top' layout='vertical' style={{ width: 200 }}>
+        <InputNumber suffix='px' />
+      </Item>
       <Item field='text' label='Instruction Text' layout='vertical'>
         <Input.TextArea style={{ minHeight: '6em' }} />
       </Item>
     </Form>
   );
+
 
   const htmlComponent = (
     <Input.TextArea
@@ -84,14 +146,15 @@ export const TrialHtml: React.FC<ArcoFormItem<AmpTrialHtml>> = ({ value, onChang
           type='button'
           value={isUsingParams}
           onChange={setIsUsingParams}
-          options={radioOptions}
+          options={[
+            { value: true, label: 'Using Parameters' },
+            { value: false, label: 'Customize HTML' },
+          ]}
           style={{ marginBottom: '12px' }}
         />
       </div>
 
-      {
-        isUsingParams ? paramsComponent : htmlComponent
-      }
+      {isUsingParams ? paramsComponent : htmlComponent}
       {/* 
       <Tabs defaultActiveTab={isUsingParams ? 'params' : 'html'}>
         <TabPane key='params' title='Using Parameters'> 
@@ -101,10 +164,42 @@ export const TrialHtml: React.FC<ArcoFormItem<AmpTrialHtml>> = ({ value, onChang
       </Tabs> 
       */}
 
-      <div style={{ height: 600, display: 'flex', flexDirection: 'column' }} >
-        <h3>Preview</h3>
-        <iframe style={{ flexGrow: 1 }} ref={previewRef}></iframe>
-      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'start' }} >
+        <Space size='large'>
+          <h3>Preview</h3>
+          <Item shouldUpdate noStyle>
+            {
+              (value: AmpParams) => {
+                const allItems = value.stimuli.flatMap((stimuli, stimuliIndex) => (
+                  stimuli.items.map((item, itemIndex) => ({ ...item, index: `${stimuliIndex + 1}-${itemIndex + 1}` }))
+                ));
+                return (
+                  <Select
+                    placeholder='Select a stimuli item to preview'
+                    style={{ width: 300, height: 32 }}
+                    onChange={index => setPreviewStimuliItem(allItems[index])}
+                    allowClear
+                  >
+                    {
+                      allItems.map((item, index) => (
+                        <Option key={index} value={index}>
+                          <StimuliThumbnail {...item} />
+                        </Option>
+                      ))
+                    }
+                  </Select>
+                )
+              }
+            }
+          </Item>
+        </Space>
+        <iframe style={{ flexGrow: 1 }} ref={previewRef} height={700}></iframe>
+        {
+          isUsingParams && (
+            <Text type='secondary'>(Black image border will not be visible in the generated survey.)</Text>
+          ) 
+        }
+      </div >
     </>
   )
 };

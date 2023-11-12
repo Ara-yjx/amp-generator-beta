@@ -65,6 +65,7 @@ export const defaultAmpParams: AmpParams = {
   trialHtml: {
     width: 300,
     height: 300,
+    marginTop: 50,
     text: 'd key = less pleasant        :        k key = more pleasant',
   }
 };

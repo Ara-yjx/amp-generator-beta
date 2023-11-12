@@ -6,5 +6,6 @@ export function renderTrialHtml(params: AmpTrialHtmlParams) {
     .replace('{{width}}', `${params.width}`)
     .replace('{{height}}', `${params.height}`)
     .replace('{{text}}', `${params.text}`)
+    .replace('{{marginTop}}', `${params.marginTop}`)
   ;
 }
