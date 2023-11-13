@@ -7,6 +7,7 @@ import type { ArcoFormItem } from '../util/arco';
 import { StimuliThumbnail } from './stimuliThumbnail';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
+import throttle from 'lodash/throttle';
 
 const { Item } = Form;
 const { Option } = Select;
@@ -45,6 +46,47 @@ body {
 `;
 
 
+const setIframeContent = throttle((
+  previewRef: React.MutableRefObject<HTMLIFrameElement | null>,
+  previewInnerHtml: string,
+  previewStimuliItem: AmpStimuliItem | undefined,
+  isUsingParams: boolean,
+) => {
+  const iframeDocument = previewRef.current?.contentDocument;
+  if (iframeDocument) {
+    // Set style once 
+    if (!iframeDocument.getElementById('preview-style')) {
+      const styleEl = iframeDocument.createElement('style');
+      styleEl.id = 'preview-style';
+      styleEl.appendChild(iframeDocument.createTextNode(QUALTRICS_STYLE));
+      iframeDocument.head.appendChild(styleEl);
+    }
+    // Set body html
+    iframeDocument.body.innerHTML = previewInnerHtml;
+    // Simulate stimuli preview
+    const imageEl = iframeDocument.getElementById('spt-trial-image') as HTMLImageElement;
+    const textEl = iframeDocument.getElementById('spt-trial-text') as HTMLElement;
+    if (imageEl && textEl && previewStimuliItem) {
+      imageEl.style.visibility = '';
+      textEl.style.visibility = '';
+      if (previewStimuliItem.type === 'image') {
+        imageEl.src = previewStimuliItem.content;
+        textEl.style.visibility = 'hidden';
+      } else if (previewStimuliItem.type === 'text') {
+        textEl.innerText = previewStimuliItem.content;
+        imageEl.style.visibility = 'hidden';
+      }
+    }
+    // Border for visibility
+    if (isUsingParams) {
+      if (textEl.parentElement) {
+        textEl.parentElement.style.border = '1px solid grey';
+      }
+    }
+  }
+}, 500, { leading: true, trailing: true });
+
+
 export const TrialHtml: React.FC<ArcoFormItem<AmpTrialHtml>> = ({ value, onChange }) => {
 
 
@@ -78,42 +120,10 @@ export const TrialHtml: React.FC<ArcoFormItem<AmpTrialHtml>> = ({ value, onChang
   ));
   const previewStimuliItem = allItems.find(item => item.uid === previewStimuliUid);
 
-  const previewRef = useRef<HTMLIFrameElement | null>(null);
+  const previewRef = useRef<HTMLIFrameElement>(null);
   const previewInnerHtml = isUsingParams ? renderTrialHtml(params) : bulk;
-  useEffect(() => {
-    const iframeDocument = previewRef.current?.contentDocument;
-    if (iframeDocument) {
-      // Set style once 
-      if (!iframeDocument.getElementById('preview-style')) {
-        const styleEl = iframeDocument.createElement('style');
-        styleEl.id = 'preview-style';
-        styleEl.appendChild(iframeDocument.createTextNode(QUALTRICS_STYLE));
-        iframeDocument.head.appendChild(styleEl);
-      }
-      // Set body html
-      iframeDocument.body.innerHTML = previewInnerHtml;
-      // Simulate stimuli preview
-      const imageEl = iframeDocument.getElementById('spt-trial-image') as HTMLImageElement;
-      const textEl = iframeDocument.getElementById('spt-trial-text') as HTMLElement;
-      if (imageEl && textEl && previewStimuliItem) {
-        imageEl.style.visibility = '';
-        textEl.style.visibility = '';
-        if (previewStimuliItem.type === 'image') {
-          imageEl.src = previewStimuliItem.content;
-          textEl.style.visibility = 'hidden';
-        } else if (previewStimuliItem.type === 'text') {
-          textEl.innerText = previewStimuliItem.content;
-          imageEl.style.visibility = 'hidden';
-        }
-      }
-      // Border for visibility
-      if (isUsingParams) {
-        if (textEl.parentElement) {
-          textEl.parentElement.style.border = '1px solid grey';
-        }
-      }
-    }
-  });
+
+  useEffect(() => setIframeContent(previewRef, previewInnerHtml, previewStimuliItem, isUsingParams));
 
   const paramsComponent = (
     <Form
@@ -178,7 +188,7 @@ export const TrialHtml: React.FC<ArcoFormItem<AmpTrialHtml>> = ({ value, onChang
           <Item shouldUpdate noStyle>
             {
               (value: AmpParams) => {
-                
+
                 return (
                   <Select
                     placeholder='Select a stimuli item to preview'
@@ -203,7 +213,7 @@ export const TrialHtml: React.FC<ArcoFormItem<AmpTrialHtml>> = ({ value, onChang
         {
           isUsingParams && (
             <Text type='secondary'>(Black image border will not be visible in the generated survey.)</Text>
-          ) 
+          )
         }
       </div >
     </>

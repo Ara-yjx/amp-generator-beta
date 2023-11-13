@@ -11,19 +11,30 @@ import { TrialHtml } from './trialHtml';
 import { WarnTrialNumber } from './warnTrialNumber';
 import { AcceptedKeys } from './acceptedKeys';
 import { AutoProceedTimeout } from './autoProceedTimeout';
+import throttle from 'lodash/throttle';
 
 const { Item } = Form;
 const { TabPane } = Tabs;
 
-const DownloadButton: React.FC<{ blob?: Blob }> = ({ blob }) => {
-  const href = useBlobUrl(blob);
-  console.log('href', href);
+
+const DownloadButton: React.FC<{ values?: AmpParams }> = ({ values }) => {
+  const [url, setUrl] = useState<string>();
+  const blobUrl = useBlobUrl();
+  const throttledSetBlob = useRef<(values?: AmpParams) => void>();
+  if (!throttledSetBlob.current) {
+    throttledSetBlob.current = throttle((values?: AmpParams) => {
+      if (values) {
+        setUrl(blobUrl(generateBlob(generateQsfString(values))))
+      }
+    }, 500, { leading: true, trailing: true });
+  }
+  useEffect(() => throttledSetBlob.current?.(values), [values]);
   return (
-    <Button type='primary' href={href} download='spt-generator.qsf'>
+    <Button type='primary' href={url} download='spt-generator.qsf'>
       Generate Qualtrics qsf File
     </Button>
   );
-}
+};
 
 
 export const MainForm: React.FC<{}> = ({ }) => {
@@ -93,7 +104,7 @@ export const MainForm: React.FC<{}> = ({ }) => {
         <Item shouldUpdate>
           {
             values => (
-              <DownloadButton blob={generateBlob(generateQsfString(values))} />
+              <DownloadButton values={values} />
             )
           }
         </Item>

@@ -11,7 +11,6 @@ export const WarnTrialNumber: React.FC<{ values: AmpParams }> = ({ values }) => 
       sumBy(stimuli.items, i => i.count),
     ]
   ));
-  console.log('stimuliImageCounts', stimuliImageCounts)
 
   const mismatchStimuli = stimuliImageCounts.filter(([stimuliIndex, count]) => count !== values.totalTrials)
 
