@@ -5,6 +5,8 @@ import { defaultAmpParams } from '../data/defaultAmpParams';
 import { renderTrialHtml } from '../data/renderTrialHtml';
 import type { ArcoFormItem } from '../util/arco';
 import { StimuliThumbnail } from './stimuliThumbnail';
+import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
+import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 
 const { Item } = Form;
 const { Option } = Select;
@@ -68,7 +70,13 @@ export const TrialHtml: React.FC<ArcoFormItem<AmpTrialHtml>> = ({ value, onChang
 
   // Preview
 
-  const [previewStimuliItem, setPreviewStimuliItem] = useState<AmpStimuliItem>();
+  const [previewStimuliUid, setPreviewStimuliItemUid] = useState<number>();
+  const { form } = useFormContext();
+  const stimuliWatch = useWatch('stimuli', form) as AmpParams['stimuli'];
+  const allItems = stimuliWatch.flatMap((stimuli, stimuliIndex) => (
+    stimuli.items.map((item, itemIndex) => ({ ...item, indexDisplay: `${stimuliIndex + 1}-${itemIndex + 1}` }))
+  ));
+  const previewStimuliItem = allItems.find(item => item.uid === previewStimuliUid);
 
   const previewRef = useRef<HTMLIFrameElement | null>(null);
   const previewInnerHtml = isUsingParams ? renderTrialHtml(params) : bulk;
@@ -170,19 +178,17 @@ export const TrialHtml: React.FC<ArcoFormItem<AmpTrialHtml>> = ({ value, onChang
           <Item shouldUpdate noStyle>
             {
               (value: AmpParams) => {
-                const allItems = value.stimuli.flatMap((stimuli, stimuliIndex) => (
-                  stimuli.items.map((item, itemIndex) => ({ ...item, index: `${stimuliIndex + 1}-${itemIndex + 1}` }))
-                ));
+                
                 return (
                   <Select
                     placeholder='Select a stimuli item to preview'
                     style={{ width: 300, height: 32 }}
-                    onChange={index => setPreviewStimuliItem(allItems[index])}
+                    onChange={setPreviewStimuliItemUid}
                     allowClear
                   >
                     {
-                      allItems.map((item, index) => (
-                        <Option key={index} value={index}>
+                      allItems.map((item) => (
+                        <Option key={item.uid} value={item.uid}>
                           <StimuliThumbnail {...item} />
                         </Option>
                       ))

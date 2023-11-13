@@ -4,16 +4,16 @@ import { Typography } from '@arco-design/web-react';
 const { Text } = Typography;
 
 export interface StimuliThumbnailProps {
-  index: ReactNode,
+  indexDisplay: ReactNode,
   type: AmpStimuliItem['type'],
   content: string,
 }
 
-export const StimuliThumbnail: React.FC<StimuliThumbnailProps> = ({ index, type, content }) => (
+export const StimuliThumbnail: React.FC<StimuliThumbnailProps> = ({ indexDisplay, type, content }) => (
 
   <div style={{ display: 'flex', alignItems: 'center' }}>
     <div style={{ minWidth: 32 }}>
-      {index}
+      {indexDisplay}
     </div>
     {
       type === 'image' ?

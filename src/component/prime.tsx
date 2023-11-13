@@ -18,7 +18,7 @@ const PrimeItemOptions = (stimuliItems: AmpStimuliItem[], primeItems: AmpStimuli
       stimuliItems.map(({ uid, type, content }, index) => (
         hiddenUids.includes(uid) ? null :
           <Option value={uid} key={uid}>
-            <StimuliThumbnail index={index + 1} type={type} content={content} />
+            <StimuliThumbnail indexDisplay={index + 1} type={type} content={content} />
           </Option>
       ))
     }
