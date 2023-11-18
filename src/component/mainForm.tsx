@@ -83,6 +83,12 @@ export const MainForm: React.FC<{}> = ({ }) => {
             { values => <WarnTrialNumber values={values} />}
           </Item>
           <Item 
+            label='Number of total rounds' field='totalRounds' 
+            extra='To create the second-round trial block in Qualtrics, click the "Copy" button on the top-right of the "Run trial" block to replicate.'
+          >
+            <InputNumber min={1} style={{ width: 200 }} />
+          </Item>
+          <Item 
             label='Accepted keyboard responses' field='acceptedKeys' 
             extra='Letters (case insensitive), Number digits, Arrow keys.'
           >

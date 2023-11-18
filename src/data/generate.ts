@@ -35,7 +35,7 @@ export function hydrateQsf(params: AmpParams) {
     totalTrials: params.totalTrials,
   }];
   setEd('stimuliItems', stimuliItems);
-  setEd('numOfRounds', 1);
+  setEd('totalRounds', params.totalRounds);
   setEd('timeline', {
     durationsAndIntervals: [[params.timeline[0], params.timeline[1]], [params.timeline[2], params.timeline[3]]],
     delayBeforeKeyboard: params.timeline[4],
@@ -45,6 +45,7 @@ export function hydrateQsf(params: AmpParams) {
   setEd('primes', exportPrime(params));
   console.log('exportPrime', exportPrime(params))
   setEd('acceptedKeys', params.acceptedKeys.join(','));
+
 
   const trialSurveyElement = template.SurveyElements.find(e => e.Element === 'SQ')
   if (trialSurveyElement) {
@@ -70,30 +71,19 @@ function exportPrime(params: AmpParams) {
   const primes = params.stimuli.flatMap((stimuli, poolIndex) => (
     stimuli.prime.map(primeItem => ({ ...primeItem, stimuli, poolIndex, roundIndex: 0 }))
   ))
-  return primes.map(({ uid, name, includeUids, excludeUids, overrideCount, isEnableOverrideCount, stimuli, poolIndex, roundIndex }) => {
-    const include = includeUids?.length ? (
-      // selected items
-      includeUids.map(
-        uid => {
-          const rep = findPrimeRepresentationFromUid(uid, stimuli);
-          return typeof rep === 'number' ? [roundIndex + 1, poolIndex + 1, rep] : rep;
-        }
-      ).filter(x => x !== undefined)
-    ) : (
-      // all items in stimuli
-      stimuli.items.map((item, index) => [roundIndex + 1, poolIndex + 1, index + 1])
-    );
+  return primes.map(({ uid, name, includeUids, excludeUids, overrideCount, stimuli, poolIndex }) => {
+    const include = includeUids.map(
+      uid => findPrimeRepresentationFromUid(uid, stimuli)
+    ).filter(x => x !== undefined);
     const exclude = excludeUids?.map(
-      uid => {
-        const rep = findPrimeRepresentationFromUid(uid, stimuli);
-        return typeof rep === 'number' ? [roundIndex + 1, poolIndex + 1, rep] : rep;
-      }
+      uid => findPrimeRepresentationFromUid(uid, stimuli)
     ).filter(x => x !== undefined);
     return {
-      name,
+      name: `prime_stimuli_${poolIndex + 1}_${name}`,
+      pool: poolIndex + 1,
       include: include?.length ? include : undefined,
       exclude: exclude?.length ? exclude : undefined,
-      overrideCount: isEnableOverrideCount ? overrideCount : undefined,
+      overrideCount: overrideCount,
     }
   });
 }

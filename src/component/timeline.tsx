@@ -47,13 +47,13 @@ export const Timeline: React.FC = () => {
           <Item field='timeline[3]' noStyle><InputNumber suffix='ms'/></Item>
         </Col>
         <Col span={3} offset={1}>
-          <Item field='timeline[4]' noStyle><InputNumber suffix='ms'/></Item>
+          <Item field='delayBeforeKeyboard' noStyle><InputNumber suffix='ms'/></Item>
         </Col>
         <Col span={4}>
           <Tag bordered color='green' style={{ width: '100%' }}>... Await keyboard input</Tag>
         </Col>
         <Col span={3}>
-          <Item field='timeline[5]' noStyle><InputNumber suffix='ms'/></Item>
+          <Item field='delayAfterKeyboard' noStyle><InputNumber suffix='ms'/></Item>
         </Col>
       </Row>
       <Row align='center'>

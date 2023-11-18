@@ -10,8 +10,7 @@ export type AmpStimuliPrimeItem = {
   name: string;
   includeUids: number[];
   excludeUids: number[];
-  isEnableOverrideCount: boolean;
-  overrideCount?: number;
+  overrideCount: (number|null)[];
 };
 
 export interface AmpStimuli {
@@ -30,10 +29,13 @@ export interface AmpTrialHtmlParams {
 export type AmpTrialHtml = AmpTrialHtmlParams | string;
 
 export interface AmpParams {
-  stimuli: [AmpStimuli, AmpStimuli, AmpStimuli];
-  timeline: [number, number, number, number, number, number];
+  stimuli: AmpStimuli[];
+  timeline: number[];
   acceptedKeys: string[];
   totalTrials: number;
+  totalRounds: number;
   autoProceedTimeout: number | null;
+  delayBeforeKeyboard: number;
+  delayAfterKeyboard: number;
   trialHtml: AmpTrialHtml;
 }

@@ -18,8 +18,8 @@ export const defaultAmpParams: AmpParams = {
       shuffle: 2,
       isEnablePriming: true,
       prime: [
-        { name: 'learned_1', includeUids: [uidRef['stimuli[0].items[0]']], excludeUids: [], isEnableOverrideCount: false, overrideCount: 0, uid: uidRef['stimuli[0].prime[0]'] },
-        { name: 'control_1', includeUids: [], excludeUids: [uidRef['stimuli[0].prime[0]']], isEnableOverrideCount: true, overrideCount: 20, uid: uid() },
+        { name: 'learned_1', includeUids: [uidRef['stimuli[0].items[0]']], excludeUids: [], overrideCount: [20], uid: uidRef['stimuli[0].prime[0]'] },
+        { name: 'control_1', includeUids: [], excludeUids: [uidRef['stimuli[0].prime[0]']], overrideCount: [null], uid: uid() },
       ],
     },
     {
@@ -58,10 +58,13 @@ export const defaultAmpParams: AmpParams = {
       prime: [],
     },
   ],
-  timeline: [75, 125, 100, 125, 0, 0],
+  timeline: [75, 125, 100, 125],
   acceptedKeys: ['d', 'k'],
   totalTrials: 20,
+  totalRounds: 1,
   autoProceedTimeout: null,
+  delayAfterKeyboard: 0,
+  delayBeforeKeyboard: 0,
   trialHtml: {
     width: 300,
     height: 300,
