@@ -82,6 +82,9 @@ const PrimeItem: React.FC<PrimeItemProps> = ({ field, index, remove, stimuliFiel
     return findPrimeRepresentationFromUid(value, form.getFieldValue(stimuliField));
   };
 
+  // Same value should not exist. (primeWatch is the value in prev iter, before onChange actually alters form value.)
+  const validateNameUnique = (value: string|undefined) => !primeWatch.some(({name}) => name === value);
+
   return (
     <>
       <Row gutter={24} style={{ width: '100%' }}>
@@ -89,21 +92,29 @@ const PrimeItem: React.FC<PrimeItemProps> = ({ field, index, remove, stimuliFiel
           <Item
             label='Name'
             field={field + '.name'}
-            rules={[{ required: true }]}
             layout='vertical'
             disabled={!isEnablePriming}
             style={{ margin: 0 }}
+            rules={[
+              { required: true },
+              {
+                validator(value, cb) {
+                  validateNameUnique(value) ? cb() : cb('Duplicated name.')
+                },
+                validateTrigger: 'onChange',
+              },
+            ]}
           >
             <Input style={{ width: 280 }} />
           </Item>
         </Col>
         <Col span={1}>
-          <Tooltip content={[
-            "You can access the randomization result through these embeeded data:",
-            `- prime_stimuli_${index + 1}_${nameWatch}_item_index`,
-            `- prime_stimuli_${index + 1}_${nameWatch}_content`,
-            `- prime_stimuli_${index + 1}_${nameWatch}_type`,
-          ].join('\n')} position='top'>
+          <Tooltip content={<>
+            You can access the randomization result through these embeeded data:
+            <li>prime_stimuli_{index + 1}_{nameWatch}_item_index</li>
+            <li>prime_stimuli_{index + 1}_{nameWatch}_content</li>
+            <li>prime_stimuli_{index + 1}_{nameWatch}_type</li>
+          </>} position='top'>
             <IconQuestionCircle />
           </Tooltip>
         </Col>
@@ -169,6 +180,7 @@ const PrimeItem: React.FC<PrimeItemProps> = ({ field, index, remove, stimuliFiel
                     label={`Round ${roundIndex + 1}`}
                     layout='horizontal'
                     style={{ width: 300, margin: 0 }}
+                    key={roundIndex}
                   >
                     <InputNumber min={0} placeholder='(no override)' />
                   </Item>
