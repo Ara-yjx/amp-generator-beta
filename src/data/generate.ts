@@ -43,7 +43,6 @@ export function hydrateQsf(params: AmpParams) {
     autoProceedTimeout: params.autoProceedTimeout,
   });
   setEd('primes', exportPrime(params));
-  console.log('exportPrime', exportPrime(params))
   setEd('acceptedKeys', params.acceptedKeys.join(','));
 
 
@@ -83,7 +82,18 @@ function exportPrime(params: AmpParams) {
       pool: poolIndex + 1,
       include: include?.length ? include : undefined,
       exclude: exclude?.length ? exclude : undefined,
-      overrideCount: overrideCount,
+      overrideCount: exportOverrideCount(overrideCount),
     }
   });
+}
+
+
+function exportOverrideCount(overrideCount: AmpStimuliPrimeItem['overrideCount']) {
+  if (Array.isArray(overrideCount)) {
+    return overrideCount.map(x => x === undefined ? null : x);
+  } else if (overrideCount === undefined) {
+    return null;
+  } else { // number or null
+    return overrideCount;
+  }
 }

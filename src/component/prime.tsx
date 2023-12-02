@@ -1,4 +1,4 @@
-import { Button, Collapse, Form, Grid, Input, InputNumber, Select, Space, Switch, Tooltip, Typography } from '@arco-design/web-react';
+import { Button, Form, Grid, Input, InputNumber, Select, Space, Switch, Tooltip } from '@arco-design/web-react';
 import { IconDelete, IconPlus, IconQuestionCircle } from '@arco-design/web-react/icon';
 import React, { useEffect } from 'react';
 import { StimuliThumbnail } from './stimuliThumbnail';
@@ -10,7 +10,91 @@ import range from 'lodash/range';
 const { Item, List } = Form;
 const { Row, Col } = Grid;
 const { Option, OptGroup } = Select;
-const { Text } = Typography;
+
+// const PrimeOverride: React.FC<ArcoFormItem<AmpStimuliPrimeItem['overrideCount'] & field>> = ({ value, onChange }) => 
+const PrimeOverride: React.FC<{ field: string }> = ({ field }) => {
+  type OverrideType = 'no' | 'const' | 'var';
+  const getOverrideType = (overrideCount: AmpStimuliPrimeItem['overrideCount']) => (
+    overrideCount === null ? 'no' : (
+      Array.isArray(overrideCount) ? 'var' : 'const'
+    )
+  );
+  const { form } = Form.useFormContext();
+  const value = Form.useWatch(field, form) as AmpStimuliPrimeItem['overrideCount'];
+  const type = getOverrideType(value);
+  const totalRounds = Form.useWatch('totalRounds', form) as number;
+  const onTypeChange = (newType: OverrideType) => {
+    if (newType !== type) {
+      if (newType === 'no') {
+        form.setFieldValue(field, null);
+      } else if (newType === 'const') {
+        form.setFieldValue(field, 0);
+      } else if (newType === 'var') {
+        form.setFieldValue(field, Array(totalRounds).fill(type === 'const' ? value : 0));
+      }
+    }
+  }
+  // When totalRounds changes, remove extra
+  useEffect(() => {
+    if (type === 'var') {
+      const alignedOverrideCount = [...(value as (number | undefined)[]), ...Array(totalRounds).fill(undefined)].slice(0, totalRounds);
+      form.setFieldValue(field, alignedOverrideCount);
+    }
+  }, [totalRounds]);
+
+  return (
+    <>
+      <Row>
+        <Col offset={2} span={22}>
+          <Space align='start'>
+            <Item label='Override stimuli count: ' layout='horizontal' style={{ margin: 10 }}>
+              <Select
+                style={{ width: 300 }}
+                options={[
+                  { label: 'No override', value: 'no' },
+                  { label: 'Same count for all rounds', value: 'const' },
+                  { label: 'Different count for each round', value: 'var' },
+                ]}
+                value={type}
+                onChange={onTypeChange}
+              />
+            </Item>
+            {
+              type === 'const' && (
+                <Item field={field} style={{ width: 100, margin: 10 }} layout='horizontal' rules={[{ required: true }]}>
+                  <InputNumber min={0} />
+                </Item>
+              )
+            }
+          </Space>
+        </Col>
+      </Row>
+      {
+        type === 'var' && (
+          <Row style={{ marginBottom: 20 }}>
+            <Col offset={4} span={20}>
+              <Space wrap>
+                {
+                  range(totalRounds).map(roundIndex => (
+                    <Item
+                      field={`${field}[${roundIndex}]`}
+                      label={`Round ${roundIndex + 1}`}
+                      layout='vertical'
+                      style={{ width: 150, margin: 0 }}
+                      key={roundIndex}
+                    >
+                      <InputNumber min={0} placeholder='(no override)' />
+                    </Item>
+                  ))
+                }
+              </Space>
+            </Col>
+          </Row>
+        )
+      }
+    </>
+  )
+}
 
 
 const PrimeItemOptions = (stimuliItems: AmpStimuliItem[], primeItems: AmpStimuliPrimeItem[], hiddenUids: number[] = []) => ([
@@ -50,7 +134,6 @@ const PrimeItem: React.FC<PrimeItemProps> = ({ field, index, remove, stimuliFiel
   const itemsWatch = Form.useWatch(stimuliField + '.items', form) as AmpStimuli['items'];
   const primeWatch = Form.useWatch(stimuliField + '.prime', form) as AmpStimuli['prime'];
   const includeUidsWatch = Form.useWatch(field + '.includeUids', form) as number[];
-  const totalRoundsWatch = Form.useWatch('totalRounds', form) as number;
   const nameWatch = Form.useWatch(field + '.name', form) as string;
 
   // When option changes, remove invalid options
@@ -72,29 +155,24 @@ const PrimeItem: React.FC<PrimeItemProps> = ({ field, index, remove, stimuliFiel
     }
   }, [JSON.stringify([...optionUids].sort())]);
 
-  // When totalRounds changes, remove extra 
-  useEffect(() => {
-    const overrideCount = [...form.getFieldValue(`${field}.overrideCount`), ...Array(totalRoundsWatch).fill(null)].slice(0, totalRoundsWatch);
-    form.setFieldValue(`${field}.overrideCount`, overrideCount);
-  }, [totalRoundsWatch]);
 
   const renderFormat = (option: any, value: any) => {
     return findPrimeRepresentationFromUid(value, form.getFieldValue(stimuliField));
   };
 
   // Same value should not exist. (primeWatch is the value in prev iter, before onChange actually alters form value.)
-  const validateNameUnique = (value: string|undefined) => !primeWatch.some(({name}) => name === value);
+  const validateNameUnique = (value: string | undefined) => !primeWatch.some(({ name }) => name === value);
 
   return (
     <>
-      <Row gutter={24} style={{ width: '100%' }}>
+      <Row gutter={24} style={{ width: '100%', marginTop: 10 }}>
         <Col span={6}>
           <Item
             label='Name'
             field={field + '.name'}
             layout='vertical'
             disabled={!isEnablePriming}
-            style={{ margin: 0 }}
+            style={{ margin: 5 }}
             rules={[
               { required: true },
               {
@@ -125,7 +203,7 @@ const PrimeItem: React.FC<PrimeItemProps> = ({ field, index, remove, stimuliFiel
             label='Included items'
             layout='vertical'
             disabled={!isEnablePriming}
-            style={{ margin: 0 }}
+            style={{ margin: 5 }}
           >
             <Select
               mode='multiple' style={{ width: 320 }} renderFormat={renderFormat}
@@ -142,7 +220,7 @@ const PrimeItem: React.FC<PrimeItemProps> = ({ field, index, remove, stimuliFiel
             label='Excluded items'
             layout='vertical'
             disabled={!isEnablePriming}
-            style={{ margin: 0 }}
+            style={{ margin: 5 }}
           >
             <Select
               mode='multiple' style={{ width: 320 }} renderFormat={renderFormat}
@@ -164,33 +242,7 @@ const PrimeItem: React.FC<PrimeItemProps> = ({ field, index, remove, stimuliFiel
           </Item>
         </Col>
       </Row>
-      <Row>
-        <Col span={22} offset={2}>
-          <Collapse bordered={false}>
-            <Collapse.Item name='.' header={
-              <Text type='secondary'>
-                {'Override stimuli count : '}
-                {form.getFieldValue(field).overrideCount.map(String).join(' / ')}
-              </Text>
-            }>
-              {
-                range(totalRoundsWatch).map(roundIndex => (
-                  <Item
-                    field={`${field}.overrideCount[${roundIndex}]`}
-                    label={`Round ${roundIndex + 1}`}
-                    layout='horizontal'
-                    style={{ width: 300, margin: 0 }}
-                    key={roundIndex}
-                  >
-                    <InputNumber min={0} placeholder='(no override)' />
-                  </Item>
-                ))
-              }
-
-            </Collapse.Item>
-          </Collapse>
-        </Col>
-      </Row>
+      <PrimeOverride field={field + '.overrideCount'} />
     </>
   );
 };
@@ -242,7 +294,7 @@ function newPrimeItem(i: number, rounds: number): AmpStimuliPrimeItem {
     name: `priming_${i + 1}`,
     includeUids: [],
     excludeUids: [],
-    overrideCount: Array(rounds).fill(null),
+    overrideCount: null,
     uid: uid(),
   }
 }

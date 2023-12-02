@@ -10,7 +10,7 @@ export type AmpStimuliPrimeItem = {
   name: string;
   includeUids: number[];
   excludeUids: number[];
-  overrideCount: (number|null)[];
+  overrideCount: (number|undefined) | (number|undefined)[] | null; // same InputNumber might set value to undefined
 };
 
 export interface AmpStimuli {

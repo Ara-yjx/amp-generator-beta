@@ -18,8 +18,8 @@ export const defaultAmpParams: AmpParams = {
       shuffle: 2,
       isEnablePriming: true,
       prime: [
-        { name: 'learned_1', includeUids: [uidRef['stimuli[0].items[0]']], excludeUids: [], overrideCount: [20], uid: uidRef['stimuli[0].prime[0]'] },
-        { name: 'control_1', includeUids: [], excludeUids: [uidRef['stimuli[0].prime[0]']], overrideCount: [null], uid: uid() },
+        { name: 'learned_1', includeUids: [uidRef['stimuli[0].items[0]']], excludeUids: [], overrideCount: 20, uid: uidRef['stimuli[0].prime[0]'] },
+        { name: 'control_1', includeUids: [], excludeUids: [uidRef['stimuli[0].prime[0]']], overrideCount: null, uid: uid() },
       ],
     },
     {
