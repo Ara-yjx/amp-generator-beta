@@ -28,14 +28,18 @@ export interface AmpTrialHtmlParams {
 }
 export type AmpTrialHtml = AmpTrialHtmlParams | string;
 
+export interface AmpTimeline {
+  durationsAndIntervals: [number, number][],
+  delayBeforeKeyboard: number,
+  delayAfterKeyboard: number,
+  autoProceedTimeout: number | null,
+}
+
 export interface AmpParams {
   stimuli: AmpStimuli[];
-  timeline: number[];
+  timeline: AmpTimeline;
   acceptedKeys: string[];
   totalTrials: number;
   totalRounds: number;
-  autoProceedTimeout: number | null;
-  delayBeforeKeyboard: number;
-  delayAfterKeyboard: number;
   trialHtml: AmpTrialHtml;
 }

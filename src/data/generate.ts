@@ -36,12 +36,7 @@ export function hydrateQsf(params: AmpParams) {
   }];
   setEd('stimuliItems', stimuliItems);
   setEd('totalRounds', params.totalRounds);
-  setEd('timeline', {
-    durationsAndIntervals: [[params.timeline[0], params.timeline[1]], [params.timeline[2], params.timeline[3]]],
-    delayBeforeKeyboard: params.timeline[4],
-    delayAfterKeyboard: params.timeline[5],
-    autoProceedTimeout: params.autoProceedTimeout,
-  });
+  setEd('timeline', params.timeline);
   setEd('primes', exportPrime(params));
   setEd('acceptedKeys', params.acceptedKeys.join(','));
 

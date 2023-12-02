@@ -1,10 +1,10 @@
-import { InputNumber, InputTag, Space, Switch, Typography } from '@arco-design/web-react';
+import { InputNumber, Space, Switch, Typography } from '@arco-design/web-react';
 import React from 'react';
-import { AmpParams } from '../data/ampTypes';
+import type { AmpTimeline } from '../data/ampTypes';
 import type { ArcoFormItem } from '../util/arco';
 
 
-export const AutoProceedTimeout: React.FC<ArcoFormItem<AmpParams['autoProceedTimeout']>> = ({ value, onChange }) => {
+export const AutoProceedTimeout: React.FC<ArcoFormItem<AmpTimeline['autoProceedTimeout']>> = ({ value, onChange }) => {
 
   return (
     <Space>

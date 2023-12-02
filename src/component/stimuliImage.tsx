@@ -63,7 +63,7 @@ const ImageItem: React.FC<{
         <Col flex={1}>
           <Item field={field + '.content'} noStyle shouldUpdate>
             {
-              (value, form) => form.getFieldValue(field + '.type') === 'image' ? <Input/> : <Input.TextArea autoSize/>
+              (value, form) => form.getFieldValue(field + '.type') === 'image' ? <Input /> : <Input.TextArea autoSize />
             }
           </Item>
         </Col>
@@ -112,9 +112,13 @@ export const StimuliImage: React.FC<{ field: string }> = ({ field }) => {
         {
           (fields, operation) => {
             const { add } = operation;
-            const onClickAdd = () => { 
-              const lastItem = form.getFieldValue(fields[fields.length - 1].field);
-              add({ ...lastItem, uid: uid() })
+            const onClickAdd = () => {
+              if (fields.length) {
+                const lastItem = form.getFieldValue(fields[fields.length - 1].field);
+                add({ ...lastItem, uid: uid() });
+              } else {
+                add({ type: 'text', content: '', count: 1, uid: uid() } as AmpStimuliItem)
+              }
             };
             return (
               <>
