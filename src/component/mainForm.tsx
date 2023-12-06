@@ -12,6 +12,7 @@ import { StimuliPool } from './stimuliPool';
 import { Timeline } from './timeline';
 import { TrialHtml } from './trialHtml';
 import { WarnTrialNumber } from './warnTrialNumber';
+import { LoadSave } from './loadSave';
 
 const { Item } = Form;
 
@@ -53,6 +54,7 @@ export const MainForm: React.FC<{}> = ({ }) => {
         initialValues={defaultAmpParams}
         onValuesChange={onValuesChange}
       >
+        <LoadSave />
         <h3 style={{ textAlign: 'left' }}>Stimuli List</h3>
         <StimuliPool />
         <br />
@@ -105,4 +107,4 @@ export const MainForm: React.FC<{}> = ({ }) => {
       </Form >
     </>
   )
-}
+};
