@@ -73,7 +73,7 @@ function exportPrime(params: AmpParams) {
       uid => findPrimeRepresentationFromUid(uid, stimuli)
     ).filter(x => x !== undefined);
     return {
-      name: `prime_stimuli_${poolIndex + 1}_${name}`,
+      name: `stimuli_${poolIndex + 1}_${name}`,
       pool: poolIndex + 1,
       include: include?.length ? include : undefined,
       exclude: exclude?.length ? exclude : undefined,
