@@ -1,4 +1,4 @@
-import { Button, Form, Grid, Input, InputNumber, Select, Space, Switch, Tooltip } from '@arco-design/web-react';
+import { Button, Divider, Form, Grid, Input, InputNumber, Select, Space, Switch, Tooltip } from '@arco-design/web-react';
 import { IconDelete, IconPlus, IconQuestionCircle } from '@arco-design/web-react/icon';
 import React, { useEffect } from 'react';
 import { StimuliThumbnail } from './stimuliThumbnail';
@@ -47,7 +47,7 @@ const PrimeOverride: React.FC<{ field: string }> = ({ field }) => {
       <Row>
         <Col offset={2} span={22}>
           <Space align='start'>
-            <Item label='Override stimuli count: ' layout='horizontal' style={{ margin: 10 }}>
+            <Item label='Override stimuli count: ' layout='inline' style={{ margin: 10 }}>
               <Select
                 style={{ width: 300 }}
                 options={[
@@ -61,7 +61,7 @@ const PrimeOverride: React.FC<{ field: string }> = ({ field }) => {
             </Item>
             {
               type === 'const' && (
-                <Item field={field} style={{ width: 100, margin: 10 }} layout='horizontal' rules={[{ required: true }]}>
+                <Item field={field} style={{ width: 100, margin: 10 }} layout='inline' rules={[{ required: true }]}>
                   <InputNumber min={0} />
                 </Item>
               )
@@ -73,12 +73,13 @@ const PrimeOverride: React.FC<{ field: string }> = ({ field }) => {
         type === 'var' && (
           <Row style={{ marginBottom: 20 }}>
             <Col offset={4} span={20}>
-              <Space wrap>
+              <Space wrap /* split={<Divider type='vertical' style={{ height: 40 }} />} */>
                 {
                   range(totalRounds).map(roundIndex => (
                     <Item
                       field={`${field}[${roundIndex}]`}
                       label={`Round ${roundIndex + 1}`}
+                      labelCol={{ style: { margin: 0 } }}
                       layout='vertical'
                       style={{ width: 150, margin: 0 }}
                       key={roundIndex}

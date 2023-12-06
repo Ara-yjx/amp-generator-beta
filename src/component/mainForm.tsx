@@ -1,21 +1,19 @@
 
-import React, { useRef, useEffect, useState } from 'react';
-import { Form, Input, Button, Checkbox, InputNumber, InputTag, type FormInstance, Tabs, Switch, Card, Collapse } from '@arco-design/web-react';
+import { Button, Collapse, Form, InputNumber, type FormInstance } from '@arco-design/web-react';
+import throttle from 'lodash/throttle';
+import React, { useEffect, useRef, useState } from 'react';
+import type { AmpParams } from '../data/ampTypes';
 import { defaultAmpParams } from '../data/defaultAmpParams';
-import type { AmpParams, AmpStimuli } from '../data/ampTypes';
 import { generateBlob, generateQsfString } from '../data/generate';
 import { useBlobUrl } from '../hooks/useBlobUrl';
-import { Timeline } from './timeline';
-import { StimuliImage } from './stimuliImage';
-import { TrialHtml } from './trialHtml';
-import { WarnTrialNumber } from './warnTrialNumber';
 import { AcceptedKeys } from './acceptedKeys';
 import { AutoProceedTimeout } from './autoProceedTimeout';
-import throttle from 'lodash/throttle';
-import { uid } from '../data/uid';
+import { StimuliPool } from './stimuliPool';
+import { Timeline } from './timeline';
+import { TrialHtml } from './trialHtml';
+import { WarnTrialNumber } from './warnTrialNumber';
 
 const { Item } = Form;
-const { TabPane } = Tabs;
 
 
 const DownloadButton: React.FC<{ values?: AmpParams }> = ({ values }) => {
@@ -47,12 +45,6 @@ export const MainForm: React.FC<{}> = ({ }) => {
     console.log('onValuesChange: ', changeValue, values);
   };
 
-  const [activeStimuliTab, setActiveStimuliTab] = useState(0);
-  const newStimuli: AmpStimuli = {
-    items: [{ type: 'text', content: '', count: 1, uid: uid() }],
-    shuffle: false, isEnablePriming: false, prime: []
-  };
-
   return (
     <>
       <Form
@@ -61,42 +53,13 @@ export const MainForm: React.FC<{}> = ({ }) => {
         initialValues={defaultAmpParams}
         onValuesChange={onValuesChange}
       >
-        <Item label={<h3>Stimuli List</h3>}>
-          <Form.List field='stimuli' >
-            {
-              (fields, { add, remove }) => (
-                <Tabs
-                  activeTab={`${activeStimuliTab}`}
-                  onChange={tabKeyStr => setActiveStimuliTab(parseInt(tabKeyStr))}
-                  type='card-gutter'
-                  editable
-                  onAddTab={() => { add({ ...newStimuli }); setActiveStimuliTab(fields.length); }}
-                  onDeleteTab={tabKeyStr => {
-                    const tabKey = parseInt(tabKeyStr);
-                    if (window.confirm(`⚠️⚠️⚠️ Are you sure to delete Stimuli ${tabKey + 1} and all its primings completely?`)) {
-                      remove(tabKey);
-                      if (fields.length === 1) { // keep at least one tab
-                        add({ ...newStimuli });
-                      } else if (tabKey === fields.length - 1) { // if remove last tab, focus on prev tab
-                        setActiveStimuliTab(tabKey - 1);
-                      }
-                    }
-                  }}
-                >
-                  {
-                    fields.map(({ field }, index) => (
-                      <TabPane key={index} title={`Stimuli ${index + 1}`} style={{ padding: 15 }}>
-                        <StimuliImage field={field} />
-                      </TabPane>
-                    ))
-                  }
-                </Tabs>
-              )
-            }
-          </Form.List>
-        </Item>
+        <h3 style={{ textAlign: 'left' }}>Stimuli List</h3>
+        <StimuliPool />
+        <br />
 
-        <Item label={<h3>Trial timeline</h3>} field='timeline'>
+        <h3 style={{ textAlign: 'left' }}>Trial Timeline</h3>
+
+        <Item field='timeline'>
           <Timeline />
         </Item>
 
