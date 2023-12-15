@@ -66,12 +66,22 @@ function exportPrime(params: AmpParams) {
     stimuli.prime.map(primeItem => ({ ...primeItem, stimuli, poolIndex, roundIndex: 0 }))
   ))
   return primes.map(({ uid, name, includeUids, excludeUids, overrideCount, stimuli, poolIndex }) => {
-    const include = includeUids.map(
-      uid => findPrimeRepresentationFromUid(uid, stimuli)
-    ).filter(x => x !== undefined);
-    const exclude = excludeUids?.map(
-      uid => findPrimeRepresentationFromUid(uid, stimuli)
-    ).filter(x => x !== undefined);
+    const include = includeUids.map(uid => {
+      const nameOrIndex = findPrimeRepresentationFromUid(uid, stimuli);
+      if (typeof nameOrIndex === 'string') {
+        return `stimuli_${poolIndex + 1}_${nameOrIndex}`;
+      } else {
+        return nameOrIndex;
+      }
+    }).filter(x => x !== undefined);
+    const exclude = excludeUids?.map(uid => {
+      const nameOrIndex = findPrimeRepresentationFromUid(uid, stimuli);
+      if (typeof nameOrIndex === 'string') {
+        return `stimuli_${poolIndex + 1}_${nameOrIndex}`;
+      } else {
+        return nameOrIndex;
+      }
+    }).filter(x => x !== undefined);
     return {
       name: `stimuli_${poolIndex + 1}_${name}`,
       pool: poolIndex + 1,
@@ -81,6 +91,7 @@ function exportPrime(params: AmpParams) {
     }
   });
 }
+
 
 
 function exportOverrideCount(overrideCount: AmpStimuliPrimeItem['overrideCount']) {
