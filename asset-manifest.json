@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/amp-generator-beta/static/css/main.c6f94cf4.css",
-    "main.js": "/amp-generator-beta/static/js/main.f89dbb7d.js",
+    "main.js": "/amp-generator-beta/static/js/main.1522979b.js",
     "static/js/787.028f531c.chunk.js": "/amp-generator-beta/static/js/787.028f531c.chunk.js",
     "index.html": "/amp-generator-beta/index.html",
     "main.c6f94cf4.css.map": "/amp-generator-beta/static/css/main.c6f94cf4.css.map",
-    "main.f89dbb7d.js.map": "/amp-generator-beta/static/js/main.f89dbb7d.js.map",
+    "main.1522979b.js.map": "/amp-generator-beta/static/js/main.1522979b.js.map",
     "787.028f531c.chunk.js.map": "/amp-generator-beta/static/js/787.028f531c.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.c6f94cf4.css",
-    "static/js/main.f89dbb7d.js"
+    "static/js/main.1522979b.js"
   ]
 }
