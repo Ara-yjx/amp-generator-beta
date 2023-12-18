@@ -13,6 +13,7 @@ import { Timeline } from './timeline';
 import { TrialHtml } from './trialHtml';
 import { WarnTrialNumber } from './warnTrialNumber';
 import { LoadSave } from './loadSave';
+import { MultiRounds } from './multiRounds';
 
 const { Item } = Form;
 
@@ -67,17 +68,12 @@ export const MainForm: React.FC<{}> = ({ }) => {
 
         <span style={{ textAlign: 'left' }}>
           <Item label='Number of total trials' field='totalTrials' >
-            <InputNumber min={0} style={{ width: 200 }} />
+            <InputNumber min={0} style={{ width: 160 }} suffix='trials' />
           </Item>
           <Item shouldUpdate noStyle>
             {values => <WarnTrialNumber values={values} />}
           </Item>
-          <Item
-            label='Number of total rounds' field='totalRounds'
-            extra='To create the second-round trial block in Qualtrics, click the "Copy" button on the top-right of the "Run trial" block to replicate.'
-          >
-            <InputNumber min={1} style={{ width: 200 }} />
-          </Item>
+          <MultiRounds />
           <Item
             label='Accepted keyboard responses' field='acceptedKeys'
             extra='Letters (a~z, case insensitive), Number digits (0~9), Arrow keys, Space key.'
