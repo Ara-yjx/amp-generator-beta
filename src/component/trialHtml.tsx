@@ -8,6 +8,7 @@ import { StimuliThumbnail } from './stimuliThumbnail';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import throttle from 'lodash/throttle';
+import { IconToBottom, IconToLeft, IconToRight, IconToTop } from '@arco-design/web-react/icon';
 
 const { Item } = Form;
 const { Option } = Select;
@@ -132,10 +133,14 @@ export const TrialHtml: React.FC<ArcoFormItem<AmpTrialHtml>> = ({ value, onChang
       layout='vertical'
     >
       <Space size='large'>
-        <Item field='width' label='Image Width' style={{ width: 200 }}>
+        <Item field='width' label={
+          <>Image Width <IconToLeft /><IconToRight /></>
+        } style={{ width: 200 }}>
           <InputNumber suffix='px' />
         </Item>
-        <Item field='height' label='Image Height' style={{ width: 200 }}>
+        <Item field='height' label={
+          <>Image Height <IconToLeft style={{ transform: 'rotate(90deg)', transformOrigin: 'right' }} /><IconToRight style={{ transform: 'rotate(90deg)', transformOrigin: 'left' }} /></>
+        } style={{ width: 200 }}>
           <InputNumber suffix='px' />
         </Item>
       </Space>

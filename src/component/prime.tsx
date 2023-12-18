@@ -257,10 +257,12 @@ export const Prime: React.FC<{ field: string }> = ({ field }) => {
 
   return (
     <div style={{ textAlign: 'left' }}>
-      <Space>
-        <h3 style={{ display: 'flex' }}>Priming</h3>
-        <Item field={field + '.isEnablePriming'} triggerPropName='checked' noStyle><Switch /></Item>
-      </Space>
+      <h3>
+        <Space>
+          Priming
+          <Item field={field + '.isEnablePriming'} triggerPropName='checked' noStyle><Switch /></Item>
+        </Space>
+      </h3>
       {
         isEnablePrimingWatch ? <>
           <p>

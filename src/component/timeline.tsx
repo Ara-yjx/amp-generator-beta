@@ -69,7 +69,7 @@ export const Timeline: React.FC = () => {
           </Tag>
           <Space style={{ height: 30 }}>
             <Space style={{ width: 180 }}>
-              <Text type='secondary'>Delay before keyboard</Text>
+              <Text type='secondary'>Delay after keyboard</Text>
               <Tooltip content='This is the delay after receiving keyboard input and continuing to the next trial. ("Retention")' position='bottom'>
                 <IconQuestionCircle />
               </Tooltip>
