@@ -1,6 +1,6 @@
 import { Card, Form, InputNumber, Space, Tag, Tooltip, Typography } from '@arco-design/web-react';
 import { IconArrowFall, IconQuestionCircle } from '@arco-design/web-react/icon';
-import React, { useEffect } from 'react';
+import React, { Fragment, useEffect } from 'react';
 import type { AmpStimuli, AmpTimeline } from '../data/ampTypes';
 
 const { Item } = Form;
@@ -24,8 +24,8 @@ export const Timeline: React.FC = () => {
   return (
     <Card style={{ textAlign: 'start' }}>
       {
-        timelineWatch.durationsAndIntervals.map((_: any, index: any) => (
-          <>
+        timelineWatch.durationsAndIntervals.map((_: any, index: number) => (
+          <Fragment key={index}>
             <div style={{ margin: 10, display: 'flex', height: 30, justifyContent: 'flex-start', alignItems: 'center', gap: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', height: 30 }}><IconArrowFall /></div>
               <Tag bordered color='blue' size='medium' style={{ width: 100, height: 30, textAlign: 'center' }}>
@@ -44,7 +44,7 @@ export const Timeline: React.FC = () => {
                 <InputNumber suffix='ms' min={0} style={{ width: 200 }} />
               </Item>
             </div>
-          </>
+          </Fragment>
         ))
       }
       <div style={{ margin: 10, display: 'flex', height: 30 * 3 + 10 * 2, justifyContent: 'flex-start', alignItems: 'center', gap: 10 }}>

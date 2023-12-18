@@ -55,7 +55,6 @@ export const StimuliPool: React.FC<{}> = ({ }) => {
             onChange={tabKeyStr => setActiveStimuliTab(parseInt(tabKeyStr))}
             type='card-gutter'
             editable
-            react-dnd
             onAddTab={() => { add({ ...newStimuli }); setActiveStimuliTab(fields.length); }}
             onDeleteTab={tabKeyStr => {
               const tabKey = parseInt(tabKeyStr);
