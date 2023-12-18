@@ -1,19 +1,18 @@
-
 import { Button, Collapse, Form, InputNumber, type FormInstance } from '@arco-design/web-react';
 import throttle from 'lodash/throttle';
 import React, { useEffect, useRef, useState } from 'react';
 import type { AmpParams } from '../data/ampTypes';
-import { defaultAmpParams } from '../data/defaultAmpParams';
+import { emptyAmpParams } from '../data/emptyAmpParams';
 import { generateBlob, generateQsfString } from '../data/generate';
 import { useBlobUrl } from '../hooks/useBlobUrl';
 import { AcceptedKeys } from './acceptedKeys';
 import { AutoProceedTimeout } from './autoProceedTimeout';
+import { LoadSave } from './loadSave';
+import { MultiRounds } from './multiRounds';
 import { StimuliPool } from './stimuliPool';
 import { Timeline } from './timeline';
 import { TrialHtml } from './trialHtml';
 import { WarnTrialNumber } from './warnTrialNumber';
-import { LoadSave } from './loadSave';
-import { MultiRounds } from './multiRounds';
 
 const { Item } = Form;
 
@@ -52,7 +51,7 @@ export const MainForm: React.FC<{}> = ({ }) => {
       <Form
         layout='vertical'
         ref={formRef}
-        initialValues={defaultAmpParams}
+        initialValues={emptyAmpParams}
         onValuesChange={onValuesChange}
       >
         <LoadSave />
