@@ -36,11 +36,15 @@ const PrimeOverride: React.FC<{ field: string }> = ({ field }) => {
       }
     }
   }
-  // When totalRounds changes, remove extra
+  // When totalRounds changes, remove extra (if > 1) or switch to 'no' (if = 1)
   useEffect(() => {
     if (type === 'var') {
-      const alignedOverrideCount = [...(value as (number | undefined)[]), ...Array(totalRounds).fill(undefined)].slice(0, totalRounds);
-      form.setFieldValue(field, alignedOverrideCount);
+      if (totalRounds === 1) {
+        form.setFieldValue(field, null);
+      } else {
+        const alignedOverrideCount = [...(value as (number | undefined)[]), ...Array(totalRounds).fill(undefined)].slice(0, totalRounds);
+        form.setFieldValue(field, alignedOverrideCount);
+      }
     }
   }, [totalRounds]);
 
@@ -55,7 +59,7 @@ const PrimeOverride: React.FC<{ field: string }> = ({ field }) => {
                 options={[
                   { label: 'No override', value: 'no' },
                   { label: 'Same count for all rounds', value: 'const' },
-                  { label: 'Different count for each round', value: 'var' },
+                  { label: 'Different count for each round', value: 'var', disabled: totalRounds === 1 },
                 ]}
                 value={type}
                 onChange={onTypeChange}
@@ -105,10 +109,9 @@ const PrimeItemOptions = (stimuliItems: AmpStimuliItem[], primeItems: AmpStimuli
   <OptGroup label='Stimuli items' key='stimuli'>
     {
       stimuliItems.map(({ uid, type, content }, index) => (
-        hiddenUids.includes(uid) ? null :
-          <Option value={uid} key={uid}>
-            <StimuliThumbnail indexDisplay={index + 1} type={type} content={content} />
-          </Option>
+        <Option value={uid} key={uid} disabled={hiddenUids.includes(uid)}>
+          <StimuliThumbnail indexDisplay={index + 1} type={type} content={content} />
+        </Option>
       ))
     }
   </OptGroup>
@@ -137,9 +140,10 @@ const PrimeItem: React.FC<PrimeItemProps> = ({ field, index, remove, stimuliFiel
   const { form } = Form.useFormContext();
   const itemsWatch = Form.useWatch(stimuliField + '.items', form) as AmpStimuli['items'];
   const primeWatch = Form.useWatch(stimuliField + '.prime', form) as AmpStimuli['prime'];
-  const primeItemWatch = Form.useWatch(field, form) as AmpStimuliPrimeItem;
-  const includeUidsWatch = primeItemWatch.includeUids;
-  const nameWatch = primeItemWatch.name;
+  const primeItemWatch = Form.useWatch(field, form) as AmpStimuliPrimeItem | undefined; // undef in the immediate re-render when prime is removed
+  const includeUidsWatch = primeItemWatch?.includeUids ?? [];
+  const excludeUidsWatch = primeItemWatch?.excludeUids ?? [];
+  const nameWatch = primeItemWatch?.name ?? '';
   // const includeUidsWatch = Form.useWatch(field + '.includeUids', form) as number[];
   // const nameWatch = Form.useWatch(field + '.name', form) as string;
 
@@ -171,9 +175,9 @@ const PrimeItem: React.FC<PrimeItemProps> = ({ field, index, remove, stimuliFiel
   const validateNameUnique = (value: string | undefined) => !primeWatch.some(({ name }) => name === value);
 
   const { steppedPossibilities } = useContext(PrimeValidationContext);
-  const validatePrimeItemResult = validatePrimeItem(steppedPossibilities, poolIndex, primeItemWatch);
+  const validatePrimeItemResult = primeItemWatch && validatePrimeItem(steppedPossibilities, poolIndex, primeItemWatch);
   let validatePrimeItemAlert: string | null = null;
-  if (validatePrimeItemResult.length > 0) {
+  if (validatePrimeItemResult && validatePrimeItemResult.length > 0) {
     validatePrimeItemAlert = 'These included and excluded item will cause failure due to nothing-to-select in the case(s) of: \n'
     const stimuli = form.getFieldValue(stimuliField);
     const primeResults = [...validatePrimeItemResult[0].primeResults.entries()];
@@ -233,9 +237,9 @@ const PrimeItem: React.FC<PrimeItemProps> = ({ field, index, remove, stimuliFiel
           >
             <Select
               mode='multiple' style={{ width: 320 }} renderFormat={renderFormat}
-              placeholder='All stimuli items'
+              placeholder='All stimuli items are included'
             >
-              {PrimeItemOptions(itemsWatch, primeWatch.slice(0, index))}
+              {PrimeItemOptions(itemsWatch, primeWatch.slice(0, index), excludeUidsWatch)}
             </Select>
           </Item>
         </Col>
@@ -272,7 +276,7 @@ const PrimeItem: React.FC<PrimeItemProps> = ({ field, index, remove, stimuliFiel
         validatePrimeItemAlert && (
           <Alert
             type='warning'
-            content={<div style={{whiteSpace: 'pre-wrap'}}>{validatePrimeItemAlert}</div>}
+            content={<div style={{ whiteSpace: 'pre-wrap' }}>{validatePrimeItemAlert}</div>}
           />
         )
       }
