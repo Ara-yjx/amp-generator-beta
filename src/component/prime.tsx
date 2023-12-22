@@ -1,11 +1,13 @@
-import { Button, Divider, Form, Grid, Input, InputNumber, Select, Space, Switch, Tooltip } from '@arco-design/web-react';
+import { Alert, Button, Divider, Form, Grid, Input, InputNumber, Select, Space, Switch, Tooltip } from '@arco-design/web-react';
 import { IconDelete, IconPlus, IconQuestionCircle } from '@arco-design/web-react/icon';
-import React, { useEffect } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { StimuliThumbnail } from './stimuliThumbnail';
 import type { AmpStimuli, AmpStimuliItem, AmpStimuliPrimeItem } from '../data/ampTypes';
 import { uid } from '../data/uid';
 import { findPrimeRepresentationFromUid } from '../util/util';
 import range from 'lodash/range';
+import { PrimeValidationContext } from './PrimeValidationContext';
+import { validatePrimeItem } from '../data/primeValidation';
 
 const { Item, List } = Form;
 const { Row, Col } = Grid;
@@ -128,14 +130,18 @@ interface PrimeItemProps {
   index: number,
   remove: () => void,
   stimuliField: string,
+  poolIndex: number,
   isEnablePriming: boolean,
 }
-const PrimeItem: React.FC<PrimeItemProps> = ({ field, index, remove, stimuliField, isEnablePriming }) => {
+const PrimeItem: React.FC<PrimeItemProps> = ({ field, index, remove, stimuliField, poolIndex, isEnablePriming }) => {
   const { form } = Form.useFormContext();
   const itemsWatch = Form.useWatch(stimuliField + '.items', form) as AmpStimuli['items'];
   const primeWatch = Form.useWatch(stimuliField + '.prime', form) as AmpStimuli['prime'];
-  const includeUidsWatch = Form.useWatch(field + '.includeUids', form) as number[];
-  const nameWatch = Form.useWatch(field + '.name', form) as string;
+  const primeItemWatch = Form.useWatch(field, form) as AmpStimuliPrimeItem;
+  const includeUidsWatch = primeItemWatch.includeUids;
+  const nameWatch = primeItemWatch.name;
+  // const includeUidsWatch = Form.useWatch(field + '.includeUids', form) as number[];
+  // const nameWatch = Form.useWatch(field + '.name', form) as string;
 
   // When option changes, remove invalid options
   const optionUids = [...itemsWatch, ...primeWatch].map(({ uid }) => uid);
@@ -164,6 +170,25 @@ const PrimeItem: React.FC<PrimeItemProps> = ({ field, index, remove, stimuliFiel
   // Same value should not exist. (primeWatch is the value in prev iter, before onChange actually alters form value.)
   const validateNameUnique = (value: string | undefined) => !primeWatch.some(({ name }) => name === value);
 
+  const { steppedPossibilities } = useContext(PrimeValidationContext);
+  const validatePrimeItemResult = validatePrimeItem(steppedPossibilities, poolIndex, primeItemWatch);
+  let validatePrimeItemAlert: string | null = null;
+  if (validatePrimeItemResult.length > 0) {
+    validatePrimeItemAlert = 'These included and excluded item will cause failure due to nothing-to-select in the case(s) of: \n'
+    const stimuli = form.getFieldValue(stimuliField);
+    const primeResults = [...validatePrimeItemResult[0].primeResults.entries()];
+    const primeResultsStr = primeResults.map(([uid, primeResult]) => {
+      const primeName = primeWatch.find(x => x.uid === uid)?.name;
+      const primeSelectionUid = primeResult.type === 'prime' ? primeResult.primeUid : primeResult.uid;
+      const primeSelectionTypeStr = primeResult.type === 'stimuli' ? 'stimuli-item' : primeResult.type;
+      const primeSelectionStr = primeSelectionUid !== null ? findPrimeRepresentationFromUid(primeSelectionUid, stimuli) : 'nothing-to-select';
+      return `${primeName}="${primeSelectionTypeStr}-${primeSelectionStr}"`;
+    }).join(', ');
+    validatePrimeItemAlert += primeResultsStr;
+    if (validatePrimeItemResult.length > 1) {
+      validatePrimeItemAlert += `and ${validatePrimeItemResult.length - 1} other cases.`
+    }
+  }
   return (
     <>
       <Row gutter={24} style={{ width: '100%', marginTop: 10 }}>
@@ -243,13 +268,21 @@ const PrimeItem: React.FC<PrimeItemProps> = ({ field, index, remove, stimuliFiel
           </Item>
         </Col>
       </Row>
+      {
+        validatePrimeItemAlert && (
+          <Alert
+            type='warning'
+            content={<div style={{whiteSpace: 'pre-wrap'}}>{validatePrimeItemAlert}</div>}
+          />
+        )
+      }
       <PrimeOverride field={field + '.overrideCount'} />
     </>
   );
 };
 
 
-export const Prime: React.FC<{ field: string }> = ({ field }) => {
+export const Prime: React.FC<{ field: string, poolIndex: number }> = ({ field, poolIndex }) => {
   const { form } = Form.useFormContext();
   const isEnablePrimingWatch = Form.useWatch(field + '.isEnablePriming', form) as boolean;
   const stimuliField = field;
@@ -276,7 +309,7 @@ export const Prime: React.FC<{ field: string }> = ({ field }) => {
                 {fields.map(({ key, field }, index) => (
                   <PrimeItem
                     field={field} index={index} remove={() => remove(index)} key={key}
-                    stimuliField={stimuliField} isEnablePriming={isEnablePrimingWatch}
+                    stimuliField={stimuliField} isEnablePriming={isEnablePrimingWatch} poolIndex={poolIndex}
                   />
                 ))}
                 <Button shape='round' onClick={() => add(newPrimeItem(fields.length, totalRoundsWatch))} type='outline'>

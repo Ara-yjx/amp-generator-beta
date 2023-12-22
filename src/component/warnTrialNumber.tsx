@@ -1,33 +1,36 @@
-import React from 'react';
+import { Alert } from '@arco-design/web-react';
+import React, { useContext } from 'react';
 import { AmpParams } from '../data/ampTypes';
-import { Typography } from '@arco-design/web-react';
-import sumBy from 'lodash/sumBy';
+import { PrimeValidationContext } from './PrimeValidationContext';
 
 export const WarnTrialNumber: React.FC<{ values: AmpParams }> = ({ values }) => {
 
-  const stimuliImageCounts = values.stimuli.map((stimuli, stimuliIndex) => (
-    [
-      stimuliIndex,
-      sumBy(stimuli.items, i => i.count),
-    ]
-  ));
+  const { possibleTotalItems } = useContext(PrimeValidationContext);
+  const { totalTrials, totalRounds } = values;
+  const invalidPoolRounds = possibleTotalItems.flatMap((poolPossibleTotals, poolIndex) => {
+    return poolPossibleTotals.flatMap((possibleTotals, roundIndex) => (
+      possibleTotals[0] < totalTrials ? {
+        poolIndex, roundIndex, possibleTotals,
+      } : []
+    ))
+  });
 
-  const mismatchStimuli = stimuliImageCounts.filter(([stimuliIndex, count]) => count !== values.totalTrials)
-
-  if (!mismatchStimuli.length) return null;
   return (
     <div style={{ transform: 'translateY(-16px)' }}>
-      <Typography.Text type='warning'>
-        {'The number of trials does match the total image count of stimuli '}
-        {mismatchStimuli.map(([stimuliIndex]) => stimuliIndex + 1).join(',')}
-        .<br />
-        {
-          mismatchStimuli.map(([stimuliIndex, count]) => (
-            <span key={stimuliIndex}>- Total image count of simuli {stimuliIndex + 1}: {count} <br/></span>
-          ))
-        }
-      </Typography.Text>
-
+      {
+        invalidPoolRounds.map(({ poolIndex, roundIndex, possibleTotals }) => (
+          <Alert type='warning' content={
+            <>
+              {`The Number of Total Trials is larger than the`}
+              {possibleTotals.length > 1 && ` Minimum`}
+              {` Total Items Count of stimuli ${poolIndex + 1}`}
+              {totalRounds > 1 && ` round ${roundIndex + 1}`}
+              {`, which is `}
+              <b>{possibleTotals[0]}</b>
+            </>
+          } />
+        ))
+      }
     </div>
   )
 }

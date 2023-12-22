@@ -10,7 +10,8 @@ export type AmpStimuliPrimeItem = {
   name: string;
   includeUids: number[];
   excludeUids: number[];
-  overrideCount: (number|undefined) | (number|undefined)[] | null; // same InputNumber might set value to undefined
+  // undefined means no-override, null means selection box is explicit no-override
+  overrideCount: (number|undefined) | (number|undefined)[] | null; 
 };
 
 export interface AmpStimuli {

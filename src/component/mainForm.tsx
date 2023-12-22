@@ -4,7 +4,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { AmpParams } from '../data/ampTypes';
 import { emptyAmpParams } from '../data/emptyAmpParams';
 import { generateBlob, generateQsfString } from '../data/generate';
+import { PrimeValidation, getPrimeValidation, initialPrimeValidation } from '../data/primeValidation';
 import { useBlobUrl } from '../hooks/useBlobUrl';
+import { PrimeValidationContext } from './PrimeValidationContext';
 import { AcceptedKeys } from './acceptedKeys';
 import { AutoProceedTimeout } from './autoProceedTimeout';
 import { LoadSave } from './loadSave';
@@ -42,12 +44,17 @@ export const MainForm: React.FC<{}> = ({ }) => {
   console.log('MainForm')
   const formRef = useRef<FormInstance<AmpParams>>(null);
 
+  const [primeValidation, setPrimeValidation] = useState<PrimeValidation>(initialPrimeValidation);
+
   const onValuesChange = (changeValue: Partial<AmpParams>, values: Partial<AmpParams>) => {
     console.log('onValuesChange: ', changeValue, values);
+    if (values.stimuli && values.totalRounds) {
+      setPrimeValidation(getPrimeValidation(values.stimuli, values.totalRounds));
+    }
   };
 
   return (
-    <>
+    <PrimeValidationContext.Provider value={primeValidation}>
       <Form
         layout='vertical'
         ref={formRef}
@@ -100,6 +107,6 @@ export const MainForm: React.FC<{}> = ({ }) => {
           }
         </Item>
       </Form >
-    </>
+    </PrimeValidationContext.Provider>
   )
 };

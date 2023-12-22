@@ -1,11 +1,11 @@
 import { Button, Divider, Form, Grid, Image, Input, InputNumber, Select, Space, Switch, Typography } from '@arco-design/web-react';
-import { IconArrowDown, IconArrowUp, IconDelete, IconPlus } from '@arco-design/web-react/icon';
-import sumBy from 'lodash/sumBy';
-import React from 'react';
-import { Prime } from './prime';
-import { uid } from '../data/uid';
-import { AmpStimuliItem } from '../data/ampTypes';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
+import { IconArrowDown, IconArrowUp, IconDelete, IconPlus } from '@arco-design/web-react/icon';
+import React, { useContext } from 'react';
+import { AmpStimuli, AmpStimuliItem } from '../data/ampTypes';
+import { uid } from '../data/uid';
+import { PrimeValidationContext } from './PrimeValidationContext';
+import { Prime } from './prime';
 
 
 const { Item, List } = Form;
@@ -89,7 +89,34 @@ const ImageItem: React.FC<{
   )
 };
 
-export const StimuliImage: React.FC<{ field: string }> = ({ field }) => {
+
+const ItemsCountWithPrime: React.FC<{ field: string, index: number }> = ({ field, index }) => {
+  const { form } = Form.useFormContext();
+  const stimuli = Form.useWatch(field, form) as AmpStimuli;
+  const totalRounds = Form.useWatch('totalRounds', form) as number;
+  // const totalRounds = Form.useWatch('totalRounds', form) as number;
+  const { possibleTotalItems } = useContext(PrimeValidationContext);
+  const poolPossibleTotalItems = possibleTotalItems[index];
+  return (
+    <div style={{ textAlign: 'left' }}>
+      <Text type='secondary'>
+        {stimuli.isEnablePriming ? 'Possible total items count: ' : 'Total items count: '}
+        {
+          totalRounds === 1 ? (
+            poolPossibleTotalItems[0].join(', ')
+          ) : (
+            poolPossibleTotalItems.map((counts, roundIndex) => (
+              <li>{`Round ${roundIndex + 1}: ${counts.join(', ')}`}</li>
+            ))
+          )
+        }
+      </Text>
+    </div>
+  )
+};
+
+
+export const StimuliImage: React.FC<{ field: string, index: number }> = ({ field, index }) => {
   const { form } = Form.useFormContext();
   const totalItems = useWatch(field + '.items', form) as AmpStimuliItem[];
 
@@ -132,9 +159,6 @@ export const StimuliImage: React.FC<{ field: string }> = ({ field }) => {
                     <Button shape='round' onClick={onClickAdd} type='outline'>
                       <IconPlus />Add Item
                     </Button>
-                    <Text type='secondary'>
-                      Total Items Count: {sumBy(totalItems, i => i.count)}
-                    </Text>
                   </Space>
                 </Row>
               </>
@@ -147,7 +171,9 @@ export const StimuliImage: React.FC<{ field: string }> = ({ field }) => {
         <InputShuffle />
       </Item>
       <Divider />
-      <Prime field={field} />
+      <Prime field={field} poolIndex={index} />
+      <Divider />
+      <ItemsCountWithPrime field={field} index={index} />
     </>
   );
 }

@@ -78,7 +78,7 @@ export const StimuliPool: React.FC<{}> = ({ }) => {
                     Stimuli {index + 1}
                   </DraggableTitle>
                 }>
-                  <StimuliImage field={field} />
+                  <StimuliImage field={field} index={index} />
                 </TabPane>
               ))
             }
