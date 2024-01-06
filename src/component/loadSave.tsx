@@ -5,6 +5,7 @@ import React, { useRef } from 'react';
 import { defaultAmpParams } from '../data/defaultAmpParams';
 import { generateBlob } from '../data/generate';
 import { useBlobUrl } from '../hooks/useBlobUrl';
+import { transformOldValues } from '../data/backwardCompatibility';
 
 const { Item } = Form;
 
@@ -36,7 +37,9 @@ export const LoadSave = () => {
       try {
         const content = e.target?.result as string | undefined;
         if (content) {
-          form.setFieldsValue(JSON.parse(content).values);
+          const values = JSON.parse(content).values;
+          transformOldValues(values);
+          form.setFieldsValue(values);
           Message.success('Loaded successfully. 🎉');
         } else {
           throw 'Cannot read file content';

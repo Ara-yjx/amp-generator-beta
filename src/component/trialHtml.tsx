@@ -1,20 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Form, Input, InputNumber, Radio, Select, Space, Typography } from '@arco-design/web-react';
+import { Button, Checkbox, Form, Input, InputNumber, Popover, Radio, Select, Space, Typography } from '@arco-design/web-react';
 import type { AmpParams, AmpStimuliItem, AmpTrialHtml, AmpTrialHtmlParams } from '../data/ampTypes';
-import { defaultAmpParams } from '../data/defaultAmpParams';
+import { emptyAmpParams } from '../data/emptyAmpParams';
 import { renderTrialHtml } from '../data/renderTrialHtml';
 import type { ArcoFormItem } from '../util/arco';
 import { StimuliThumbnail } from './stimuliThumbnail';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import throttle from 'lodash/throttle';
-import { IconToBottom, IconToLeft, IconToRight, IconToTop } from '@arco-design/web-react/icon';
+import { IconClose, IconToBottom, IconToLeft, IconToRight, IconToTop } from '@arco-design/web-react/icon';
+import { CompactPicker } from 'react-color';
 
 const { Item } = Form;
 const { Option } = Select;
 const { Text } = Typography;
 
-const defaultParams = defaultAmpParams.trialHtml as AmpTrialHtmlParams;
+const defaultParams = emptyAmpParams.trialHtml as AmpTrialHtmlParams;
 const defaultHtml = renderTrialHtml(defaultParams);
 
 // const QUALTRICS_DEFAULT_SKIN = {
@@ -47,7 +48,8 @@ body {
 `;
 
 
-const setIframeContent = throttle((
+// const setIframeContent = throttle((
+const setIframeContent = (
   previewRef: React.MutableRefObject<HTMLIFrameElement | null>,
   previewInnerHtml: string,
   previewStimuliItem: AmpStimuliItem | undefined,
@@ -85,7 +87,33 @@ const setIframeContent = throttle((
       }
     }
   }
-}, 500, { leading: true, trailing: true });
+}
+// }, 500, { leading: true, trailing: true });
+
+
+export const TextColorPicker: React.FC<ArcoFormItem<AmpTrialHtmlParams['textColor']>> = ({ value, onChange }) => (
+  <Space size='mini'>
+    <Text type='secondary'>Font color</Text>
+    <Popover
+      trigger='click'
+      position='right'
+      content={
+        <Space direction='vertical'>
+          <CompactPicker color={value ?? '#000'} onChange={v => onChange?.(v.hex)} />
+          <Button size='mini' type='secondary' icon={<IconClose />} onClick={() => onChange?.(undefined)}>
+            Use default color
+          </Button>
+        </Space>
+      }
+    >
+      {
+        value === undefined ?
+          <Button size='mini' type='secondary'>(default)</Button> :
+          <Button size='mini' style={{ backgroundColor: value, boxShadow: 'grey 0 0 2px' }}></Button>
+      }
+    </Popover>
+  </Space>
+);
 
 
 export const TrialHtml: React.FC<ArcoFormItem<AmpTrialHtml>> = ({ value, onChange }) => {
@@ -113,18 +141,25 @@ export const TrialHtml: React.FC<ArcoFormItem<AmpTrialHtml>> = ({ value, onChang
 
   // Preview
 
-  const [previewStimuliUid, setPreviewStimuliItemUid] = useState<number>();
+  const [previewStimuliItemUid, setPreviewStimuliItemUid] = useState<number>();
   const { form } = useFormContext();
   const stimuliWatch = useWatch('stimuli', form) as AmpParams['stimuli'];
   const allItems = stimuliWatch.flatMap((stimuli, stimuliIndex) => (
     stimuli.items.map((item, itemIndex) => ({ ...item, indexDisplay: `${stimuliIndex + 1}-${itemIndex + 1}` }))
   ));
-  const previewStimuliItem = allItems.find(item => item.uid === previewStimuliUid);
+  const previewStimuliItem = allItems.find(item => item.uid === previewStimuliItemUid);
 
   const previewRef = useRef<HTMLIFrameElement>(null);
   const previewInnerHtml = isUsingParams ? renderTrialHtml(params) : bulk;
 
   useEffect(() => setIframeContent(previewRef, previewInnerHtml, previewStimuliItem, isUsingParams));
+
+  // If stimuli updates and the previewStimuliItem is deleted, reset previewStimuliItem
+  useEffect(() => {
+    if (!allItems.find(x => x.uid === previewStimuliItemUid)) {
+      setPreviewStimuliItemUid(undefined);
+    }
+  });
 
   const paramsComponent = (
     <Form
@@ -147,7 +182,23 @@ export const TrialHtml: React.FC<ArcoFormItem<AmpTrialHtml>> = ({ value, onChang
       <Item field='marginTop' label='Blank space at page top' layout='vertical' style={{ width: 200 }}>
         <InputNumber suffix='px' />
       </Item>
-      <Item field='text' label='Instruction Text' layout='vertical'>
+      <Item label='Text stimuli style' layout='vertical'>
+        <Space size={50} style={{ width: '100%' }} >
+          <Space size='mini'>
+            <Text type='secondary'>Font size</Text>
+            <Item field='textFontSize' noStyle layout='inline'>
+              <InputNumber suffix='px' min={1} style={{ width: 100 }} />
+            </Item>
+          </Space>
+          <Item field='textIsBold' noStyle triggerPropName='checked'>
+            <Checkbox><Text type='secondary'>Bold</Text></Checkbox>
+          </Item>
+          <Item field='textColor' noStyle>
+            <TextColorPicker />
+          </Item>
+        </Space>
+      </Item>
+      <Item field='instruction' label='Instruction Text' layout='vertical'>
         <Input.TextArea style={{ minHeight: '6em' }} />
       </Item>
     </Form>
@@ -198,6 +249,7 @@ export const TrialHtml: React.FC<ArcoFormItem<AmpTrialHtml>> = ({ value, onChang
                   <Select
                     placeholder='Select a stimuli item to preview'
                     style={{ width: 300, height: 32 }}
+                    value={previewStimuliItemUid}
                     onChange={setPreviewStimuliItemUid}
                     allowClear
                   >

@@ -71,6 +71,9 @@ export const defaultAmpParams: AmpParams = {
     width: 300,
     height: 300,
     marginTop: 50,
-    text: 'd key = less pleasant        :        k key = more pleasant',
+    instruction: 'd key = less pleasant        :        k key = more pleasant',
+    textFontSize: 28,
+    textIsBold: true,
+    textColor: '#000000',
   }
 };

@@ -25,7 +25,12 @@ export interface AmpTrialHtmlParams {
   width: number;
   height: number;
   marginTop: number;
-  text: string;
+  instruction: string;
+  textFontSize: number;
+  textIsBold: boolean;
+  textColor?: string;
+  /** @deprecated */
+  text?: string; // use instruction
 }
 export type AmpTrialHtml = AmpTrialHtmlParams | string;
 
