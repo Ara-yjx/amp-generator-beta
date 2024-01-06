@@ -14,7 +14,7 @@ export interface PrimeValidation {
 
 export function getPrimeValidation(stimuli: AmpStimuli[], totalRounds: number): PrimeValidation {
   const steppedPossibilities = stimuli.map(s => range(totalRounds).map(round => getAllPossibilitiesForRound(s, round))); // [poolIndex][round][prime]
-  const possibilities = steppedPossibilities.map(poolSpo => poolSpo.map(roundSpo => roundSpo.at(-1)![1]));
+  const possibilities = steppedPossibilities.map(poolSpo => poolSpo.map(roundSpo => roundSpo[roundSpo.length - 1][1]));
   const possibleTotalItems = possibilities.map(poolPossibilities => poolPossibilities.map(getPossibilityTotalItemsClean));
   return { steppedPossibilities, possibilities, possibleTotalItems }
 }
@@ -39,7 +39,7 @@ export function getAllPossibilitiesForRound(stimuli: AmpStimuli, round: number):
   if (!stimuli.isEnablePriming) return possibilities; // BREAK to save some computations and avoid bugs
 
   for (const prime of stimuli.prime) {
-    const possibilitiesOfPrime = possibilities.at(-1)![1].flatMap(
+    const possibilitiesOfPrime = possibilities[possibilities.length - 1][1].flatMap(
       po => getPossibilitiesOneStep(po, prime, round)
     );
     possibilities.push([prime.uid, possibilitiesOfPrime]);
