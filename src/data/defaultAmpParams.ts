@@ -1,3 +1,4 @@
+import range from 'lodash/range';
 import { AmpParams } from './ampTypes';
 import { uid } from './uid';
 
@@ -6,14 +7,18 @@ const uidRef = {
   'stimuli[0].prime[0]': uid(),
 } as const;
 
+// Change this to process.env.PUBLIC_URL to test with resources before deploying them
+const publicUrl = 'https://ara-yjx.github.io/amp-generator-beta';
+// const publicUrl = process.env.PUBLIC_URL;
+
 export const defaultAmpParams: AmpParams = {
   stimuli: [
     {
       items: [
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_zANlu6B1UFbcflF', count: 5, uid: uidRef['stimuli[0].items[0]'] },
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_vQzlOEGBXbnuhSn', count: 5, uid: uid() },
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_XJw0GZWrbUlfyOI', count: 5, uid: uid() },
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_E72k4fxbh7Zxw7e', count: 5, uid: uid() },
+        { type: 'image', content: `${publicUrl}/sample-images/1-01.jpg`, count: 5, uid: uidRef['stimuli[0].items[0]'] },
+        { type: 'image', content: `${publicUrl}/sample-images/1-02.jpg`, count: 5, uid: uid() },
+        { type: 'image', content: `${publicUrl}/sample-images/1-03.jpg`, count: 5, uid: uid() },
+        { type: 'image', content: `${publicUrl}/sample-images/1-04.jpg`, count: 5, uid: uid() },
       ],
       shuffle: 2,
       isEnablePriming: true,
@@ -23,35 +28,16 @@ export const defaultAmpParams: AmpParams = {
       ],
     },
     {
-      items: [
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_3jUT9yhSx8mI5wy', count: 1, uid: uid() },
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_25WNyckTIXiv4bQ', count: 1, uid: uid() },
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_9HRiGBCgN50xZI2', count: 1, uid: uid() },
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_bqP6msi7K3SPhPM', count: 1, uid: uid() },
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_8q8uD7MVCDyWdzo', count: 1, uid: uid() },
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_5jy9Uo2ZV2BaPki', count: 1, uid: uid() },
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_3KIqzYFkmmCv3cq', count: 1, uid: uid() },
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_2lYARTfPvNPiwF8', count: 1, uid: uid() },
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_8CagBSGuqa3103k', count: 1, uid: uid() },
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_eXWu2juJ3IFpiia', count: 1, uid: uid() },
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_9t0w55KTUPY9uK2', count: 1, uid: uid() },
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_5jo1Wq1EpYoas3s', count: 1, uid: uid() },
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_81blvWQpZDlael8', count: 1, uid: uid() },
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_0U7PxswipvQuNrU', count: 1, uid: uid() },
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_2gZtO50zqBd39B4', count: 1, uid: uid() },
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_2aQYOy04gO7kx4G', count: 1, uid: uid() },
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_9yt21bg0o84Tt9c', count: 1, uid: uid() },
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_03srJoTDehJb2V8', count: 1, uid: uid() },
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_4YIfcyT8d1xghlI', count: 1, uid: uid() },
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/ControlPanel/Graphic.php?IM=IM_8qUdZ0CwAXeCKxM', count: 1, uid: uid() },
-      ],
+      items: range(20).map(i => (
+        { type: 'image', content: `${publicUrl}/sample-images/2-${('0' + String(i + 1)).slice(0, 2)}.jpg`, count: 1, uid: uid() } as const
+      )),
       shuffle: true,
       isEnablePriming: false,
       prime: [],
     },
     {
       items: [
-        { type: 'image', content: 'https://upenn.co1.qualtrics.com/CP/Graphic.php?IM=IM_bQlal1oB5kyb60m', count: 20, uid: uid() },
+        { type: 'image', content: `${publicUrl}/sample-images/3-01.jpg`, count: 20, uid: uid() },
       ],
       shuffle: false,
       isEnablePriming: false,
