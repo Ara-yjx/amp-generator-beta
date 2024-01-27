@@ -1,7 +1,7 @@
 import type { AmpParams, AmpStimuli, AmpStimuliPrimeItem } from './ampTypes';
 import qsfTemplate from '../assets/qsfTemplate.json';
 import { renderTrialHtml } from './renderTrialHtml';
-import { findPrimeRepresentationFromUid } from '../util/util';
+import { type UidDetail, getUidDetail } from '../util/util';
 
 interface EmbeddedDataTemplate {
   Description: string;
@@ -63,27 +63,25 @@ export function generateBlob(str: string) {
 
 function exportPrime(params: AmpParams) {
   const primes = params.stimuli.flatMap((stimuli, poolIndex) => (
-    stimuli.prime.map(primeItem => ({ ...primeItem, stimuli, poolIndex, roundIndex: 0 }))
-  ))
+    stimuli.prime.map(primeItem => ({ ...primeItem, stimuli, poolIndex }))
+  ));
   return primes.map(({ uid, name, includeUids, excludeUids, overrideCount, stimuli, poolIndex }) => {
-    const include = includeUids.map(uid => {
-      const nameOrIndex = findPrimeRepresentationFromUid(uid, stimuli);
-      if (typeof nameOrIndex === 'string') {
-        return `stimuli_${poolIndex + 1}_${nameOrIndex}`;
-      } else {
-        return nameOrIndex;
+    /** prime export name or stimuli item index (1-based) */
+    function getPrimeRefForExport(uidDetail?: UidDetail) {
+      if (uidDetail?.type === 'prime') {
+        return getPrimeExportName(poolIndex, uidDetail.ref.name);
+      } else if (uidDetail?.type === 'stimuli') {
+        return uidDetail.index + 1;
       }
-    }).filter(x => x !== undefined);
-    const exclude = excludeUids?.map(uid => {
-      const nameOrIndex = findPrimeRepresentationFromUid(uid, stimuli);
-      if (typeof nameOrIndex === 'string') {
-        return `stimuli_${poolIndex + 1}_${nameOrIndex}`;
-      } else {
-        return nameOrIndex;
-      }
-    }).filter(x => x !== undefined);
+    }
+    const include = includeUids.flatMap(uid => (
+      getPrimeRefForExport(getUidDetail(uid, stimuli)) ?? []
+    ));
+    const exclude = excludeUids.flatMap(uid => (
+      getPrimeRefForExport(getUidDetail(uid, stimuli)) ?? []
+    ));
     return {
-      name: `stimuli_${poolIndex + 1}_${name}`,
+      name: getPrimeExportName(poolIndex, name),
       pool: poolIndex + 1,
       include: include?.length ? include : undefined,
       exclude: exclude?.length ? exclude : undefined,
@@ -92,7 +90,9 @@ function exportPrime(params: AmpParams) {
   });
 }
 
-
+function getPrimeExportName(poolIndex: number, name: string) {
+  return `stimuli_${poolIndex + 1}_${name}`;
+}
 
 function exportOverrideCount(overrideCount: AmpStimuliPrimeItem['overrideCount']) {
   if (Array.isArray(overrideCount)) {
