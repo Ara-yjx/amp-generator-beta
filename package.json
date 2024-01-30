@@ -2,7 +2,7 @@
   "name": "amp-webapp",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://ara-yjx.github.io/amp-generator-beta",
+  "homepage": "https://spbuilder-team.github.io/",
   "dependencies": {
     "@arco-design/web-react": "^2.50.2",
     "@testing-library/jest-dom": "^5.17.0",

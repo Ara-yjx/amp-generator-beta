@@ -7,9 +7,12 @@ const uidRef = {
   'stimuli[0].prime[0]': uid(),
 } as const;
 
-// Change this to process.env.PUBLIC_URL to test with resources before deploying them
-const publicUrl = 'https://ara-yjx.github.io/amp-generator-beta';
-// const publicUrl = process.env.PUBLIC_URL;
+const { host, origin, pathname } = window.location;
+const publicUrl = host.startsWith('localhost:') ? (
+  'https://spbuilder-team.github.io'
+) : (
+  (origin + pathname).replace(/\/+$/, '') // remove trailing '/'s
+);
 
 export const defaultAmpParams: AmpParams = {
   stimuli: [
