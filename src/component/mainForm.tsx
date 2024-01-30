@@ -1,4 +1,4 @@
-import { Button, Collapse, Form, InputNumber, type FormInstance } from '@arco-design/web-react';
+import { Button, Collapse, Form, InputNumber, type FormInstance, Tooltip } from '@arco-design/web-react';
 import throttle from 'lodash/throttle';
 import React, { useEffect, useRef, useState } from 'react';
 import type { AmpParams } from '../data/ampTypes';
@@ -44,7 +44,7 @@ export const MainForm: React.FC<{}> = ({ }) => {
   console.log('MainForm')
   const formRef = useRef<FormInstance<AmpParams>>(null);
 
-  const [primeValidation, setPrimeValidation] = useState<PrimeValidation>(initialPrimeValidation);
+  const [primeValidation, setPrimeValidation] = useState<PrimeValidation | null>(null);
 
   const onValuesChange = (changeValue: Partial<AmpParams>, values: Partial<AmpParams>) => {
     console.log('onValuesChange: ', changeValue, values);

@@ -1,11 +1,12 @@
-import { Button, Divider, Form, Grid, Image, Input, InputNumber, Select, Space, Switch, Typography } from '@arco-design/web-react';
+import { Button, Divider, Form, Grid, Image, Input, InputNumber, Select, Space, Switch, Tooltip, Typography } from '@arco-design/web-react';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
-import { IconArrowDown, IconArrowUp, IconDelete, IconPlus } from '@arco-design/web-react/icon';
+import { IconArrowDown, IconArrowUp, IconDelete, IconPlus, IconQuestionCircle } from '@arco-design/web-react/icon';
 import React, { useContext } from 'react';
 import { AmpStimuli, AmpStimuliItem } from '../data/ampTypes';
 import { uid } from '../data/uid';
 import { PrimeValidationContext } from './PrimeValidationContext';
 import { Prime } from './prime';
+import sumBy from 'lodash/sumBy';
 
 
 const { Item, List } = Form;
@@ -94,25 +95,43 @@ const ItemsCountWithPrime: React.FC<{ field: string, index: number }> = ({ field
   const { form } = Form.useFormContext();
   const stimuli = Form.useWatch(field, form) as AmpStimuli;
   const totalRounds = Form.useWatch('totalRounds', form) as number;
-  // const totalRounds = Form.useWatch('totalRounds', form) as number;
-  const { possibleTotalItems } = useContext(PrimeValidationContext);
-  const poolPossibleTotalItems = possibleTotalItems[index];
-  return (
-    <div style={{ textAlign: 'left' }}>
-      <Text type='secondary'>
-        {stimuli.isEnablePriming ? 'Possible total items count: ' : 'Total items count: '}
-        {
-          totalRounds === 1 ? (
-            poolPossibleTotalItems[0].join(', ')
-          ) : (
-            poolPossibleTotalItems.map((counts, roundIndex) => (
-              <li>{`Round ${roundIndex + 1}: ${counts.join(', ')}`}</li>
-            ))
-          )
-        }
-      </Text>
-    </div>
-  )
+  const primeValidation = useContext(PrimeValidationContext);
+
+  if (stimuli.isEnablePriming && primeValidation) {
+    const possibleTotalItems = primeValidation?.possibleTotalItems;
+    const poolPossibleTotalItems = possibleTotalItems[index];
+    return (
+      <div style={{ textAlign: 'left' }}>
+        <Text type='secondary'>
+          {'Possible total items count: '}
+          {
+            poolPossibleTotalItems && (
+              totalRounds === 1 ? (
+                poolPossibleTotalItems[0].join(', ')
+              ) : (
+                poolPossibleTotalItems.map((counts, roundIndex) => (
+                  <li>{`Round ${roundIndex + 1}: ${counts.join(', ')}`}</li>
+                ))
+              )
+            )
+          }
+        </Text>
+      </div>
+    );
+
+  } else if (!stimuli.isEnablePriming) {
+    return (
+      <div style={{ textAlign: 'left' }}>
+        <Text type='secondary'>
+          {'Total items count: '}
+          {sumBy(stimuli.items, x => x.count)}
+        </Text>
+      </div>
+    );
+
+  } else {
+    return null;
+  }
 };
 
 

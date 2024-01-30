@@ -5,7 +5,12 @@ import { PrimeValidationContext } from './PrimeValidationContext';
 
 export const WarnTrialNumber: React.FC<{ values: AmpParams }> = ({ values }) => {
 
-  const { possibleTotalItems } = useContext(PrimeValidationContext);
+  const primeValidation = useContext(PrimeValidationContext);
+  if (!primeValidation) {
+    return null;
+  }
+
+  const { possibleTotalItems } = primeValidation;
   const { totalTrials, totalRounds } = values;
   const invalidPoolRounds = possibleTotalItems.flatMap((poolPossibleTotals, poolIndex) => {
     return poolPossibleTotals.flatMap((possibleTotals, roundIndex) => (

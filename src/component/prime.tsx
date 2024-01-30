@@ -174,25 +174,29 @@ const PrimeItem: React.FC<PrimeItemProps> = ({ field, index, remove, stimuliFiel
   // Same value should not exist. (primeWatch is the value in prev iter, before onChange actually alters form value.)
   const validateNameUnique = (value: string | undefined) => !primeWatch.some(({ name }) => name === value);
 
-  const { steppedPossibilities } = useContext(PrimeValidationContext);
-  const validatePrimeItemResult = primeItemWatch && validatePrimeItem(steppedPossibilities, poolIndex, primeItemWatch);
   let validatePrimeItemAlert: string | null = null;
-  if (validatePrimeItemResult && validatePrimeItemResult.length > 0) {
-    validatePrimeItemAlert = 'These included and excluded item will cause failure due to nothing-to-select in the case(s) of: \n'
-    const stimuli = form.getFieldValue(stimuliField);
-    const primeResults = [...validatePrimeItemResult[0].primeResults.entries()];
-    const primeResultsStr = primeResults.map(([uid, primeResult]) => {
-      const primeName = primeWatch.find(x => x.uid === uid)?.name;
-      const primeSelectionUid = primeResult.type === 'prime' ? primeResult.primeUid : primeResult.uid;
-      const primeSelectionTypeStr = primeResult.type === 'stimuli' ? 'stimuli-item' : primeResult.type;
-      const primeSelectionStr = primeSelectionUid !== null ? findPrimeRepresentationFromUid(primeSelectionUid, stimuli) : 'nothing-to-select';
-      return `${primeName}="${primeSelectionTypeStr}-${primeSelectionStr}"`;
-    }).join(', ');
-    validatePrimeItemAlert += primeResultsStr;
-    if (validatePrimeItemResult.length > 1) {
-      validatePrimeItemAlert += `and ${validatePrimeItemResult.length - 1} other cases.`
+  const primeValidation = useContext(PrimeValidationContext);
+  if (primeValidation) {
+    const { steppedPossibilities } = primeValidation;
+    const validatePrimeItemResult = primeItemWatch && validatePrimeItem(steppedPossibilities, poolIndex, primeItemWatch);
+    if (validatePrimeItemResult && validatePrimeItemResult.length > 0) {
+      validatePrimeItemAlert = 'These included and excluded item will cause failure due to nothing-to-select in the case(s) of: \n'
+      const stimuli = form.getFieldValue(stimuliField);
+      const primeResults = [...validatePrimeItemResult[0].primeResults.entries()];
+      const primeResultsStr = primeResults.map(([uid, primeResult]) => {
+        const primeName = primeWatch.find(x => x.uid === uid)?.name;
+        const primeSelectionUid = primeResult.type === 'prime' ? primeResult.primeUid : primeResult.uid;
+        const primeSelectionTypeStr = primeResult.type === 'stimuli' ? 'stimuli-item' : primeResult.type;
+        const primeSelectionStr = primeSelectionUid !== null ? findPrimeRepresentationFromUid(primeSelectionUid, stimuli) : 'nothing-to-select';
+        return `${primeName}="${primeSelectionTypeStr}-${primeSelectionStr}"`;
+      }).join(', ');
+      validatePrimeItemAlert += primeResultsStr;
+      if (validatePrimeItemResult.length > 1) {
+        validatePrimeItemAlert += `and ${validatePrimeItemResult.length - 1} other cases.`
+      }
     }
   }
+
   return (
     <>
       <Row gutter={24} style={{ width: '100%', marginTop: 10 }}>

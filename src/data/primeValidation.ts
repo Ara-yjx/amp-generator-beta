@@ -4,6 +4,7 @@ import sortBy from 'lodash/sortBy'
 import sum from 'lodash/sum'
 import { emptyAmpParams } from './emptyAmpParams';
 
+const COMPLEXITY_THRESHOLD = 2000;
 
 /** [pool][round] -> Possibilities|counts */
 export interface PrimeValidation {
@@ -12,11 +13,27 @@ export interface PrimeValidation {
   possibleTotalItems: number[][][],
 }
 
-export function getPrimeValidation(stimuli: AmpStimuli[], totalRounds: number): PrimeValidation {
-  const steppedPossibilities = stimuli.map(s => range(totalRounds).map(round => getAllPossibilitiesForRound(s, round))); // [poolIndex][round][prime]
-  const possibilities = steppedPossibilities.map(poolSpo => poolSpo.map(roundSpo => roundSpo[roundSpo.length - 1][1]));
-  const possibleTotalItems = possibilities.map(poolPossibilities => poolPossibilities.map(getPossibilityTotalItemsClean));
-  return { steppedPossibilities, possibilities, possibleTotalItems }
+export function getPrimeValidation(stimuli: AmpStimuli[], totalRounds: number): PrimeValidation | null {
+  if (estimateComplexity(stimuli)) {
+    const steppedPossibilities = stimuli.map(s => range(totalRounds).map(round => getAllPossibilitiesForRound(s, round))); // [poolIndex][round][prime]
+    const possibilities = steppedPossibilities.map(poolSpo => poolSpo.map(roundSpo => roundSpo[roundSpo.length - 1][1]));
+    const possibleTotalItems = possibilities.map(poolPossibilities => poolPossibilities.map(getPossibilityTotalItemsClean));
+    return { steppedPossibilities, possibilities, possibleTotalItems }
+  } else {
+    console.log('getPrimeValidation estimateComplexity is above threshold');
+    return null;
+  }
+}
+
+
+function estimateComplexity(stimuli: AmpStimuli[]): boolean {
+  const poolComplexities = stimuli.map(({ items, prime }) => {
+    const primeOptionCount = prime.map(p => p.includeUids.length || items.length);
+    const poolComplexity = primeOptionCount.reduce((x, y) => x * y, 1);
+    return poolComplexity;
+  });
+  const totalComplexity = sum(poolComplexities);
+  return totalComplexity < COMPLEXITY_THRESHOLD;
 }
 
 export type PrimeResult =
