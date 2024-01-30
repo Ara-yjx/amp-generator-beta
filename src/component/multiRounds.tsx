@@ -1,5 +1,6 @@
 import React from 'react';
-import { Form, InputNumber, Space, Switch, Typography } from '@arco-design/web-react';
+import { Form, InputNumber, Space, Switch, Tooltip, Typography } from '@arco-design/web-react';
+import { IconQuestionCircle } from '@arco-design/web-react/icon';
 
 const { Item } = Form;
 
@@ -11,7 +12,13 @@ export const MultiRounds: React.FC<{}> = ({ }) => {
     <>
       <Space style={!isMultiRounds ? { marginBottom: 20 } : undefined}>
         <Switch checked={isMultiRounds} onChange={value => form.setFieldValue('totalRounds', value ? 2 : 1)} />
-        <Typography.Text type='secondary'>Enable multiple rounds of trial</Typography.Text>
+        <Typography.Text type='secondary'>
+          Add more rounds
+          &nbsp;
+          <Tooltip content='This function allows you to include more than one round of trials in the survey.'>
+            <IconQuestionCircle />
+          </Tooltip>
+        </Typography.Text>
       </Space>
       {
         isMultiRounds && (

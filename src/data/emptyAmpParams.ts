@@ -5,7 +5,7 @@ export const emptyAmpParams: AmpParams = {
   stimuli: [
     {
       items: [
-        { type: 'text', content: 'Edit me', count: 1, uid: uid() },
+        { type: 'text', content: '', count: 1, uid: uid() },
       ],
       shuffle: false,
       isEnablePriming: false,
@@ -13,7 +13,7 @@ export const emptyAmpParams: AmpParams = {
     },
     {
       items: [
-        { type: 'text', content: 'Edit me', count: 1, uid: uid() },
+        { type: 'text', content: '', count: 1, uid: uid() },
       ],
       shuffle: false,
       isEnablePriming: false,

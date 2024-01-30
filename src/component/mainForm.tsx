@@ -15,6 +15,7 @@ import { StimuliPool } from './stimuliPool';
 import { Timeline } from './timeline';
 import { TrialHtml } from './trialHtml';
 import { WarnTrialNumber } from './warnTrialNumber';
+import { IconQuestionCircle } from '@arco-design/web-react/icon';
 
 const { Item } = Form;
 
@@ -62,7 +63,7 @@ export const MainForm: React.FC<{}> = ({ }) => {
         onValuesChange={onValuesChange}
       >
         <LoadSave />
-        <h3 style={{ textAlign: 'left' }}>Stimuli List</h3>
+        <h3 style={{ textAlign: 'left' }}>Stimuli Pool</h3>
         <StimuliPool />
         <br />
 
@@ -81,7 +82,14 @@ export const MainForm: React.FC<{}> = ({ }) => {
           </Item>
           <MultiRounds />
           <Item
-            label='Accepted keyboard responses' field='acceptedKeys'
+            label={
+            <>
+            Allowed Input Keys &nbsp;
+            <Tooltip content={`The keys that participants are allowed to press.\nParticipants' responses will be recorded in Qualtrics survey result data.`}>
+              <IconQuestionCircle />
+            </Tooltip>
+            </>}
+            field='acceptedKeys'
             extra='Letters (a~z, case insensitive), Number digits (0~9), Arrow keys, Space key.'
           >
             <AcceptedKeys />
