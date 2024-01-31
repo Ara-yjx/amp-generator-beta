@@ -9,7 +9,7 @@ const uidRef = {
 
 const { host, origin, pathname } = window.location;
 const publicUrl = host.startsWith('localhost:') ? (
-  'https://spbuilder-team.github.io'
+  'https://spbuilder.org'
 ) : (
   (origin + pathname).replace(/\/+$/, '') // remove trailing '/'s
 );
