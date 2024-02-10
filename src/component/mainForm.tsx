@@ -1,4 +1,4 @@
-import { Button, Collapse, Form, InputNumber, type FormInstance, Tooltip } from '@arco-design/web-react';
+import { Collapse, Form, InputNumber, type FormInstance, Tooltip, Space } from '@arco-design/web-react';
 import throttle from 'lodash/throttle';
 import React, { useEffect, useRef, useState } from 'react';
 import type { AmpParams } from '../data/ampTypes';
@@ -9,13 +9,14 @@ import { useBlobUrl } from '../hooks/useBlobUrl';
 import { PrimeValidationContext } from './PrimeValidationContext';
 import { AcceptedKeys } from './acceptedKeys';
 import { AutoProceedTimeout } from './autoProceedTimeout';
+import { BubblyButton } from './bubblyButton';
 import { LoadSave } from './loadSave';
 import { MultiRounds } from './multiRounds';
 import { StimuliPool } from './stimuliPool';
 import { Timeline } from './timeline';
 import { TrialHtml } from './trialHtml';
 import { WarnTrialNumber } from './warnTrialNumber';
-import { IconQuestionCircle } from '@arco-design/web-react/icon';
+import { IconCloudDownload, IconQuestionCircle } from '@arco-design/web-react/icon';
 
 const { Item } = Form;
 
@@ -33,9 +34,12 @@ const DownloadButton: React.FC<{ values?: AmpParams }> = ({ values }) => {
   }
   useEffect(() => throttledSetBlob.current?.(values), [values]);
   return (
-    <Button type='primary' href={url} download='spt-generator.qsf'>
-      Generate Qualtrics qsf File
-    </Button>
+    <BubblyButton href={url} download='spt-generator.qsf'>
+      <Space>
+        <IconCloudDownload style={{ fontSize: '1.5em' }} />
+        Generate Qualtrics qsf File
+      </Space>
+    </BubblyButton>
   );
 };
 
@@ -83,12 +87,13 @@ export const MainForm: React.FC<{}> = ({ }) => {
           <MultiRounds />
           <Item
             label={
-            <>
-            Allowed Input Keys &nbsp;
-            <Tooltip content={`The keys that participants are allowed to press.\nParticipants' responses will be recorded in Qualtrics survey result data.`}>
-              <IconQuestionCircle />
-            </Tooltip>
-            </>}
+              <>
+                Allowed Input Keys &nbsp;
+                <Tooltip content={`The keys that participants are allowed to press.\nParticipants' responses will be recorded in Qualtrics survey result data.`}>
+                  <IconQuestionCircle />
+                </Tooltip>
+              </>
+            }
             field='acceptedKeys'
             extra='Letters (a~z, case insensitive), Number digits (0~9), Arrow keys, Space key.'
           >
