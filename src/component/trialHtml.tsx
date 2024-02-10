@@ -8,7 +8,7 @@ import { StimuliThumbnail } from './stimuliThumbnail';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import throttle from 'lodash/throttle';
-import { IconClose, IconToBottom, IconToLeft, IconToRight, IconToTop } from '@arco-design/web-react/icon';
+import { IconRefresh, IconToBottom, IconToLeft, IconToRight, IconToTop } from '@arco-design/web-react/icon';
 import { CompactPicker } from 'react-color';
 
 const { Item } = Form;
@@ -100,7 +100,7 @@ export const TextColorPicker: React.FC<ArcoFormItem<AmpTrialHtmlParams['textColo
       content={
         <Space direction='vertical'>
           <CompactPicker color={value ?? '#000'} onChange={v => onChange?.(v.hex)} />
-          <Button size='mini' type='secondary' icon={<IconClose />} onClick={() => onChange?.(undefined)}>
+          <Button size='mini' type='secondary' icon={<IconRefresh />} onClick={() => onChange?.(undefined)}>
             Use default color
           </Button>
         </Space>
@@ -169,12 +169,12 @@ export const TrialHtml: React.FC<ArcoFormItem<AmpTrialHtml>> = ({ value, onChang
     >
       <Space size='large'>
         <Item field='width' label={
-          <>Image Width <IconToLeft /><IconToRight /></>
+          <>Content Width <IconToLeft /><IconToRight /></>
         } style={{ width: 200 }}>
           <InputNumber suffix='px' />
         </Item>
         <Item field='height' label={
-          <>Image Height <IconToLeft style={{ transform: 'rotate(90deg)', transformOrigin: 'right' }} /><IconToRight style={{ transform: 'rotate(90deg)', transformOrigin: 'left' }} /></>
+          <>Content Height <IconToLeft style={{ transform: 'rotate(90deg)', transformOrigin: 'right' }} /><IconToRight style={{ transform: 'rotate(90deg)', transformOrigin: 'left' }} /></>
         } style={{ width: 200 }}>
           <InputNumber suffix='px' />
         </Item>
@@ -195,6 +195,9 @@ export const TrialHtml: React.FC<ArcoFormItem<AmpTrialHtml>> = ({ value, onChang
           </Item>
           <Item field='textColor' noStyle>
             <TextColorPicker />
+          </Item>
+          <Item field='textWrap' noStyle triggerPropName='checked'>
+            <Checkbox><Text type='secondary'>Wrap text</Text></Checkbox>
           </Item>
         </Space>
       </Item>

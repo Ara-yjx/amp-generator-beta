@@ -29,6 +29,7 @@ export interface AmpTrialHtmlParams {
   textFontSize: number;
   textIsBold: boolean;
   textColor?: string;
+  textWrap: boolean;
   /** @deprecated */
   text?: string; // use instruction
 }

@@ -1,5 +1,4 @@
-import type { AmpParams, AmpTrialHtmlParams } from './ampTypes';
-import { emptyAmpParams } from './emptyAmpParams';
+import type { AmpParams } from './ampTypes';
 
 
 export function transformOldValues(values: AmpParams) {
@@ -9,8 +8,8 @@ export function transformOldValues(values: AmpParams) {
       values.trialHtml.instruction = values.trialHtml.text;
       values.trialHtml.text = undefined;
     }
-    const emptyTrialHtml = emptyAmpParams.trialHtml as AmpTrialHtmlParams;
-    values.trialHtml.textFontSize ??= emptyTrialHtml.textFontSize;
-    values.trialHtml.textIsBold ??= emptyTrialHtml.textIsBold;
+    values.trialHtml.textFontSize ??= 28;
+    values.trialHtml.textIsBold ??= true;
+    values.trialHtml.textWrap ??= true;
   }
 }

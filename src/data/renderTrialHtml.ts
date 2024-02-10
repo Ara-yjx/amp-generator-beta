@@ -11,5 +11,6 @@ export function renderTrialHtml(params: AmpTrialHtmlParams) {
     .replace('{{textFontSize}}', `${params.textFontSize}`)
     .replace('{{textFontWeight}}', params.textIsBold ? 'bold' : 'normal')
     .replace('{{textColor}}', params.textColor ?? 'inherit')
+    .replace('{{textWrap}}', params.textWrap ? 'pre-line' : 'pre')
     ;
 }

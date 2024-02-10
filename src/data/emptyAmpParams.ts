@@ -37,5 +37,6 @@ export const emptyAmpParams: AmpParams = {
     textFontSize: 28,
     textIsBold: true,
     textColor: undefined,
+    textWrap: true,
   }
 };
