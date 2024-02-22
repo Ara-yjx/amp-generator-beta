@@ -1,0 +1,1 @@
+export default `Zhou, Y., Ye, J., & Shen, X. (2024, February). A Qualtrics-compatible Tool for Sequential Priming Tasks: A Methodological Introduction with Empirical Support. Poster session presented at 2024 Society for Personality and Social Psychology (SPSP) Social Cognition Preconference, Annual Convention, San Diego, CA`
