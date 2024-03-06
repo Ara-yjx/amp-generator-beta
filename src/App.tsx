@@ -69,7 +69,7 @@ function App() {
           <Layout.Header>
             <h1>Sequential Priming Builder</h1>
             <Space split={<Divider type='vertical' />} style={{ marginBottom: 30 }}>
-              <Link href='./SP-Builder_User_Manual.pdf' target='_blank' icon={<IconBook />}>
+              <Link href='./SP-Builder_User_Manual_20240307.pdf' target='_blank' icon={<IconBook />}>
                 User manual
               </Link>
               <Link href='./SP-Builder_FAQ.pdf' target='_blank' icon={<IconQuestionCircle />}>
