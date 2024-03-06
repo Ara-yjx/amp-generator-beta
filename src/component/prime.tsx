@@ -181,7 +181,7 @@ const PrimeItem: React.FC<PrimeItemProps> = ({ field, index, remove, stimuliFiel
     const validatePrimeItemResult = primeItemWatch && validatePrimeItem(steppedPossibilities, poolIndex, primeItemWatch);
     if (validatePrimeItemResult && validatePrimeItemResult.length > 0) {
       validatePrimeItemAlert = 'These included and excluded item will cause failure due to nothing-to-select in the case(s) of: \n'
-      const stimuli = form.getFieldValue(stimuliField);
+      const stimuli: AmpStimuli = form.getFieldValue(stimuliField);
       const primeResults = [...validatePrimeItemResult[0].primeResults.entries()];
       const primeResultsStr = primeResults.map(([uid, primeResult]) => {
         const primeName = primeWatch.find(x => x.uid === uid)?.name;
@@ -223,9 +223,9 @@ const PrimeItem: React.FC<PrimeItemProps> = ({ field, index, remove, stimuliFiel
         <Col span={1}>
           <Tooltip content={<>
             You can access the randomization result through these embeeded data:
-            <li>prime_stimuli_{index + 1}_{nameWatch}_item_index</li>
-            <li>prime_stimuli_{index + 1}_{nameWatch}_content</li>
-            <li>prime_stimuli_{index + 1}_{nameWatch}_type</li>
+            <li>prime_stimuli_{poolIndex + 1}_{nameWatch}_item_index</li>
+            <li>prime_stimuli_{poolIndex + 1}_{nameWatch}_content</li>
+            <li>prime_stimuli_{poolIndex + 1}_{nameWatch}_type</li>
           </>} position='top'>
             <IconQuestionCircle />
           </Tooltip>
