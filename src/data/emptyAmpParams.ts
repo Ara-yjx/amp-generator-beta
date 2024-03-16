@@ -33,7 +33,7 @@ export const emptyAmpParams: AmpParams = {
     width: 300,
     height: 300,
     marginTop: 50,
-    instruction: 'You can add trial instructions here, \nbut a more flexible way is to add a Text/Graphic block manually in Qualtrics.',
+    instruction: 'You can add trial instructions here, \nbut a more flexible way is to add a Text/Graphic question manually in Qualtrics.',
     textFontSize: 28,
     textIsBold: true,
     textColor: undefined,

@@ -106,9 +106,7 @@ export const MainForm: React.FC<{}> = ({ }) => {
 
         <Collapse bordered={false} style={{ marginBottom: 20 }}>
           <Collapse.Item name='0' header={<h3>Trial Block HTML</h3>}>
-            <Item field='trialHtml'>
-              <TrialHtml />
-            </Item>
+            <TrialHtml />
           </Collapse.Item>
         </Collapse>
 

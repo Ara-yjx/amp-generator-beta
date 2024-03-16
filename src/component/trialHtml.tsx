@@ -1,22 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button, Checkbox, Form, Input, InputNumber, Popover, Radio, Select, Space, Typography } from '@arco-design/web-react';
-import type { AmpParams, AmpStimuliItem, AmpTrialHtml, AmpTrialHtmlParams } from '../data/ampTypes';
-import { emptyAmpParams } from '../data/emptyAmpParams';
+import type { AmpParams, AmpStimuliItem, AmpTrialHtml } from '../data/ampTypes';
 import { renderTrialHtml } from '../data/renderTrialHtml';
 import type { ArcoFormItem } from '../util/arco';
 import { StimuliThumbnail } from './stimuliThumbnail';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
-import throttle from 'lodash/throttle';
 import { IconRefresh, IconToBottom, IconToLeft, IconToRight, IconToTop } from '@arco-design/web-react/icon';
 import { CompactPicker } from 'react-color';
 
 const { Item } = Form;
 const { Option } = Select;
 const { Text } = Typography;
-
-const defaultParams = emptyAmpParams.trialHtml as AmpTrialHtmlParams;
-const defaultHtml = renderTrialHtml(defaultParams);
 
 // const QUALTRICS_DEFAULT_SKIN = {
 //   fontSize: '24',
@@ -48,12 +43,10 @@ body {
 `;
 
 
-// const setIframeContent = throttle((
 const setIframeContent = (
   previewRef: React.MutableRefObject<HTMLIFrameElement | null>,
   previewInnerHtml: string,
   previewStimuliItem: AmpStimuliItem | undefined,
-  isUsingParams: boolean,
 ) => {
   const iframeDocument = previewRef.current?.contentDocument;
   if (iframeDocument) {
@@ -81,17 +74,14 @@ const setIframeContent = (
       }
     }
     // Border for visibility
-    if (isUsingParams) {
-      if (textEl.parentElement) {
-        textEl.parentElement.style.border = '1px solid grey';
-      }
+    if (textEl.parentElement) {
+      textEl.parentElement.style.border = '1px solid grey';
     }
   }
 }
-// }, 500, { leading: true, trailing: true });
 
 
-export const TextColorPicker: React.FC<ArcoFormItem<AmpTrialHtmlParams['textColor']>> = ({ value, onChange }) => (
+const TextColorPicker: React.FC<ArcoFormItem<AmpTrialHtml['textColor']>> = ({ value, onChange }) => (
   <Space size='mini'>
     <Text type='secondary'>Font color</Text>
     <Popover
@@ -101,7 +91,7 @@ export const TextColorPicker: React.FC<ArcoFormItem<AmpTrialHtmlParams['textColo
         <Space direction='vertical'>
           <CompactPicker color={value ?? '#000'} onChange={v => onChange?.(v.hex)} />
           <Button size='mini' type='secondary' icon={<IconRefresh />} onClick={() => onChange?.(undefined)}>
-            Use default color
+            Use default color of your Qualtrics skin
           </Button>
         </Space>
       }
@@ -116,33 +106,87 @@ export const TextColorPicker: React.FC<ArcoFormItem<AmpTrialHtmlParams['textColo
 );
 
 
-export const TrialHtml: React.FC<ArcoFormItem<AmpTrialHtml>> = ({ value, onChange }) => {
+const ConfigModeForm: React.FC = () => {
+  return (
+    <div>
+      <Space size='large'>
+        <Item field='trialHtml.width' label={
+          <b>Content Width <IconToLeft /><IconToRight /></b>
+        } style={{ width: 200 }}>
+          <InputNumber suffix='px' />
+        </Item>
+        <Item field='trialHtml.height' label={
+          <b>Content Height <IconToLeft style={{ transform: 'rotate(90deg)', transformOrigin: 'right' }} /><IconToRight style={{ transform: 'rotate(90deg)', transformOrigin: 'left' }} /></b>
+        } style={{ width: 200 }}>
+          <InputNumber suffix='px' />
+        </Item>
+      </Space>
 
+      <Item field='trialHtml.marginTop' label={<b>Blank space above content</b>} layout='vertical' style={{ width: 200 }}>
+        <InputNumber suffix='px' />
+      </Item>
 
-  const [isUsingParams, setIsUsingParams] = useState<boolean>(typeof value === 'object');
-  const [params, setParams] = useState<AmpTrialHtmlParams>(
-    typeof value === 'object' ? value : defaultParams
+      <Item label={<b>Text stimuli style</b>} layout='vertical'>
+        <Space size={50} style={{ width: '100%' }} >
+          <Space size='mini'>
+            <Text type='secondary'>Font size</Text>
+            <Item field='trialHtml.textFontSize' noStyle layout='inline'>
+              <InputNumber suffix='px' min={1} style={{ width: 100 }} />
+            </Item>
+          </Space>
+          <Item field='trialHtml.textIsBold' noStyle triggerPropName='checked'>
+            <Checkbox><Text type='secondary'>Bold</Text></Checkbox>
+          </Item>
+          <Item field='trialHtml.textColor' noStyle>
+            <TextColorPicker />
+          </Item>
+          <Item field='trialHtml.textWrap' noStyle triggerPropName='checked'>
+            <Checkbox><Text type='secondary'>Wrap text</Text></Checkbox>
+          </Item>
+        </Space>
+      </Item>
+
+      <Item field='trialHtml.instruction' label={<b>Instruction Text</b>} layout='vertical'>
+        <Input.TextArea style={{ minHeight: '6em' }} />
+      </Item>
+    </div>
   );
-  const [bulk, setBulk] = useState<string>(
-    typeof value === 'string' ? value : defaultHtml
-  );
+};
 
-  const onParamsFormChange = (change: Partial<AmpTrialHtmlParams>, values: Partial<AmpTrialHtmlParams>) => {
-    const newParams = { ...params, ...values };
-    setParams(newParams);
-    onChange?.(newParams);
-  };
 
-  const onBulkChange = (value: string) => {
-    setBulk(value);
-    onChange?.(value);
-  };
+const CustomModeForm: React.FC = () => (
+  <Item field='trialHtml.customHtml' noStyle>
+    <Input.TextArea
+      style={{ minHeight: '15em', fontFamily: 'Inconsolata, Consolas, monospace' }}
+    />
+  </Item>
+);
 
+
+export const TrialHtml: React.FC = () => {
+
+  const { form } = useFormContext();
+  const trialHtmlWatch = useWatch('trialHtml', form) as AmpParams['trialHtml'];
+  const isConfigMode = typeof trialHtmlWatch.customHtml !== 'string';
+
+  // When switch to custom mode, render from current configs.
+  // When switch to config mode, clear customHtml after confirmation.
+  const onModeChange = (isNewModeConfigMode: boolean) => {
+    if (isNewModeConfigMode) {
+      if (trialHtmlWatch.customHtml !== renderTrialHtml(trialHtmlWatch)) {
+        if (!window.confirm('Switching to Use Configurations will revert all the edits in Customized HTML. Continue?')) {
+          return;
+        }
+      }
+      form.setFieldValue('trialHtml.customHtml', undefined);
+    } else {
+      form.setFieldValue('trialHtml.customHtml', renderTrialHtml(trialHtmlWatch));
+    }
+  }
 
   // Preview
 
   const [previewStimuliItemUid, setPreviewStimuliItemUid] = useState<number>();
-  const { form } = useFormContext();
   const stimuliWatch = useWatch('stimuli', form) as AmpParams['stimuli'];
   const allItems = stimuliWatch.flatMap((stimuli, stimuliIndex) => (
     stimuli.items.map((item, itemIndex) => ({ ...item, indexDisplay: `${stimuliIndex + 1}-${itemIndex + 1}` }))
@@ -150,9 +194,11 @@ export const TrialHtml: React.FC<ArcoFormItem<AmpTrialHtml>> = ({ value, onChang
   const previewStimuliItem = allItems.find(item => item.uid === previewStimuliItemUid);
 
   const previewRef = useRef<HTMLIFrameElement>(null);
-  const previewInnerHtml = isUsingParams ? renderTrialHtml(params) : bulk;
+  const previewInnerHtml = trialHtmlWatch.customHtml ?? renderTrialHtml(trialHtmlWatch);
 
-  useEffect(() => setIframeContent(previewRef, previewInnerHtml, previewStimuliItem, isUsingParams));
+  useEffect(() => {
+    setIframeContent(previewRef, previewInnerHtml, previewStimuliItem)
+  }, [previewRef, previewInnerHtml, previewStimuliItem?.content, previewStimuliItem?.type]);
 
   // If stimuli updates and the previewStimuliItem is deleted, reset previewStimuliItem
   useEffect(() => {
@@ -161,123 +207,45 @@ export const TrialHtml: React.FC<ArcoFormItem<AmpTrialHtml>> = ({ value, onChang
     }
   });
 
-  const paramsComponent = (
-    <Form
-      initialValues={params}
-      onValuesChange={onParamsFormChange}
-      layout='vertical'
-    >
-      <Space size='large'>
-        <Item field='width' label={
-          <>Content Width <IconToLeft /><IconToRight /></>
-        } style={{ width: 200 }}>
-          <InputNumber suffix='px' />
-        </Item>
-        <Item field='height' label={
-          <>Content Height <IconToLeft style={{ transform: 'rotate(90deg)', transformOrigin: 'right' }} /><IconToRight style={{ transform: 'rotate(90deg)', transformOrigin: 'left' }} /></>
-        } style={{ width: 200 }}>
-          <InputNumber suffix='px' />
-        </Item>
-      </Space>
-      <Item field='marginTop' label='Blank space at page top' layout='vertical' style={{ width: 200 }}>
-        <InputNumber suffix='px' />
-      </Item>
-      <Item label='Text stimuli style' layout='vertical'>
-        <Space size={50} style={{ width: '100%' }} >
-          <Space size='mini'>
-            <Text type='secondary'>Font size</Text>
-            <Item field='textFontSize' noStyle layout='inline'>
-              <InputNumber suffix='px' min={1} style={{ width: 100 }} />
-            </Item>
-          </Space>
-          <Item field='textIsBold' noStyle triggerPropName='checked'>
-            <Checkbox><Text type='secondary'>Bold</Text></Checkbox>
-          </Item>
-          <Item field='textColor' noStyle>
-            <TextColorPicker />
-          </Item>
-          <Item field='textWrap' noStyle triggerPropName='checked'>
-            <Checkbox><Text type='secondary'>Wrap text</Text></Checkbox>
-          </Item>
-        </Space>
-      </Item>
-      <Item field='instruction' label='Instruction Text' layout='vertical'>
-        <Input.TextArea style={{ minHeight: '6em' }} />
-      </Item>
-    </Form>
-  );
-
-
-  const htmlComponent = (
-    <Input.TextArea
-      style={{ minHeight: '8em', fontFamily: 'Inconsolata, Consolas, monospace' }}
-      value={bulk}
-      onChange={onBulkChange}
-    />
-  );
-
   return (
-    <>
-      <div style={{ textAlign: 'left' }}>
+    <div style={{ textAlign: 'start' }}>
+      <div>
         <Radio.Group
           type='button'
-          value={isUsingParams}
-          onChange={setIsUsingParams}
+          value={isConfigMode}
+          onChange={onModeChange}
           options={[
-            { value: true, label: 'Using Parameters' },
+            { value: true, label: 'Use Configurations' },
             { value: false, label: 'Customize HTML' },
           ]}
           style={{ marginBottom: '12px' }}
         />
       </div>
 
-      {isUsingParams ? paramsComponent : htmlComponent}
-      {/* 
-      <Tabs defaultActiveTab={isUsingParams ? 'params' : 'html'}>
-        <TabPane key='params' title='Using Parameters'> 
-        </TabPane>
-        <TabPane key='html' title='Customize HTML'>
-        </TabPane>
-      </Tabs> 
-      */}
+      {isConfigMode ? <ConfigModeForm /> : <CustomModeForm />}
 
-      <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'start' }} >
+      <div style={{ display: 'flex', flexDirection: 'column' }} >
         <Space size='large'>
           <h3>Preview</h3>
-          <Item shouldUpdate noStyle>
+          <Select
+            placeholder='Select a stimuli item to preview'
+            style={{ width: 300, height: 32 }}
+            value={previewStimuliItemUid}
+            onChange={setPreviewStimuliItemUid}
+            allowClear
+          >
             {
-              (value: AmpParams) => {
-
-                return (
-                  <Select
-                    placeholder='Select a stimuli item to preview'
-                    style={{ width: 300, height: 32 }}
-                    value={previewStimuliItemUid}
-                    onChange={setPreviewStimuliItemUid}
-                    allowClear
-                  >
-                    {
-                      allItems.map((item) => (
-                        <Option key={item.uid} value={item.uid}>
-                          <StimuliThumbnail {...item} />
-                        </Option>
-                      ))
-                    }
-                  </Select>
-                )
-              }
+              allItems.map((item) => (
+                <Option key={item.uid} value={item.uid}>
+                  <StimuliThumbnail {...item} />
+                </Option>
+              ))
             }
-          </Item>
+          </Select>
         </Space>
         <iframe style={{ flexGrow: 1 }} ref={previewRef} height={700}></iframe>
-        {
-          isUsingParams && (
-            <Text type='secondary'>(Black image border will not be visible in the generated survey.)</Text>
-          )
-        }
+        <Text type='secondary'>(The grey border of content area will not be visible in the generated survey.)</Text>
       </div >
-    </>
+    </div>
   )
 };
-
-

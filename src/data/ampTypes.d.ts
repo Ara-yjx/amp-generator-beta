@@ -21,7 +21,7 @@ export interface AmpStimuli {
   prime: AmpStimuliPrimeItem[];
 }
 
-export interface AmpTrialHtmlParams {
+export interface AmpTrialHtml {
   width: number;
   height: number;
   marginTop: number;
@@ -30,10 +30,10 @@ export interface AmpTrialHtmlParams {
   textIsBold: boolean;
   textColor?: string;
   textWrap: boolean;
+  customHtml?: string; // this is like an "override"; under params mode it's undefined; when switching to custom mode, it gets rendered from params
   /** @deprecated */
   text?: string; // use instruction
 }
-export type AmpTrialHtml = AmpTrialHtmlParams | string;
 
 export interface AmpTimeline {
   durationsAndIntervals: [number, number][],

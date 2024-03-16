@@ -11,6 +11,9 @@ interface EmbeddedDataTemplate {
 }
 export function hydrateQsf(params: AmpParams) {
   const template = qsfTemplate;
+
+  // Set embedded data
+
   /* @ts-ignore */
   const embeddedData = template.SurveyElements[1].Payload.Flow[0].EmbeddedData as EmbeddedDataTemplate[];
   function setEd(name: string, value: any) {
@@ -40,12 +43,20 @@ export function hydrateQsf(params: AmpParams) {
   setEd('primes', exportPrime(params));
   setEd('acceptedKeys', params.acceptedKeys.join(','));
 
+  // Render trial html
 
-  const trialSurveyElement = template.SurveyElements.find(e => e.Element === 'SQ')
+  const trialSurveyElement = template.SurveyElements.find(e => e.PrimaryAttribute === 'QID2')
   if (trialSurveyElement) {
-    const trialHtml = typeof params.trialHtml === 'object' ? renderTrialHtml(params.trialHtml) : params.trialHtml;
+    const trialHtml = params.trialHtml.customHtml ?? renderTrialHtml(params.trialHtml);
+    console.log('trialSurveyElement', trialHtml)
     // @ts-ignore
     trialSurveyElement.Payload.QuestionText = trialHtml;
+    // @ts-ignore
+    trialSurveyElement.Payload.QuestionDescription = '';
+    // @ts-ignore
+    trialSurveyElement.SecondaryAttribute = '';
+  } else {
+    console.error('Failed to render trialHtml: qsf question element QID2 not found.')
   }
 
   return template;
