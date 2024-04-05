@@ -30,6 +30,7 @@ export interface AmpTrialHtml {
   textIsBold: boolean;
   textColor?: string;
   textWrap: boolean;
+  darkMode: boolean;
   customHtml?: string; // this is like an "override"; under params mode it's undefined; when switching to custom mode, it gets rendered from params
   /** @deprecated */
   text?: string; // use instruction

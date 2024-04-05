@@ -1,4 +1,4 @@
-import type { AmpParams, AmpStimuli, AmpStimuliPrimeItem } from './ampTypes';
+import type { AmpParams, AmpStimuliPrimeItem } from './ampTypes';
 import qsfTemplate from '../assets/qsfTemplate.json';
 import { renderTrialHtml } from './renderTrialHtml';
 import { type UidDetail, getUidDetail } from '../util/util';
@@ -42,13 +42,13 @@ export function hydrateQsf(params: AmpParams) {
   setEd('timeline', params.timeline);
   setEd('primes', exportPrime(params));
   setEd('acceptedKeys', params.acceptedKeys.join(','));
+  setEd('darkMode', params.trialHtml.darkMode);
 
   // Render trial html
 
   const trialSurveyElement = template.SurveyElements.find(e => e.PrimaryAttribute === 'QID2')
   if (trialSurveyElement) {
     const trialHtml = params.trialHtml.customHtml ?? renderTrialHtml(params.trialHtml);
-    console.log('trialSurveyElement', trialHtml)
     // @ts-ignore
     trialSurveyElement.Payload.QuestionText = trialHtml;
     // @ts-ignore
@@ -64,7 +64,6 @@ export function hydrateQsf(params: AmpParams) {
 
 export function generateQsfString(params: AmpParams) {
   const hydrated = hydrateQsf(params);
-  console.log('hydrated', hydrated)
   return JSON.stringify(hydrated);
 }
 

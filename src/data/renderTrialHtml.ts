@@ -12,5 +12,7 @@ export function renderTrialHtml(params: AmpTrialHtml) {
     .replace('{{textFontWeight}}', params.textIsBold ? 'bold' : 'normal')
     .replace('{{textColor}}', params.textColor ?? 'auto')
     .replace('{{textWrap}}', params.textWrap ? 'pre-line' : 'pre')
+    .replace('{{backgroundColor}}', params.darkMode ? 'black' : 'auto')
+    .replace('{{instructionColor}}', params.darkMode ? 'white' : 'black')
     ;
 }

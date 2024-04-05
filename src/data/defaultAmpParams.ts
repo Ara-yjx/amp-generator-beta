@@ -65,5 +65,6 @@ export const defaultAmpParams: AmpParams = {
     textIsBold: true,
     textColor: '#000000',
     textWrap: true,
+    darkMode: false,
   }
 };

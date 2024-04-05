@@ -38,5 +38,6 @@ export const emptyAmpParams: AmpParams = {
     textIsBold: true,
     textColor: undefined,
     textWrap: true,
+    darkMode: false,
   }
 };

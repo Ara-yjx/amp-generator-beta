@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, Checkbox, Form, Input, InputNumber, Popover, Radio, Select, Space, Typography } from '@arco-design/web-react';
+import { Button, Checkbox, Form, Input, InputNumber, Popover, Radio, Select, Space, Switch, Typography } from '@arco-design/web-react';
 import type { AmpParams, AmpStimuliItem, AmpTrialHtml } from '../data/ampTypes';
 import { renderTrialHtml } from '../data/renderTrialHtml';
 import type { ArcoFormItem } from '../util/arco';
@@ -47,6 +47,7 @@ const setIframeContent = (
   previewRef: React.MutableRefObject<HTMLIFrameElement | null>,
   previewInnerHtml: string,
   previewStimuliItem: AmpStimuliItem | undefined,
+  darkMode: boolean,
 ) => {
   const iframeDocument = previewRef.current?.contentDocument;
   if (iframeDocument) {
@@ -59,6 +60,8 @@ const setIframeContent = (
     }
     // Set body html
     iframeDocument.body.innerHTML = previewInnerHtml;
+    // Simulate mode page background
+    iframeDocument.body.style.backgroundColor = darkMode ? 'black' : 'initial';
     // Simulate stimuli preview
     const imageEl = iframeDocument.getElementById('spt-trial-image') as HTMLImageElement;
     const textEl = iframeDocument.getElementById('spt-trial-text') as HTMLElement;
@@ -107,6 +110,18 @@ const TextColorPicker: React.FC<ArcoFormItem<AmpTrialHtml['textColor']>> = ({ va
 
 
 const ConfigModeForm: React.FC = () => {
+  
+  // When change to darkMode, change text content color
+  const { form } = useFormContext();
+  const darkModeWatch = useWatch('trialHtml.darkMode', form) as AmpParams['trialHtml']['darkMode'];
+  useEffect(() => {
+    if (darkModeWatch === true) {
+      form.setFieldValue('trialHtml.textColor', '#fff');
+    } else {
+      form.setFieldValue('trialHtml.textColor', '#000');
+    }
+  }, [darkModeWatch]);
+
   return (
     <div>
       <Space size='large'>
@@ -124,6 +139,10 @@ const ConfigModeForm: React.FC = () => {
 
       <Item field='trialHtml.marginTop' label={<b>Blank space above content</b>} layout='vertical' style={{ width: 200 }}>
         <InputNumber suffix='px' />
+      </Item>
+
+      <Item field='trialHtml.darkMode' label={<b>Dark mode</b>} layout='vertical' triggerPropName='checked'>
+        <Switch />
       </Item>
 
       <Item label={<b>Text stimuli style</b>} layout='vertical'>
@@ -197,8 +216,8 @@ export const TrialHtml: React.FC = () => {
   const previewInnerHtml = trialHtmlWatch.customHtml ?? renderTrialHtml(trialHtmlWatch);
 
   useEffect(() => {
-    setIframeContent(previewRef, previewInnerHtml, previewStimuliItem)
-  }, [previewRef, previewInnerHtml, previewStimuliItem?.content, previewStimuliItem?.type]);
+    setIframeContent(previewRef, previewInnerHtml, previewStimuliItem, trialHtmlWatch.darkMode)
+  }, [previewRef, previewInnerHtml, previewStimuliItem?.content, previewStimuliItem?.type, trialHtmlWatch.darkMode]);
 
   // If stimuli updates and the previewStimuliItem is deleted, reset previewStimuliItem
   useEffect(() => {

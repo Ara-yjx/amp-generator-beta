@@ -12,6 +12,7 @@ export function transformOldValues(values: AmpParams) {
     values.trialHtml.textFontSize ??= 28;
     values.trialHtml.textIsBold ??= true;
     values.trialHtml.textWrap ??= true;
+    values.trialHtml.darkMode ??= false;
 
   } else {
     // Move string-type trialHtml into trialHtml.customHtml, and fill the config with default values
