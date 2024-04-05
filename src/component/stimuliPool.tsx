@@ -38,7 +38,7 @@ const DraggableTitle = <T,>({ dragPayload, ondragstart, ondrop, children }: Drag
   )
 };
 
-export const StimuliPool: React.FC<{}> = ({ }) => {
+export const StimuliPool: React.FC = () => {
 
   const [activeStimuliTab, setActiveStimuliTab] = useState(0);
   const newStimuli: AmpStimuli = {
@@ -58,7 +58,7 @@ export const StimuliPool: React.FC<{}> = ({ }) => {
             onAddTab={() => { add({ ...newStimuli }); setActiveStimuliTab(fields.length); }}
             onDeleteTab={tabKeyStr => {
               const tabKey = parseInt(tabKeyStr);
-              if (window.confirm(`⚠️⚠️⚠️ Are you sure to delete Stimuli ${tabKey + 1} and all its primings completely?`)) {
+              if (window.confirm(`⚠️⚠️⚠️ Are you sure to delete Stimuli Pool ${tabKey + 1} and all its primings completely?`)) {
                 remove(tabKey);
                 if (fields.length === 1) { // keep at least one tab
                   add({ ...newStimuli });
@@ -75,7 +75,7 @@ export const StimuliPool: React.FC<{}> = ({ }) => {
                     dragPayload={index}
                     ondragstart={setActiveStimuliTab}
                     ondrop={payload => { move(payload, index); setActiveStimuliTab(index); }}>
-                    Stimuli {index + 1}
+                    Stimuli Pool {index + 1}
                   </DraggableTitle>
                 }>
                   <StimuliImage field={field} index={index} />

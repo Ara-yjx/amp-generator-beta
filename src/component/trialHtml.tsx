@@ -6,7 +6,7 @@ import type { ArcoFormItem } from '../util/arco';
 import { StimuliThumbnail } from './stimuliThumbnail';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
-import { IconRefresh, IconToBottom, IconToLeft, IconToRight, IconToTop } from '@arco-design/web-react/icon';
+import { IconRefresh, IconToLeft, IconToRight } from '@arco-design/web-react/icon';
 import { CompactPicker } from 'react-color';
 
 const { Item } = Form;
@@ -46,7 +46,8 @@ body {
 const setIframeContent = (
   previewRef: React.MutableRefObject<HTMLIFrameElement | null>,
   previewInnerHtml: string,
-  previewStimuliItem: AmpStimuliItem | undefined,
+  previewStimuliItemType: AmpStimuliItem['type'] | undefined,
+  previewStimuliItemContent: AmpStimuliItem['content'] | undefined,
   darkMode: boolean,
 ) => {
   const iframeDocument = previewRef.current?.contentDocument;
@@ -65,19 +66,19 @@ const setIframeContent = (
     // Simulate stimuli preview
     const imageEl = iframeDocument.getElementById('spt-trial-image') as HTMLImageElement;
     const textEl = iframeDocument.getElementById('spt-trial-text') as HTMLElement;
-    if (imageEl && textEl && previewStimuliItem) {
+    if (imageEl && textEl && previewStimuliItemContent) {
       imageEl.style.visibility = '';
       textEl.style.visibility = '';
-      if (previewStimuliItem.type === 'image') {
-        imageEl.src = previewStimuliItem.content;
+      if (previewStimuliItemType === 'image') {
+        imageEl.src = previewStimuliItemContent;
         textEl.style.visibility = 'hidden';
-      } else if (previewStimuliItem.type === 'text') {
-        textEl.innerText = previewStimuliItem.content;
+      } else if (previewStimuliItemType === 'text') {
+        textEl.innerText = previewStimuliItemContent;
         imageEl.style.visibility = 'hidden';
       }
     }
     // Border for visibility
-    if (textEl.parentElement) {
+    if (textEl?.parentElement) {
       textEl.parentElement.style.border = '1px solid grey';
     }
   }
@@ -120,7 +121,7 @@ const ConfigModeForm: React.FC = () => {
     } else {
       form.setFieldValue('trialHtml.textColor', '#000');
     }
-  }, [darkModeWatch]);
+  }, [darkModeWatch, form]);
 
   return (
     <div>
@@ -216,15 +217,16 @@ export const TrialHtml: React.FC = () => {
   const previewInnerHtml = trialHtmlWatch.customHtml ?? renderTrialHtml(trialHtmlWatch);
 
   useEffect(() => {
-    setIframeContent(previewRef, previewInnerHtml, previewStimuliItem, trialHtmlWatch.darkMode)
-  }, [previewRef, previewInnerHtml, previewStimuliItem?.content, previewStimuliItem?.type, trialHtmlWatch.darkMode]);
+    setIframeContent(previewRef, previewInnerHtml, previewStimuliItem?.type, previewStimuliItem?.content, trialHtmlWatch.darkMode)
+  }, [previewRef, previewInnerHtml, previewStimuliItem?.type, previewStimuliItem?.content, trialHtmlWatch.darkMode]);
 
   // If stimuli updates and the previewStimuliItem is deleted, reset previewStimuliItem
+  const isUidValid = Boolean(allItems.find(x => x.uid === previewStimuliItemUid));
   useEffect(() => {
-    if (!allItems.find(x => x.uid === previewStimuliItemUid)) {
+    if (!isUidValid) {
       setPreviewStimuliItemUid(undefined);
     }
-  });
+  }, [isUidValid]);
 
   return (
     <div style={{ textAlign: 'start' }}>
@@ -262,7 +264,7 @@ export const TrialHtml: React.FC = () => {
             }
           </Select>
         </Space>
-        <iframe style={{ flexGrow: 1 }} ref={previewRef} height={700}></iframe>
+        <iframe style={{ flexGrow: 1 }} ref={previewRef} height={700} title='HTML Preview'></iframe>
         <Text type='secondary'>(The grey border of content area will not be visible in the generated survey.)</Text>
       </div >
     </div>

@@ -19,7 +19,7 @@ export const Timeline: React.FC = () => {
     const durationsAndIntervals = form.getFieldValue('timeline.durationsAndIntervals') as AmpTimeline['durationsAndIntervals'];
     const sliced = [...durationsAndIntervals, ...Array(stimuliWatch.length).fill([100, 0])].slice(0, stimuliWatch.length - 1);
     form.setFieldValue('timeline.durationsAndIntervals', sliced);
-  }, [stimuliWatch.length]);
+  }, [form, stimuliWatch.length]);
 
   return (
     <Card style={{ textAlign: 'start' }}>
