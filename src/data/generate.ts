@@ -1,6 +1,6 @@
-import type { AmpParams, AmpStimuliPrimeItem } from './ampTypes';
+import type { AmpParams, AmpStimuliPrimeItem, AmpTimeline } from './ampTypes';
 import qsfTemplate from '../assets/qsfTemplate.json';
-import { renderTrialHtml } from './renderTrialHtml';
+import { getIndexInLayoutByRowCol, getUniversalLayout, renderTrialHtml } from './renderTrialHtml';
 import { type UidDetail, getUidDetail } from '../util/util';
 
 interface EmbeddedDataTemplate {
@@ -39,7 +39,7 @@ export function hydrateQsf(params: AmpParams) {
   }];
   setEd('stimuliItems', stimuliItems);
   setEd('totalRounds', params.totalRounds);
-  setEd('timeline', params.timeline);
+  setEd('timeline', { ...params.timeline, concurrentDisplays: transformConcurrentDisplays(params.timeline.concurrentDisplays) });
   setEd('primes', exportPrime(params));
   setEd('acceptedKeys', params.acceptedKeys.join(','));
   setEd('darkMode', params.trialHtml.darkMode);
@@ -48,7 +48,7 @@ export function hydrateQsf(params: AmpParams) {
 
   const trialSurveyElement = template.SurveyElements.find(e => e.PrimaryAttribute === 'QID2')
   if (trialSurveyElement) {
-    const trialHtml = params.trialHtml.customHtml ?? renderTrialHtml(params.trialHtml);
+    const trialHtml = params.trialHtml.customHtml ?? renderTrialHtml(params.trialHtml, params.timeline.concurrentDisplays);
     // @ts-ignore
     trialSurveyElement.Payload.QuestionText = trialHtml;
     // @ts-ignore
@@ -112,4 +112,16 @@ function exportOverrideCount(overrideCount: AmpStimuliPrimeItem['overrideCount']
   } else { // number or null
     return overrideCount;
   }
+}
+
+function transformConcurrentDisplays(concurrentDisplays: AmpTimeline['concurrentDisplays']) {
+  const universalLayout = getUniversalLayout(concurrentDisplays);
+  return concurrentDisplays?.map(elementPoolMapping => (
+    elementPoolMapping.map((row, rowIndex) => (
+      row.map((col, colIndex) => ({
+        key: `${getIndexInLayoutByRowCol(rowIndex, colIndex, universalLayout) + 1}`,
+        pool: typeof col === 'number' ? col + 1 : 0, // empty
+      }))
+    )).flat()
+  ));
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button, Checkbox, Form, Input, InputNumber, Popover, Radio, Select, Space, Switch, Typography } from '@arco-design/web-react';
-import type { AmpParams, AmpStimuliItem, AmpTrialHtml } from '../data/ampTypes';
+import type { AmpParams, AmpStimuliItem, AmpTimeline, AmpTrialHtml } from '../data/ampTypes';
 import { renderTrialHtml } from '../data/renderTrialHtml';
 import type { ArcoFormItem } from '../util/arco';
 import { StimuliThumbnail } from './stimuliThumbnail';
@@ -8,82 +8,11 @@ import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import { IconRefresh, IconToLeft, IconToRight } from '@arco-design/web-react/icon';
 import { CompactPicker } from 'react-color';
+import { TrialHtmlPreview } from './trialHtmlPreview';
 
 const { Item } = Form;
 const { Option } = Select;
 const { Text } = Typography;
-
-// const QUALTRICS_DEFAULT_SKIN = {
-//   fontSize: '24',
-//   fontWeight: '400',
-//   fontFamily: 'Poppins,Arial,sans-serif',
-//   color: '#757575',
-//   lineHeight: '1.5em',
-// } as const; // as Partial<CSSStyleDeclaration>;
-const QUALTRICS_STYLE = `
-# @font-face {
-#   font-family: Poppins;
-#   src: url(/fonts/poppinslight.ttf);
-#   font-style: normal;
-#   font-weight: 400
-# }
-# @font-face {
-#   font-family: Poppins;
-#   src: url(/fonts/poppinslight.ttf);
-#   font-style: italic;
-#   font-weight: 400
-# }
-body {
-  font-size: 24px;
-  font-weight: 400px;
-  font-family: Poppins,Arial,sans-serif;
-  color: #757575;
-  line-height: 1.5em;
-}
-`;
-
-
-const setIframeContent = (
-  previewRef: React.MutableRefObject<HTMLIFrameElement | null>,
-  previewInnerHtml: string,
-  previewStimuliItemType: AmpStimuliItem['type'] | undefined,
-  previewStimuliItemContent: AmpStimuliItem['content'] | undefined,
-  darkMode: boolean,
-) => {
-  const iframeDocument = previewRef.current?.contentDocument;
-  if (iframeDocument) {
-    // Set style once 
-    if (!iframeDocument.getElementById('preview-style')) {
-      const styleEl = iframeDocument.createElement('style');
-      styleEl.id = 'preview-style';
-      styleEl.appendChild(iframeDocument.createTextNode(QUALTRICS_STYLE));
-      iframeDocument.head.appendChild(styleEl);
-    }
-    // Set body html
-    iframeDocument.body.innerHTML = previewInnerHtml;
-    // Simulate mode page background
-    iframeDocument.body.style.backgroundColor = darkMode ? 'black' : 'initial';
-    // Simulate stimuli preview
-    const imageEl = iframeDocument.getElementById('spt-trial-image') as HTMLImageElement;
-    const textEl = iframeDocument.getElementById('spt-trial-text') as HTMLElement;
-    if (imageEl && textEl && previewStimuliItemContent) {
-      imageEl.style.visibility = '';
-      textEl.style.visibility = '';
-      if (previewStimuliItemType === 'image') {
-        imageEl.src = previewStimuliItemContent;
-        textEl.style.visibility = 'hidden';
-      } else if (previewStimuliItemType === 'text') {
-        textEl.innerText = previewStimuliItemContent;
-        imageEl.style.visibility = 'hidden';
-      }
-    }
-    // Border for visibility
-    if (textEl?.parentElement) {
-      textEl.parentElement.style.border = '1px solid grey';
-    }
-  }
-}
-
 
 const TextColorPicker: React.FC<ArcoFormItem<AmpTrialHtml['textColor']>> = ({ value, onChange }) => (
   <Space size='mini'>
@@ -111,7 +40,7 @@ const TextColorPicker: React.FC<ArcoFormItem<AmpTrialHtml['textColor']>> = ({ va
 
 
 const ConfigModeForm: React.FC = () => {
-  
+
   // When change to darkMode, change text content color
   const { form } = useFormContext();
   const darkModeWatch = useWatch('trialHtml.darkMode', form) as AmpParams['trialHtml']['darkMode'];
@@ -123,16 +52,30 @@ const ConfigModeForm: React.FC = () => {
     }
   }, [darkModeWatch, form]);
 
+  const concurrentDisplaysWatch = useWatch('timeline.concurrentDisplays', form) as AmpTimeline['concurrentDisplays'];
+  const isConcurrentDisplaysEnabled = Boolean(concurrentDisplaysWatch);
+
+  // Set default value when enabling concurrent; reset to undefined when disabling
+  useEffect(() => {
+    if (isConcurrentDisplaysEnabled) {
+      if (form.getFieldValue('trialHtml.concurrentVerticalGap') === undefined) form.setFieldValue('trialHtml.concurrentVerticalGap', 0);
+      if (form.getFieldValue('trialHtml.concurrentHorizontalGap') === undefined) form.setFieldValue('trialHtml.concurrentHorizontalGap', 0);
+    } else {
+      form.clearFields(['trialHtml.concurrentVerticalGap', 'trialHtml.concurrentHorizontalGap']);
+    }
+  }, [isConcurrentDisplaysEnabled]);
+
+
   return (
     <div>
       <Space size='large'>
         <Item field='trialHtml.width' label={
-          <b>Content Width <IconToLeft /><IconToRight /></b>
+          <b>Content width <IconToLeft /><IconToRight /></b>
         } style={{ width: 200 }}>
           <InputNumber suffix='px' />
         </Item>
         <Item field='trialHtml.height' label={
-          <b>Content Height <IconToLeft style={{ transform: 'rotate(90deg)', transformOrigin: 'right' }} /><IconToRight style={{ transform: 'rotate(90deg)', transformOrigin: 'left' }} /></b>
+          <b>Content height <IconToLeft style={{ transform: 'rotate(90deg)', transformOrigin: 'right' }} /><IconToRight style={{ transform: 'rotate(90deg)', transformOrigin: 'left' }} /></b>
         } style={{ width: 200 }}>
           <InputNumber suffix='px' />
         </Item>
@@ -145,6 +88,23 @@ const ConfigModeForm: React.FC = () => {
       <Item field='trialHtml.darkMode' label={<b>Dark mode</b>} layout='vertical' triggerPropName='checked'>
         <Switch />
       </Item>
+
+      {
+        isConcurrentDisplaysEnabled && (
+          <div>
+            <Item label={<b>Gap between contents (for Concurrent Display only)</b>}>
+              <Space size='large'>
+                <Item field='trialHtml.concurrentVerticalGap' label={<b>Vertical gap</b>}>
+                  <InputNumber suffix='px' style={{ width: 200 }} />
+                </Item>
+                <Item field='trialHtml.concurrentHorizontalGap' label={<b>Horizontal gap</b>}>
+                  <InputNumber suffix='px' style={{ width: 200 }} />
+                </Item>
+              </Space>
+            </Item>
+          </div>
+        )
+      }
 
       <Item label={<b>Text stimuli style</b>} layout='vertical'>
         <Space size={50} style={{ width: '100%' }} >
@@ -188,45 +148,22 @@ export const TrialHtml: React.FC = () => {
   const { form } = useFormContext();
   const trialHtmlWatch = useWatch('trialHtml', form) as AmpParams['trialHtml'];
   const isConfigMode = typeof trialHtmlWatch.customHtml !== 'string';
+  const concurrentDisplaysWatch = useWatch('timeline.concurrentDisplays', form) as AmpTimeline['concurrentDisplays'];
 
   // When switch to custom mode, render from current configs.
   // When switch to config mode, clear customHtml after confirmation.
   const onModeChange = (isNewModeConfigMode: boolean) => {
     if (isNewModeConfigMode) {
-      if (trialHtmlWatch.customHtml !== renderTrialHtml(trialHtmlWatch)) {
+      if (trialHtmlWatch.customHtml !== renderTrialHtml(trialHtmlWatch, concurrentDisplaysWatch)) {
         if (!window.confirm('Switching to Use Configurations will revert all the edits in Customized HTML. Continue?')) {
           return;
         }
       }
       form.setFieldValue('trialHtml.customHtml', undefined);
     } else {
-      form.setFieldValue('trialHtml.customHtml', renderTrialHtml(trialHtmlWatch));
+      form.setFieldValue('trialHtml.customHtml', renderTrialHtml(trialHtmlWatch, concurrentDisplaysWatch));
     }
   }
-
-  // Preview
-
-  const [previewStimuliItemUid, setPreviewStimuliItemUid] = useState<number>();
-  const stimuliWatch = useWatch('stimuli', form) as AmpParams['stimuli'];
-  const allItems = stimuliWatch.flatMap((stimuli, stimuliIndex) => (
-    stimuli.items.map((item, itemIndex) => ({ ...item, indexDisplay: `${stimuliIndex + 1}-${itemIndex + 1}` }))
-  ));
-  const previewStimuliItem = allItems.find(item => item.uid === previewStimuliItemUid);
-
-  const previewRef = useRef<HTMLIFrameElement>(null);
-  const previewInnerHtml = trialHtmlWatch.customHtml ?? renderTrialHtml(trialHtmlWatch);
-
-  useEffect(() => {
-    setIframeContent(previewRef, previewInnerHtml, previewStimuliItem?.type, previewStimuliItem?.content, trialHtmlWatch.darkMode)
-  }, [previewRef, previewInnerHtml, previewStimuliItem?.type, previewStimuliItem?.content, trialHtmlWatch.darkMode]);
-
-  // If stimuli updates and the previewStimuliItem is deleted, reset previewStimuliItem
-  const isUidValid = Boolean(allItems.find(x => x.uid === previewStimuliItemUid));
-  useEffect(() => {
-    if (!isUidValid) {
-      setPreviewStimuliItemUid(undefined);
-    }
-  }, [isUidValid]);
 
   return (
     <div style={{ textAlign: 'start' }}>
@@ -244,29 +181,9 @@ export const TrialHtml: React.FC = () => {
       </div>
 
       {isConfigMode ? <ConfigModeForm /> : <CustomModeForm />}
-
-      <div style={{ display: 'flex', flexDirection: 'column' }} >
-        <Space size='large'>
-          <h3>Preview</h3>
-          <Select
-            placeholder='Select a stimuli item to preview'
-            style={{ width: 300, height: 32 }}
-            value={previewStimuliItemUid}
-            onChange={setPreviewStimuliItemUid}
-            allowClear
-          >
-            {
-              allItems.map((item) => (
-                <Option key={item.uid} value={item.uid}>
-                  <StimuliThumbnail {...item} />
-                </Option>
-              ))
-            }
-          </Select>
-        </Space>
-        <iframe style={{ flexGrow: 1 }} ref={previewRef} height={700} title='HTML Preview'></iframe>
-        <Text type='secondary'>(The grey border of content area will not be visible in the generated survey.)</Text>
-      </div >
+      <Item shouldUpdate>
+        {() => <TrialHtmlPreview />}
+      </Item>
     </div>
   )
 };
