@@ -1,3 +1,5 @@
+/** @deprecated */
+
 import { createContext } from 'react';
 import { PrimeValidation, initialPrimeValidation } from '../data/primeValidation';
 

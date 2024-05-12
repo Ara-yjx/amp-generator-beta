@@ -1,3 +1,6 @@
+/** @deprecated */
+
+
 import { Alert } from '@arco-design/web-react';
 import React, { useContext } from 'react';
 import { AmpParams } from '../data/ampTypes';

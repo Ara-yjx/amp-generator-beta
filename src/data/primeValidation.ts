@@ -1,3 +1,5 @@
+/** @deprecated */
+
 import type { AmpStimuli, AmpStimuliItem, AmpStimuliPrimeItem } from './ampTypes';
 import range from 'lodash/range';
 import sortBy from 'lodash/sortBy'
@@ -14,6 +16,7 @@ export interface PrimeValidation {
 }
 
 export function getPrimeValidation(stimuli: AmpStimuli[], totalRounds: number): PrimeValidation | null {
+  return null;
   if (estimateComplexity(stimuli)) {
     const steppedPossibilities = stimuli.map(s => range(totalRounds).map(round => getAllPossibilitiesForRound(s, round))); // [poolIndex][round][prime]
     const possibilities = steppedPossibilities.map(poolSpo => poolSpo.map(roundSpo => roundSpo[roundSpo.length - 1][1]));

@@ -15,7 +15,7 @@ import { MultiRounds } from './multiRounds';
 import { StimuliPool } from './stimuliPool';
 import { Timeline } from './timeline';
 import { TrialHtml } from './trialHtml';
-import { WarnTrialNumber } from './warnTrialNumber';
+import { WarnTotalTrials } from './warnTotalTrials';
 import { IconCloudDownload, IconQuestionCircle } from '@arco-design/web-react/icon';
 
 const { Item } = Form;
@@ -82,7 +82,7 @@ export const MainForm: React.FC<{}> = ({ }) => {
             <InputNumber min={0} style={{ width: 160 }} suffix='trials' />
           </Item>
           <Item shouldUpdate noStyle>
-            {values => <WarnTrialNumber values={values} />}
+            {values => <WarnTotalTrials values={values} />}
           </Item>
           <MultiRounds />
           <Item
