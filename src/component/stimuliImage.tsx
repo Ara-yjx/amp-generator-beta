@@ -25,6 +25,21 @@ const InputShuffle: React.FC<{ value?: any, onChange?: (v: any) => any }> = ({ v
   const isShuffleEnabled = value === true || typeof value === 'number';
   const isMaxRepeatEnabled = typeof value === 'number';
   const maxRepeatValue = typeof value === 'number' ? value : undefined;
+  const tooltip = (
+    <Tooltip style={{ minWidth: '50em' }} content={
+    <div>
+      You can access the randomization result through these embeeded data:
+      <li>{`shuffled_{roundIndex}_{poolIndex}_{shuffledIndex}_item_index`}</li>
+      <li>{`shuffled_{roundIndex}_{poolIndex}_{shuffledIndex}_content`}</li>
+      <li>{`shuffled_{roundIndex}_{poolIndex}_{shuffledIndex}_type`}</li>
+      For example, "shuffled_1_2_3_content" gives you the <i>content</i> of the stimuli item which is at the <i>3rd position</i> after shuffling <i>Pool 2</i> in trial <i>Round 1</i>.
+      <li>If you did not check "Add more rounds" below, always use "1" for "roundIndex".</li>
+      <li>If shuffle is disbled, then the default item order is looping through all the items.</li>
+    </div>
+  } position='top'>
+      <IconQuestionCircle />
+    </Tooltip>
+  );
   return (
     <Space style={{ display: 'flex' }}>
       <Text type='secondary'>Shuffle</Text>
@@ -32,6 +47,7 @@ const InputShuffle: React.FC<{ value?: any, onChange?: (v: any) => any }> = ({ v
       <Text type='secondary'>Restrict max repeat</Text>
       <Switch disabled={!isShuffleEnabled} checked={isMaxRepeatEnabled} onChange={onMaxRepeatSwitchChange} />
       <InputNumber min={1} disabled={!isMaxRepeatEnabled} value={maxRepeatValue} onChange={onMaxRepeatNumberChange} />
+      {tooltip}
     </Space>
   )
 }
