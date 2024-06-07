@@ -4,11 +4,13 @@ import React, { Fragment, useEffect } from 'react';
 import type { AmpStimuli, AmpTimeline, ElementPoolMapping } from '../data/ampTypes';
 import { AddRemoveButtons } from './addRemoveButtons';
 import { ElementLayoutMappingEditor } from './elementLayoutMappingEditor';
+import { addToList, removeFromList } from '../util/formUtil';
 
 const { Item } = Form;
 const { Text } = Typography;
 
 const DEFAULT_DURATION_AND_INTERVAL = [100, 0];
+const DEFAULT_CONCURRENT_DISPLAY = [['empty']];
 
 export const ConcurrentDisplaysSelector: React.FC<{ form: FormInstance, field: string }> = ({ form, field }) => {
   const stimuliWatch = Form.useWatch('stimuli', form) as AmpStimuli[];
@@ -49,17 +51,29 @@ export const Timeline: React.FC = () => {
   const { form } = Form.useFormContext();
   const stimuliWatch = Form.useWatch('stimuli', form) as AmpStimuli[];
   const timelineWatch = Form.useWatch('timeline', form) as AmpTimeline;
-  const concurrentDisplaysWatch = Form.useWatch('timeline.concurrentDisplays', form);
+  const concurrentDisplaysWatch = Form.useWatch('timeline.concurrentDisplays', form) as AmpTimeline['concurrentDisplays'];
   const isConcurrentDisplaysEnabled = Boolean(concurrentDisplaysWatch);
   const timelineStimuliCount = timelineWatch.durationsAndIntervals.length + 1;
   const tagColor = isConcurrentDisplaysEnabled ? 'orange' : 'blue';
 
-  // Adjust with stimuli length
+  // Adjust with stimuli pools
   useEffect(() => {
     if (!isConcurrentDisplaysEnabled) {
+      // For simple display, adjust timeline with stimuli pool count
       resizeDurationsAndIntervalsArray(form, stimuliWatch.length);
+    } else {
+      // For concurrent display, update display to empty when stimuli pool is deleted
+      concurrentDisplaysWatch!.forEach((frame, frameIndex) => {
+        frame.forEach((row, rowIndex) => {
+          row.forEach((col, colIndex) => {
+            if (typeof col === 'number' && col >= stimuliWatch.length) {
+              form.setFieldValue(`timeline.concurrentDisplays[${frameIndex}][${rowIndex}][${colIndex}]`, 'empty');
+            }
+          })
+        })
+      });
     }
-  }, [isConcurrentDisplaysEnabled, form, stimuliWatch.length]);
+  }, [concurrentDisplaysWatch, isConcurrentDisplaysEnabled, form, stimuliWatch.length]);
 
   const onConcurrentDisplaysSwitchChange = (isConcurent: boolean) => {
     if (isConcurent) {
@@ -72,6 +86,16 @@ export const Timeline: React.FC = () => {
       form.setFieldValue('trialHtml.concurrentGap', 100);
     }
   };
+
+  // Add/Remove durationsAndIntervals item as well as concurrentDisplays item
+  const addConcurrentDisplaysFrame = () => {
+    addToList(form, 'timeline.durationsAndIntervals', DEFAULT_DURATION_AND_INTERVAL);
+    addToList(form, 'timeline.concurrentDisplays', DEFAULT_CONCURRENT_DISPLAY);
+  }
+  const removeConcurrentDisplaysFrame = () => {
+    removeFromList(form, 'timeline.durationsAndIntervals');
+    removeFromList(form, 'timeline.concurrentDisplays');
+  }
 
   return (
     <Card style={{ textAlign: 'start' }}>
@@ -154,26 +178,20 @@ export const Timeline: React.FC = () => {
           isConcurrentDisplaysEnabled && (
             <div style={{ marginBottom: 'auto', display: 'flex', height: 30, justifyContent: 'flex-start', alignItems: 'center', gap: 10, flexShrink: 0 }}>
               <div style={{ width: 22 }}><Divider /></div>
-              <ElementLayoutMappingEditor field={`timeline.concurrentDisplays[${concurrentDisplaysWatch?.length - 1}]`} />
+              <ElementLayoutMappingEditor field={`timeline.concurrentDisplays[${concurrentDisplaysWatch!.length - 1}]`} />
             </div>
           )
         }
       </div>
       {
         isConcurrentDisplaysEnabled && (
-          <Form.List field='timeline.durationsAndIntervals' noStyle>
-            {
-              (fields, { add, remove }) => (
-                <AddRemoveButtons
-                  onAdd={() => add(DEFAULT_DURATION_AND_INTERVAL)}
-                  onRemove={() => remove(fields.length - 1)}
-                  disableRemove={fields.length == 0}
-                  style={{ paddingLeft: 10 + 14 + 10 + 6 }}
-                  spaceSize='large'
-                />
-              )
-            }
-          </Form.List>
+          <AddRemoveButtons
+            onAdd={addConcurrentDisplaysFrame}
+            onRemove={removeConcurrentDisplaysFrame}
+            disableRemove={concurrentDisplaysWatch!.length === 1}
+            style={{ paddingLeft: 10 + 14 + 10 + 6 }}
+            spaceSize='large'
+          />
         )
       }
     </Card>
