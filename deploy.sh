@@ -1,0 +1,1 @@
+npm run build && GIT_SSH_COMMAND='ssh -i ~/.ssh/spbuilder-team' npx gh-pages -d build --repo git@github.com:spbuilder-team/spbuilder-team.github.io.git

@@ -1,7 +1,8 @@
-import type { AmpParams, AmpStimuliPrimeItem, AmpTimeline } from './ampTypes';
+import type { AmpParams, AmpStimuliPrimeItem, AmpTimeline, AT } from './ampTypes';
 import qsfTemplate from '../assets/qsfTemplate.json';
-import { getIndexInLayoutByRowCol, getUniversalLayout, renderTrialHtml } from './renderTrialHtml';
-import { type UidDetail, getUidDetail } from '../util/util';
+import { getIndexInLayoutByRowCol, renderTrialHtml } from './renderTrialHtml';
+import { type UidDetail, getKeyInLayout, getLayoutFromLayoutDisplays, getUidDetail, getUniversalLayout } from '../util/util';
+import { cloneDeep, range, sum } from 'lodash';
 
 interface EmbeddedDataTemplate {
   Description: string;
@@ -39,7 +40,12 @@ export function hydrateQsf(params: AmpParams) {
   }];
   setEd('stimuliItems', stimuliItems);
   setEd('totalRounds', params.totalRounds);
-  setEd('timeline', { ...params.timeline, concurrentDisplays: transformConcurrentDisplays(params.timeline.concurrentDisplays) });
+  if (params.timeline) {
+    setEd('timeline', params.timeline);
+  }
+  if (params.advancedTimeline) {
+    setEd('advancedTimeline', transfromAdvancedTimeline(params.advancedTimeline));
+  }
   setEd('primes', exportPrime(params));
   setEd('acceptedKeys', params.acceptedKeys.join(','));
   setEd('darkMode', params.trialHtml.darkMode);
@@ -48,7 +54,8 @@ export function hydrateQsf(params: AmpParams) {
 
   const trialSurveyElement = template.SurveyElements.find(e => e.PrimaryAttribute === 'QID2')
   if (trialSurveyElement) {
-    const trialHtml = params.trialHtml.customHtml ?? renderTrialHtml(params.trialHtml, params.timeline.concurrentDisplays);
+    const layout = params.advancedTimeline ? getUniversalLayout(params.advancedTimeline.pages.map(page => getLayoutFromLayoutDisplays(page.layoutedDisplays))) : [1];
+    const trialHtml = params.trialHtml.customHtml ?? renderTrialHtml(params.trialHtml, undefined, layout);
     // @ts-ignore
     trialSurveyElement.Payload.QuestionText = trialHtml;
     // @ts-ignore
@@ -114,14 +121,64 @@ function exportOverrideCount(overrideCount: AmpStimuliPrimeItem['overrideCount']
   }
 }
 
-function transformConcurrentDisplays(concurrentDisplays: AmpTimeline['concurrentDisplays']) {
-  const universalLayout = getUniversalLayout(concurrentDisplays);
-  return concurrentDisplays?.map(elementPoolMapping => (
-    elementPoolMapping.map((row, rowIndex) => (
-      row.map((col, colIndex) => ({
-        key: `${getIndexInLayoutByRowCol(rowIndex, colIndex, universalLayout) + 1}`,
-        pool: typeof col === 'number' ? col + 1 : 0, // empty
-      }))
-    )).flat()
-  ));
+// /** @deprecated */
+// function transformConcurrentDisplays(concurrentDisplays: AmpTimeline['concurrentDisplays']) {
+//   const universalLayout = getUniversalLayout(concurrentDisplays);
+//   return concurrentDisplays?.map(elementPoolMapping => (
+//     elementPoolMapping.map((row, rowIndex) => (
+//       row.map((col, colIndex) => ({
+//         key: `${getIndexInLayoutByRowCol(rowIndex, colIndex, universalLayout) + 1}`,
+//         pool: typeof col === 'number' ? col + 1 : 0, // empty
+//       }))
+//     )).flat()
+//   ));
+// }
+
+// 
+
+type ExportPageDisplaySrc = ['pool', number] | ['copy', number, string] | null;
+
+function transfromAdvancedTimeline({ pages }: { pages: AT.Page[] }) {
+  const layouts = pages.map(page => getLayoutFromLayoutDisplays(page.layoutedDisplays));
+  const universalLayout = getUniversalLayout(layouts);
+  console.log('universalLayout', universalLayout)
+  return {
+    pages: pages.map((page, pageIndex) => ({
+      condition: page.condition,
+      displays: transformDisplays(page.layoutedDisplays, universalLayout),
+      response: transfromResponse(page.response),
+      interval: pageIndex === pages.length - 1 ? undefined: (page.interval ?? 0),
+    }))
+  };
+
+  function transformDisplays(layoutedDisplays: AT.Page['layoutedDisplays'], universalLayout: AT.Layout) {
+    // Init all items with null (display:none)
+    const result: { [key: string]: ExportPageDisplaySrc } = Object.fromEntries(
+      range(sum(universalLayout)).map(keyZeroBased => [String(keyZeroBased + 1), null])
+    );
+    layoutedDisplays.forEach((ldRow, ldRowIndex) => {
+      ldRow.forEach((displaySrc, ldColIndex) => {
+        const displayKey = getKeyInLayout(ldRowIndex, ldColIndex, universalLayout);
+        if (displaySrc[0] === 'blank') {
+          result[displayKey] = ['pool', 0];
+        } else if (displaySrc[0] === 'pool') {
+          result[displayKey] = ['pool', displaySrc[1] + 1];
+        } else if (displaySrc[0] === 'copy') {
+          const [_, copyPool, copyRow, copyCol] = displaySrc;
+          result[displayKey] = ['copy', copyPool + 1, getKeyInLayout(copyRow, copyCol, universalLayout)];
+        }
+      })
+    })
+    return result;
+  }
+
+  function transfromResponse(response: AT.Page['response']) {
+    const result: any = {};
+    if (response.keyboard.enabled) {
+      result.keyboard = { keys: response.keyboard.keys, delayBefore: response.keyboard.delayBefore };
+    }
+    if (response.timeout.enabled) {
+      result.timeout = { duration: response.timeout.duration };
+    }
+  }
 }

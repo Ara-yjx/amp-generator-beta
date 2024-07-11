@@ -1,4 +1,5 @@
-import { AmpParams, AmpStimuli, AmpStimuliItem, AmpStimuliPrimeItem } from '../data/ampTypes';
+import { range, sum } from 'lodash';
+import { AmpParams, AmpStimuli, AmpStimuliItem, AmpStimuliPrimeItem, AT } from '../data/ampTypes';
 
 export type UidDetail = {
   type: 'stimuli',
@@ -36,4 +37,25 @@ export function findPrimeRepresentationFromUid(uid: number, stimuli: AmpStimuli)
 
 export function isAnyPrimeOverridePerRound(stimuli: AmpStimuli) {
   return stimuli.prime.some(prime => Array.isArray(prime.overrideCount));
+}
+
+export function getLayoutFromLayoutDisplays(layoutedDisplays: AT.Page['layoutedDisplays']): AT.Layout {
+  return layoutedDisplays.map(x => x.length);
+}
+
+export function getUniversalLayout(layouts: AT.Layout[]): AT.Layout {
+  if (layouts.length === 0) {
+    return [1];
+  }
+  const numOfRows = Math.max(...layouts.map(layout => layout.length));
+  return range(numOfRows).map(rowIndex => (
+    // max num of col for this fow
+    Math.max(...layouts.map(layout => (
+      layout.length > rowIndex ? layout[rowIndex] : 0
+    )))
+  ));
+}
+
+export function getKeyInLayout(row: number, col: number, layout: AT.Layout) {
+  return String(sum(layout.slice(0, row)) + col + 1);
 }

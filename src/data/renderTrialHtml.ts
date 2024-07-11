@@ -40,7 +40,7 @@ function renderRow(params: AmpTrialHtml, numOfCols: number, itemIndex: number) {
   `;
 }
 
-export function renderTrialHtml(params: AmpTrialHtml, concurrentDisplays: AmpTimeline['concurrentDisplays'], layout?: number[]) {
+export function renderTrialHtml(params: AmpTrialHtml, concurrentDisplays?: AmpTimeline['concurrentDisplays'], layout?: number[]) {
   const renderLayout = layout ?? getUniversalLayout(concurrentDisplays);
   const containerHeight = params.height * renderLayout.length + (params.concurrentVerticalGap ?? 0) * (renderLayout.length - 1);
   return `

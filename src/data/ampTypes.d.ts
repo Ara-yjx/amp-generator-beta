@@ -50,9 +50,31 @@ export interface AmpTimeline {
   concurrentDisplays?: ElementPoolMapping[],
 }
 
+export namespace AT {
+
+  type Layout = number[];
+  type DisplaySrc = ['pool', number] | ['copy', number, number, number] | ['blank'];
+  type Condition = ['response', number, '==' | '!=', string[]]; // temp
+
+  interface Page {
+    // isConditionEnabled: boolean,
+    condition?: Condition,
+    // layout: Layout,
+    // displays: { row: int, col: int, src: DisplaySrc }[],
+    layoutedDisplays: DisplaySrc[][],
+    response: {
+      keyboard: { enabled: boolean, keys: string[], delayBefore?: number, delayAfter?: number },
+      timeout: { enabled: boolean, duration: number },
+    }
+    interval?: number;
+  }
+}
+
 export interface AmpParams {
   stimuli: AmpStimuli[];
-  timeline: AmpTimeline;
+  trialType: 'simple' | 'advanced';
+  timeline?: AmpTimeline;
+  advancedTimeline?: { pages: AT.Page[] };
   acceptedKeys: string[];
   totalTrials: number;
   totalRounds: number;

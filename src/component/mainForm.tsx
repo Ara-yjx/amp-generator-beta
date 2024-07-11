@@ -1,4 +1,4 @@
-import { Collapse, Form, InputNumber, type FormInstance, Tooltip, Space } from '@arco-design/web-react';
+import { Collapse, Form, InputNumber, type FormInstance, Tooltip, Space, Radio } from '@arco-design/web-react';
 import throttle from 'lodash/throttle';
 import React, { useEffect, useRef, useState } from 'react';
 import type { AmpParams } from '../data/ampTypes';
@@ -17,9 +17,11 @@ import { Timeline } from './timeline';
 import { TrialHtml } from './trialHtml';
 import { WarnTotalTrials } from './warnTotalTrials';
 import { IconCloudDownload, IconQuestionCircle } from '@arco-design/web-react/icon';
+import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
+import { AdvancedTimeline } from './advancedTimeline';
 
 const { Item } = Form;
-
+const RadioGroup = Radio.Group;
 
 const DownloadButton: React.FC<{ values?: AmpParams }> = ({ values }) => {
   const [url, setUrl] = useState<string>();
@@ -71,11 +73,21 @@ export const MainForm: React.FC<{}> = ({ }) => {
         <StimuliPool />
         <br />
 
-        <h3 style={{ textAlign: 'left' }}>Trial Timeline</h3>
+        <h3 style={{ textAlign: 'left' }}>Trial Flow</h3>
 
-        <Item field='timeline'>
-          <Timeline />
+        <Item field='trialType' style={{ textAlign: 'left' }}>
+          <RadioGroup type='button' options={[{ value: 'simple', label: 'Simple' }, { value: 'advanced', label: 'Advanced' }]} />
         </Item>
+
+        <Item shouldUpdate>{
+          values => values.trialType === 'simple' ? (
+            <Item field='timeline'>
+              <Timeline />
+            </Item>
+          ) : (
+            <AdvancedTimeline />
+          )
+        }</Item>
 
         <span style={{ textAlign: 'left' }}>
           <Item label='Number of total trials' field='totalTrials' >
@@ -85,23 +97,6 @@ export const MainForm: React.FC<{}> = ({ }) => {
             {values => <WarnTotalTrials values={values} />}
           </Item>
           <MultiRounds />
-          <Item
-            label={
-              <>
-                Allowed Input Keys &nbsp;
-                <Tooltip content={`The keys that participants are allowed to press.\nParticipants' responses will be recorded in Qualtrics survey result data.`}>
-                  <IconQuestionCircle />
-                </Tooltip>
-              </>
-            }
-            field='acceptedKeys'
-            extra='Letters (a~z, case insensitive), Number digits (0~9), Arrow keys, Space key.'
-          >
-            <AcceptedKeys />
-          </Item>
-          <Item field='timeline.autoProceedTimeout'>
-            <AutoProceedTimeout />
-          </Item>
         </span>
 
         <Collapse bordered={false} style={{ marginBottom: 20 }}>

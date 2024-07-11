@@ -47,6 +47,7 @@ export const defaultAmpParams: AmpParams = {
       prime: [],
     },
   ],
+  trialType: 'simple',
   timeline: {
     durationsAndIntervals: [[75, 125], [100, 125]],
     delayAfterKeyboard: 0,

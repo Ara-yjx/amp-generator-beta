@@ -9,13 +9,14 @@ export const AddRemoveButtons: React.FC<{
   onAdd?: ((e: Event) => void);
   onRemove?: ((e: Event) => void);
   disableRemove?: boolean;
+  size?: 'small' | 'mini' | 'large' | 'default';
   style?: React.CSSProperties;
   spaceSize?: SpaceProps['size'];
   spaceWrap?: boolean;
-}> = ({ onAdd, onRemove, disableRemove, style, spaceSize, spaceWrap }) => (
+}> = ({ onAdd, onRemove, disableRemove, size, style, spaceSize, spaceWrap }) => (
 
   <Space style={style} size={spaceSize} wrap={spaceWrap}>
-    <Button shape='circle' type='outline' icon={<IconPlus />} onClick={onAdd} />
-    <Button shape='circle' type='outline' icon={<IconMinus />} onClick={onRemove} disabled={disableRemove} />
+    <Button size={size} shape='circle' type='outline' icon={<IconPlus />} onClick={onAdd} />
+    <Button size={size} shape='circle' type='outline' icon={<IconMinus />} onClick={onRemove} disabled={disableRemove} />
   </Space>
 )

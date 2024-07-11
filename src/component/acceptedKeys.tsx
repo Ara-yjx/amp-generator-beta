@@ -35,6 +35,7 @@ export const AcceptedKeys: React.FC<ArcoFormItem<AmpParams['acceptedKeys']>> = (
       inputValue={''}
       allowClear
       onKeyDown={onKeyDown}
+      style={{ minWidth: 100 }}
     />
   )
 };
