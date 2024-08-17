@@ -21,43 +21,49 @@ export function getElementPoolMappingOfLayout<T = null>(layout: number[], fillWi
 }
 
 function renderItem(params: AmpTrialHtml, index: number) {
-  return `
-        <!-- Item -->
-          <div class="spt-trial-content" id="spt-trial-content-${index + 1}" style="margin-left: ${params.concurrentHorizontalGap ?? 0}px; width: ${params.width}px; height: ${params.height}px; position: relative;">
-          <div class="spt-trial-text" style="position: absolute; width: 100%; height: 100%; white-space: ${params.textWrap ? 'pre-line' : 'pre'}; color: ${params.textColor ?? 'auto'}; font-weight: ${params.textIsBold ? 'bold' : 'normal'}; font-size: ${params.textFontSize}px; line-height: 1.5em; text-align: center;"></div>
-          <img class="spt-trial-image" style="position: absolute; width: 100%; height: 100%; object-fit: contain;"/>
-        </div>
-  `;
+  return trim(`
+    <!-- Item -->
+    <div class="spt-trial-content spt-trial-content-${index + 1}" style="margin-left: ${params.concurrentHorizontalGap ?? 0}px; width: ${params.width}px; height: ${params.height}px; position: relative;">
+      <img class="spt-trial-image" style="position: absolute; width: 100%; height: 100%; object-fit: contain;"/>
+      <div class="spt-trial-text" style="position: absolute; width: 100%; height: 100%; white-space: ${params.textWrap ? 'pre-line' : 'pre'}; color: ${params.textColor ?? 'auto'}; font-weight: ${params.textIsBold ? 'bold' : 'normal'}; font-size: ${params.textFontSize}px; line-height: 1.5em; display: flex; justify-content: center; align-items: center;"></div>
+    </div>
+  `);
 }
 
-/** @param itemIndex The item index of the first col in this row, which is also the # of items in the previous rows */
-function renderRow(params: AmpTrialHtml, numOfCols: number, itemIndex: number) {
-  return `
-      <!-- Row, also wrapper for items -->
-      <div style="margin-top: ${params.concurrentVerticalGap ?? 0}px; margin-left: ${-(params.concurrentHorizontalGap ?? 0)}px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
-        ${range(numOfCols).map(colIndex => renderItem(params, itemIndex + colIndex)).join('')}
-      </div>
-  `;
-}
-
-export function renderTrialHtml(params: AmpTrialHtml, concurrentDisplays: AmpTimeline['concurrentDisplays'], layout?: number[]) {
-  const renderLayout = layout ?? getUniversalLayout(concurrentDisplays);
-  const containerHeight = params.height * renderLayout.length + (params.concurrentVerticalGap ?? 0) * (renderLayout.length - 1);
-  return `
-<!-- Container. Fixed-height so that the instruction won't move. Use padding to prevent internal margin collapse with external -->
-<div style="height: ${containerHeight}px; padding-top: ${params.marginTop}px; box-sizing: content-box;">
-  <!-- Wrapper for rows to implement 'gap' -->
-  <div style="margin-top: ${-(params.concurrentVerticalGap ?? 0)}px;">
-    ${(() => {
-      let result = '', itemIndex = 0;
-      for (const numOfCols of renderLayout) {
-        result += renderRow(params, numOfCols, itemIndex);
-        itemIndex += numOfCols;
-      }
-      return result;
-    })()}
+/** 
+ * @param numOfCols Number of cols in this row
+ * @param numOfPrevCols The total count of items in the previous rows, which is also the item index of the first col in this row 
+ */
+function renderRow(params: AmpTrialHtml, numOfCols: number, numOfPrevCols: number) {
+  return trim(`
+  <!-- Row -->
+  <div style="display: flex; justify-content: center; align-items: center; margin-top: ${params.concurrentVerticalGap ?? 0}px; margin-left: ${-(params.concurrentHorizontalGap ?? 0)}px;">
+${range(numOfCols).map(colIndex => renderItem(params, numOfPrevCols + colIndex)).join('\n')}
   </div>
+  `);
+}
+
+export function renderTrialHtml(params: AmpTrialHtml, concurrentDisplays: AmpTimeline['concurrentDisplays']) {
+  const layout = getUniversalLayout(concurrentDisplays);
+  const containerHeight = (params.height + (params.concurrentVerticalGap ?? 0)) * layout.length;
+  return trim(`
+<!-- Container. Fixed-height so that the instruction won't move. Flex prevents margin collapse with external. -->
+<div style="display: flex; flex-direction: column; height: ${containerHeight}px; box-sizing: content-box; padding-top: ${params.marginTop ?? 0}px; margin-top: ${-(params.concurrentVerticalGap ?? 0)}px;">
+${(() => {
+  let rows = [], numOfPrevCols = 0;
+  for (const numOfCols of layout) {
+    rows.push(renderRow(params, numOfCols, numOfPrevCols));
+    numOfPrevCols += numOfCols;
+  }
+  return rows.join('\n');
+})()}
 </div>
+<!-- Instruction -->
 <div style="display: flex; justify-content: space-around; margin-top: 6em; white-space: pre-wrap; color: ${params.darkMode ? 'white' : 'black'}; text-align: center">${params.instruction}</div>
-`
+`);
+}
+
+/** Remove newline at head and tail, and all spaces at tail */
+function trim(s: string) {
+  return s.replace(/^\n/, '').replace(/\n +$/, '');
 }

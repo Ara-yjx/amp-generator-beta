@@ -259,7 +259,7 @@ function renderTrialPreview(
 function simulateDisplay(stimuliItems: StimuliItemToDisplay[], container: Document) {
   simulateClear(container);
   stimuliItems.forEach((stimuliItem, index) => {
-    const contentEl = container.querySelector<HTMLDivElement>('.spt-trial-content#spt-trial-content-' + (index + 1));
+    const contentEl = container.querySelector<HTMLDivElement>('.spt-trial-content.spt-trial-content-' + (index + 1));
     if (contentEl) {
       if (stimuliItem !== null) {
         const textEl = contentEl.querySelector<HTMLDivElement>('.spt-trial-text');
