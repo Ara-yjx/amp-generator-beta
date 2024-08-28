@@ -4,6 +4,7 @@ import { emptyAmpParams } from './emptyAmpParams';
 export function transformOldValues(values: AmpParams) {
   console.log('transformOldValues');
   console.log(JSON.stringify(values))
+  values.trialType ??= 'simple';
   if (typeof values.trialHtml !== 'string') {
     if (values.trialHtml.text !== undefined) {
       values.trialHtml.instruction = values.trialHtml.text;
@@ -13,7 +14,6 @@ export function transformOldValues(values: AmpParams) {
     values.trialHtml.textIsBold ??= true;
     values.trialHtml.textWrap ??= true;
     values.trialHtml.darkMode ??= false;
-
   } else {
     // Move string-type trialHtml into trialHtml.customHtml, and fill the config with default values
     values.trialHtml = {

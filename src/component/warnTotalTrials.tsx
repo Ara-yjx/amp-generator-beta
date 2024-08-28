@@ -6,7 +6,7 @@ import { sumBy } from 'lodash';
 export const WarnTotalTrials: React.FC<{ values: AmpParams }> = ({ values }) => {
 
   let usageOfEachPool: number[];
-  if (values.timeline.concurrentDisplays) {
+  if (values.timeline?.concurrentDisplays) {
     // copied from trial.js
     usageOfEachPool = values.stimuli.map(() => 0);
     for (const elementPoolMapping of values.timeline.concurrentDisplays) {
@@ -43,7 +43,7 @@ export const WarnTotalTrials: React.FC<{ values: AmpParams }> = ({ values }) => 
         invalidPools.map(({ poolIndex, poolSize, poolUsage }) => {
           const alertContent = `Stimuli pool ${poolIndex + 1} does not have sufficient item counts. `
             + `You have ${values.totalTrials} trials`
-            + (values.timeline.concurrentDisplays ? ` and each trial uses ${poolUsage} counts from pool ${poolIndex + 1}` : '')
+            + (values.timeline?.concurrentDisplays ? ` and each trial uses ${poolUsage} counts from pool ${poolIndex + 1}` : '')
             + `, but the pool only has ${poolSize} item counts.`;
           return <Alert type='warning' content={alertContent} key={poolIndex} />
         })

@@ -5,6 +5,8 @@ import type { AmpStimuli, AmpTimeline, ElementPoolMapping } from '../data/ampTyp
 import { AddRemoveButtons } from './addRemoveButtons';
 import { ElementLayoutMappingEditor } from './elementLayoutMappingEditor';
 import { addToList, removeFromList } from '../util/formUtil';
+import { AcceptedKeys } from './acceptedKeys';
+import { AutoProceedTimeout } from './autoProceedTimeout';
 
 const { Item } = Form;
 const { Text } = Typography;
@@ -194,6 +196,24 @@ export const Timeline: React.FC = () => {
           />
         )
       }
+      <Divider/>
+      <Item
+        label={
+          <>
+            Allowed Input Keys &nbsp;
+            <Tooltip content={`The keys that participants are allowed to press.\nParticipants' responses will be recorded in Qualtrics survey result data.`}>
+              <IconQuestionCircle />
+            </Tooltip>
+          </>
+        }
+        field='acceptedKeys'
+        extra='Letters (a~z, case insensitive), Number digits (0~9), Arrow keys, Space key.'
+      >
+        <AcceptedKeys />
+      </Item>
+      <Item field='timeline.autoProceedTimeout'>
+        <AutoProceedTimeout />
+      </Item>
     </Card>
   );
 }

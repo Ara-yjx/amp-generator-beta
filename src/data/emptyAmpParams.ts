@@ -20,6 +20,7 @@ export const emptyAmpParams: AmpParams = {
       prime: [],
     },
   ],
+  trialType: 'simple',
   timeline: {
     durationsAndIntervals: [[100, 125]],
     delayAfterKeyboard: 0,
