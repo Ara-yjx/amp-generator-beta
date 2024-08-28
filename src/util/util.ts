@@ -43,6 +43,10 @@ export function getLayoutFromLayoutDisplays(layoutedDisplays: AT.Page['layoutedD
   return layoutedDisplays.map(x => x.length);
 }
 
+export function getATUniversalLayout(advancedTimeline: AT.AdvancedTimeline): AT.Layout {
+  return getUniversalLayout(advancedTimeline.pages.map(page => getLayoutFromLayoutDisplays(page.layoutedDisplays)));
+}
+
 export function getUniversalLayout(layouts: AT.Layout[]): AT.Layout {
   if (layouts.length === 0) {
     return [1];

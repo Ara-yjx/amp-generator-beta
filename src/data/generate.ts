@@ -1,8 +1,8 @@
-import type { AmpParams, AmpStimuliPrimeItem, AmpTimeline, AT } from './ampTypes';
+import { range, sum } from 'lodash';
 import qsfTemplate from '../assets/qsfTemplate.json';
-import { getIndexInLayoutByRowCol, renderTrialHtml, renderTrialHtmlForLayout } from './renderTrialHtml';
-import { type UidDetail, getKeyInLayout, getLayoutFromLayoutDisplays, getUidDetail, getUniversalLayout } from '../util/util';
-import { cloneDeep, cond, range, sum } from 'lodash';
+import { type UidDetail, getATUniversalLayout, getKeyInLayout, getUidDetail } from '../util/util';
+import type { AmpParams, AmpStimuliPrimeItem, AT } from './ampTypes';
+import { renderATTrialHtml, renderTrialHtml } from './renderTrialHtml';
 
 interface EmbeddedDataTemplate {
   Description: string;
@@ -71,8 +71,7 @@ export function generateTrialHtml(params: AmpParams): string {
   if (params.trialHtml.customHtml) {
     return params.trialHtml.customHtml;
   } else if (params.advancedTimeline) {
-    const layout = getUniversalLayout(params.advancedTimeline.pages.map(page => getLayoutFromLayoutDisplays(page.layoutedDisplays)));
-    return renderTrialHtmlForLayout(params.trialHtml, layout);
+    return renderATTrialHtml(params.trialHtml, params.advancedTimeline);
   } else {
     return renderTrialHtml(params.trialHtml, params.timeline?.concurrentDisplays);
   }
@@ -147,17 +146,16 @@ function exportOverrideCount(overrideCount: AmpStimuliPrimeItem['overrideCount']
 
 type ExportPageDisplaySrc = ['pool', number] | ['copy', number, string] | null;
 
-function transformAdvancedTimeline({ pages }: { pages: AT.Page[] }) {
-  const layouts = pages.map(page => getLayoutFromLayoutDisplays(page.layoutedDisplays));
-  const universalLayout = getUniversalLayout(layouts);
-  console.log('universalLayout', universalLayout)
+function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
+  const universalLayout = getATUniversalLayout(advancedTimeline);
+  const { pages } = advancedTimeline;
   return {
     advanced: true,
     pages: pages.map((page, pageIndex) => ({
       condition: transformATCondition(page.condition),
       displays: transformATDisplays(page.layoutedDisplays, universalLayout),
       response: transfromATResponse(page.response),
-      interval: pageIndex === pages.length - 1 ? undefined: (page.interval ?? 0),
+      interval: pageIndex === pages.length - 1 ? undefined : (page.interval ?? 0),
     }))
   };
 

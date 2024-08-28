@@ -1,6 +1,7 @@
 import range from 'lodash/range';
-import { AmpTimeline, AmpTrialHtml } from './ampTypes';
+import { AmpTimeline, AmpTrialHtml, AT } from './ampTypes';
 import { sum } from 'lodash';
+import { getATUniversalLayout } from '../util/util';
 
 /** Get minimum layout that can fit all trial displays */
 export function getUniversalLayout(concurrentDisplays: AmpTimeline['concurrentDisplays']): number[] {
@@ -43,9 +44,15 @@ ${range(numOfCols).map(colIndex => renderItem(props, numOfPrevCols + colIndex)).
   `);
 }
 
+
+// Todo: consider merging renderTrialHtml and renderATTrialHtml
 export function renderTrialHtml(props: AmpTrialHtml, concurrentDisplays: AmpTimeline['concurrentDisplays']) {
   return renderTrialHtmlForLayout(props, getUniversalLayout(concurrentDisplays));
 }
+
+export function renderATTrialHtml(props: AmpTrialHtml, advancedTimeline: AT.AdvancedTimeline) {
+  return renderTrialHtmlForLayout(props, getATUniversalLayout(advancedTimeline));
+} 
 
 export function renderTrialHtmlForLayout(props: AmpTrialHtml, layout: number[]) {
   const containerHeight = (props.height + (props.concurrentVerticalGap ?? 0)) * layout.length;

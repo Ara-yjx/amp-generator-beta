@@ -1,12 +1,13 @@
 import { Form, Select, Space, Typography } from "@arco-design/web-react";
 import useWatch from "@arco-design/web-react/es/Form/hooks/useWatch";
 import React, { useEffect, useRef, useState } from "react";
-import type { AmpParams, AmpStimuliItem, AmpTimeline, ElementPoolMapping } from "../data/ampTypes";
-import { getElementPoolMappingOfLayout, getUniversalLayout, renderTrialHtml } from "../data/renderTrialHtml";
+import type { AmpParams, AmpStimuliItem, AmpTimeline, AT, ElementPoolMapping } from "../data/ampTypes";
+import { getElementPoolMappingOfLayout, getUniversalLayout, renderATTrialHtml, renderTrialHtml, renderTrialHtmlForLayout } from "../data/renderTrialHtml";
 import { StimuliThumbnail } from "./stimuliThumbnail";
 import useFormContext from "@arco-design/web-react/es/Form/hooks/useContext";
 import { cloneDeep, range } from "lodash";
 import { cp } from "fs";
+import { getATUniversalLayout, getLayoutFromLayoutDisplays } from "../util/util";
 
 const { Item } = Form;
 const { Option } = Select;
@@ -69,14 +70,16 @@ const ConcurrentPreviewSelector: React.FC<{ onUidsChange: RenderPreviewFunction 
 
   const { form } = useFormContext();
   const stimuliWatch = useWatch('stimuli', form) as AmpParams['stimuli'];
-  const [displayIndex, setDisplayIndex] = useState(0);
+  const [previewFrameIndex, setPreviewFrameIndex] = useState(0);
   const concurrentDisplaysWatch = useWatch('timeline.concurrentDisplays', form) as ElementPoolMapping[];
   const universalLayout = getUniversalLayout(concurrentDisplaysWatch);
 
+  // stimuli items to display (by uid)
   // same structure as selected display. 'undefined' means empty (no selected stimuli item to display)
-  const [uids, setUids] = useState<(number | undefined)[][]>(() => concurrentDisplaysWatch[displayIndex].map(row => row.map(col => undefined)));
+  const [uids, setUids] = useState<(number | undefined)[][]>(() => concurrentDisplaysWatch[previewFrameIndex].map(row => row.map(col => undefined)));
 
-  const callbackOnUidsChange = (uids: (number | undefined)[][]) => {
+  // should be called manually when uids change
+  const watchUids = (uids: (number | undefined)[][]) => {
     const heteroMapping: (number | 'empty' | null)[][] = getElementPoolMappingOfLayout(universalLayout, null);
     uids.forEach((row, rowIndex) => {
       row.forEach((col, colIndex) => {
@@ -89,24 +92,24 @@ const ConcurrentPreviewSelector: React.FC<{ onUidsChange: RenderPreviewFunction 
   /** Reset to same structure as the elementPoolMapping of selected frame */
   const resetUids = () => {
     console.log('resetUids')
-    const newUids = concurrentDisplaysWatch[displayIndex].map(row => row.map(col => undefined))
+    const newUids = concurrentDisplaysWatch[previewFrameIndex].map(row => row.map(col => undefined))
     setUids(newUids);
-    callbackOnUidsChange(newUids);
+    watchUids(newUids);
   };
 
   // Reset when layout change of display index change
-  useEffect(resetUids, [JSON.stringify(getUniversalLayout([concurrentDisplaysWatch[displayIndex]]))]);
+  useEffect(resetUids, [JSON.stringify(getUniversalLayout([concurrentDisplaysWatch[previewFrameIndex]]))]);
 
   /** Update one uid in uidsRef */
   const updateOneUid = (row: number, col: number, uid: number | undefined) => {
     const uidsClone = cloneDeep(uids);
     uidsClone[row][col] = uid;
     setUids(uidsClone);
-    callbackOnUidsChange(uidsClone);
+    watchUids(uidsClone);
   };
 
-  const onDisplaySelectorChange = (newIndex: number) => {
-    setDisplayIndex(newIndex);
+  const onFrameIndexSelectorChange = (newIndex: number) => {
+    setPreviewFrameIndex(newIndex);
     resetUids();
   };
 
@@ -115,16 +118,16 @@ const ConcurrentPreviewSelector: React.FC<{ onUidsChange: RenderPreviewFunction 
       <h3>Preview</h3>
 
       <Select
-        placeholder='Select a Display in the trial timeline'
+        placeholder='Select a Display in the trial flow'
         style={{ width: 200, height: 32, marginBottom: 10 }}
-        value={displayIndex}
-        onChange={onDisplaySelectorChange}
+        value={previewFrameIndex}
+        onChange={onFrameIndexSelectorChange}
         options={concurrentDisplaysWatch.map((layout, index) => ({ label: `Display ${index + 1}`, value: index }))}
       />
       <Space size='large'>
 
         {
-          concurrentDisplaysWatch[displayIndex].map((row, rowIndex) => {
+          concurrentDisplaysWatch[previewFrameIndex].map((row, rowIndex) => {
 
             return row.map((col, colIndex) => (
 
@@ -150,9 +153,103 @@ const ConcurrentPreviewSelector: React.FC<{ onUidsChange: RenderPreviewFunction 
         }
       </Space>
     </>
-  )
+  );
 }
 
+
+const AdvancedPreviewSelector: React.FC<{ onUidsChange: RenderPreviewFunction }> = ({ onUidsChange }) => {
+
+  const { form } = useFormContext();
+  const stimuliWatch = useWatch('stimuli', form) as AmpParams['stimuli'];
+  const [previewFrameIndex, setPreviewFrameIndex] = useState(0);
+  const advancedTimelineWatch = useWatch('advancedTimeline', form) as AT.AdvancedTimeline;
+
+  const universalLayout = getATUniversalLayout(advancedTimelineWatch);
+
+  const selectedPage = advancedTimelineWatch.pages[previewFrameIndex];
+
+  const getDefaultUids = () => {
+    return selectedPage.layoutedDisplays.map(row => row.map(col => undefined)) ?? [[]];
+  };
+
+  // stimuli items to display (by uid)
+  // same structure as selected display. 'undefined' means empty (no selected stimuli item to display)
+  const [uids, setUids] = useState<(number | undefined)[][]>(getDefaultUids);
+
+  // should be called manually when uids change
+  const watchUids = (uids: (number | undefined)[][]) => {
+    const heteroMapping: (number | 'empty' | null)[][] = getElementPoolMappingOfLayout(universalLayout, null);
+    uids.forEach((row, rowIndex) => {
+      row.forEach((col, colIndex) => {
+        heteroMapping[rowIndex][colIndex] = col ?? 'empty'; // turn 'undefined' to empty
+      });
+    });
+    onUidsChange(heteroMapping.flat());
+  }
+
+  /** Reset to same structure as the elementPoolMapping of selected frame */
+  const resetUids = () => {
+    console.log('resetUids')
+    const newUids = getDefaultUids();
+    setUids(newUids);
+    watchUids(newUids);
+  };
+
+  // Reset when layout change of display index change
+  useEffect(resetUids, [JSON.stringify(getLayoutFromLayoutDisplays(selectedPage.layoutedDisplays))]);
+
+  /** Update one uid in uidsRef */
+  const updateOneUid = (row: number, col: number, uid: number | undefined) => {
+    const uidsClone = cloneDeep(uids);
+    uidsClone[row][col] = uid;
+    setUids(uidsClone);
+    watchUids(uidsClone);
+  };
+
+  const onFrameIndexSelectorChange = (newIndex: number) => {
+    setPreviewFrameIndex(newIndex);
+    resetUids();
+  };
+
+  return (
+    <>
+      <h3>Preview</h3>
+
+      <Select
+        placeholder='Select a Page in the trial flow'
+        style={{ width: 200, height: 32, marginBottom: 10 }}
+        value={previewFrameIndex}
+        onChange={onFrameIndexSelectorChange}
+        options={advancedTimelineWatch.pages.map((page, index) => ({ label: `Page ${index + 1}`, value: index }))}
+      />
+      <Space size='large'>
+        {
+          selectedPage.layoutedDisplays.map((row, rowIndex) => {
+            return row.map((col, colIndex) => (
+              <Form.Item label={`Row${rowIndex + 1}-Col${colIndex + 1}`}>
+                <Select
+                  placeholder={col[0] === 'blank' ? '(empty)' : col[0] === 'copy' ? '(copy)' : undefined}
+                  style={{ width: 200, height: 32 }}
+                  disabled={col[0] === 'blank' || col[0] === 'copy'}
+                  value={uids[rowIndex]?.[colIndex]}
+                  onChange={uid => updateOneUid(rowIndex, colIndex, uid)}
+                >
+                  {
+                    Boolean(col[0] === 'pool') && stimuliWatch[col[1] as number].items.map((item, itemIndex) => (
+                      <Option key={item.uid} value={item.uid}>
+                        <StimuliThumbnail {...item} indexDisplay={`${(col[1] as number) + 1}-${itemIndex + 1}`} />
+                      </Option>
+                    ))
+                  }
+                </Select>
+              </Form.Item>
+            ));
+          })
+        }
+      </Space>
+    </>
+  );
+}
 
 export const TrialHtmlPreview: React.FC = () => {
 
@@ -161,9 +258,11 @@ export const TrialHtmlPreview: React.FC = () => {
 
   const previewRef = useRef<HTMLIFrameElement>(null);
   const trialHtmlWatch = useWatch('trialHtml', form) as AmpParams['trialHtml'];
+  const advancedTimelineWatch = useWatch('advancedTimeline', form) as AmpParams['advancedTimeline'];
   const concurrentDisplaysWatch = useWatch('timeline.concurrentDisplays', form) as AmpTimeline['concurrentDisplays'];
-  const previewInnerHtml = trialHtmlWatch.customHtml ?? renderTrialHtml(trialHtmlWatch, concurrentDisplaysWatch);
-
+  const previewInnerHtml = trialHtmlWatch.customHtml ?? (
+    advancedTimelineWatch ? renderATTrialHtml(trialHtmlWatch, advancedTimelineWatch) : renderTrialHtml(trialHtmlWatch, concurrentDisplaysWatch)
+  );
 
   const [uids, setUids] = useState<(number | 'empty' | null)[]>([]);
 
@@ -185,7 +284,12 @@ export const TrialHtmlPreview: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }} >
-      {concurrentDisplaysWatch ? <ConcurrentPreviewSelector onUidsChange={setUids} /> : <SinglePreviewSelector onUidsChange={setUids} />}
+      {
+        advancedTimelineWatch ? <AdvancedPreviewSelector onUidsChange={setUids} /> :
+          concurrentDisplaysWatch ? <ConcurrentPreviewSelector onUidsChange={setUids} /> :
+            <SinglePreviewSelector onUidsChange={setUids} />
+      }
+
       <iframe style={{ flexGrow: 1 }} ref={previewRef} height={700} title='HTML Preview'></iframe>
       <Text type='secondary'>(The grey border of content area will not be visible in the generated survey.)</Text>
     </div >

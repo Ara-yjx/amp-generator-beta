@@ -68,13 +68,15 @@ export namespace AT {
     }
     interval?: number;
   }
+
+  type AdvancedTimeline = { pages: AT.Page[] };
 }
 
 export interface AmpParams {
   stimuli: AmpStimuli[];
   trialType: 'simple' | 'advanced';
   timeline?: AmpTimeline;
-  advancedTimeline?: { pages: AT.Page[] };
+  advancedTimeline?: AT.AdvancedTimeline;
   acceptedKeys: string[];
   totalTrials: number;
   totalRounds: number;
