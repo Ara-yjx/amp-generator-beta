@@ -56,16 +56,23 @@ export namespace AT {
   type DisplaySrc = ['pool', number] | ['copy', number, number, number] | ['blank'];
   type Condition = ['response', number, '==' | '!=', string[]]; // temp
 
+  type layoutedDisplayItem = {
+    displaySrc: DisplaySrc;
+    swap?: boolean;
+    bindKeyboard?: string[];
+  };
+
   interface Page {
     // isConditionEnabled: boolean,
     condition?: Condition,
     // layout: Layout,
     // displays: { row: int, col: int, src: DisplaySrc }[],
-    layoutedDisplays: DisplaySrc[][],
+    layoutedDisplays: layoutedDisplayItem[][],
     response: {
       keyboard: { enabled: boolean, keys: string[], delayBefore?: number, delayAfter?: number },
       timeout: { enabled: boolean, duration: number },
-    }
+    },
+    swap?: boolean,
     interval?: number;
   }
 

@@ -225,19 +225,19 @@ const AdvancedPreviewSelector: React.FC<{ onUidsChange: RenderPreviewFunction }>
       <Space size='large'>
         {
           selectedPage.layoutedDisplays.map((row, rowIndex) => {
-            return row.map((col, colIndex) => (
+            return row.map(({ displaySrc }, colIndex) => (
               <Form.Item label={`Row${rowIndex + 1}-Col${colIndex + 1}`}>
                 <Select
-                  placeholder={col[0] === 'blank' ? '(empty)' : col[0] === 'copy' ? '(copy)' : undefined}
+                  placeholder={displaySrc[0] === 'blank' ? '(empty)' : displaySrc[0] === 'copy' ? '(copy)' : undefined}
                   style={{ width: 200, height: 32 }}
-                  disabled={col[0] === 'blank' || col[0] === 'copy'}
+                  disabled={displaySrc[0] === 'blank' || displaySrc[0] === 'copy'}
                   value={uids[rowIndex]?.[colIndex]}
                   onChange={uid => updateOneUid(rowIndex, colIndex, uid)}
                 >
                   {
-                    Boolean(col[0] === 'pool') && stimuliWatch[col[1] as number].items.map((item, itemIndex) => (
+                    Boolean(displaySrc[0] === 'pool') && stimuliWatch[displaySrc[1] as number].items.map((item, itemIndex) => (
                       <Option key={item.uid} value={item.uid}>
-                        <StimuliThumbnail {...item} indexDisplay={`${(col[1] as number) + 1}-${itemIndex + 1}`} />
+                        <StimuliThumbnail {...item} indexDisplay={`${(displaySrc[1] as number) + 1}-${itemIndex + 1}`} />
                       </Option>
                     ))
                   }

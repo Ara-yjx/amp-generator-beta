@@ -17,17 +17,20 @@ import useOptionGuards from '../hooks/useOptionGuard';
 const { Item, List } = Form;
 const { Text, Title } = Typography;
 
+const emptyLayoutedDisplayItem = (): AT.layoutedDisplayItem => (
+  { displaySrc: ['blank'] }
+);
 
-const emptyPage: AT.Page = {
+const emptyPage = (): AT.Page => ({
   // layout: [1],
   // displays: [{ row: 1, col: 1, src: null }],
-  layoutedDisplays: [[['blank']]],
+  layoutedDisplays: [[emptyLayoutedDisplayItem()]],
   response: {
     keyboard: { enabled: false, keys: [], delayBefore: 0, delayAfter: 0 },
     timeout: { enabled: true, duration: 1000 },
   },
   interval: 0,
-}
+});
 
 export const ATLayout: React.FC<{ field: string }> = ({ field }) => {
   const { form } = useFormContext();
@@ -111,50 +114,82 @@ export const ATPageCondition: React.FC<{ field: string, pageIndex: number }> = (
   )
 }
 
-export const ATLayoutItem: React.FC<{ field: string, page: number, row: number, col: number, options?: { label: string, value: number }[] }> = ({ field, page, row, col }) => {
+
+/** field: advancedTimeline.pages[*].layoutedDisplays[row][col] */
+const ATLayoutItem: React.FC<{ field: string, page: number, row: number, col: number, options?: { label: string, value: number }[] }> = ({ field, page, row, col }) => {
   const { form } = useFormContext();
   const poolsWatch = useWatch('stimuli', form) as AmpParams['stimuli'];
   const pagesWatch = useWatch('advancedTimeline.pages', form) as AT.Page[];
+  const thisPageWatch = useWatch(`advancedTimeline.pages[${page}]`, form) as AT.Page;
   const poolOptions = poolsWatch.map((_, index) => ({
     label: `Pool ${index + 1}`, value: ['pool', index].join('.')
   }));
-  const prevPageOptions = pagesWatch.slice(0, page).flatMap((p, pIndex) =>
+  const copyOptions = pagesWatch.slice(0, page).flatMap((p, pIndex) =>
     p.layoutedDisplays.flatMap((ldRow, ldRowIndex) =>
-      ldRow.filter(ldCol => ldCol?.[0] === 'pool').map((ldCol, ldColIndex) => ({
-        label: `Copy Page#${pIndex + 1} Item${ldRowIndex + 1}-${ldColIndex + 1} (Pool ${ldCol![1]! + 1})`,
+      ldRow.filter(ldCol => ldCol.displaySrc?.[0] === 'pool').map((ldCol, ldColIndex) => ({
+        label: `Copy Page#${pIndex + 1} Item${ldRowIndex + 1}-${ldColIndex + 1} (Pool ${ldCol.displaySrc![1]! + 1})`,
         value: ['copy', pIndex, ldRowIndex, ldColIndex].join('.'),
       }))
     )
   );
   const blankOption = { label: '(blank)', value: 'blank' }
-  // TODO: current page options
-  const layoutItemOptions = [blankOption, ...poolOptions, ...prevPageOptions];
-  function normalizeLayoutItem(v: string | undefined): AT.DisplaySrc | undefined {
+  // TODO: current page copyOptions
+  const layoutItemOptions = [blankOption, ...poolOptions, ...copyOptions];
+
+  function deserializeDisplaySrcOption(v: string | undefined): AT.DisplaySrc | undefined {
     if (v === undefined) return undefined;
     const split = v.split('.');
     // Parse string to number except first item;
     const splitToInt = split.map((item, index) => index === 0 ? item : parseInt(item)) as AT.DisplaySrc;
     return splitToInt;
   }
-  function formatterLayoutItem(v: AT.DisplaySrc | undefined): string | undefined {
+  function serializeDisplaySrcOption(v: AT.DisplaySrc | undefined): string | undefined {
     if (v === undefined) return undefined;
     return v?.join('.') ?? 'null';
   }
 
-  useOptionGuards(field, layoutItemOptions, { formatter: formatterLayoutItem, defaultValue: ['blank'] });
-
+  useOptionGuards(`${field}.displaySrc`, layoutItemOptions, { formatter: serializeDisplaySrcOption, defaultValue: ['blank'] });
 
   return (
-    /* @ts-ignore */
-    <Item field={field} normalize={normalizeLayoutItem} formatter={formatterLayoutItem} noStyle>
-      <Select
-        style={{ width: 240, padding: 10 }}
-        options={layoutItemOptions}
-      />
-    </Item>
-  )
-}
+    <div style={{ border: '1px dashed lightgrey', padding: 5 }}>
+      <div>
+        {/* @ts-ignore */}
+        <Item field={`${field}.displaySrc`} normalize={deserializeDisplaySrcOption} formatter={serializeDisplaySrcOption} noStyle>
+          <Select
+            style={{ width: 240 }}
+            options={layoutItemOptions}
+          />
+        </Item>
+      </div>
+      {
+        thisPageWatch.swap && (
+          <div style={{ margin: '4px 0' }}>
+            <Space>
+              <Item field={`${field}.swap`} noStyle>
+                <Checkbox>Swap</Checkbox>
+              </Item>
+            </Space>
+          </div>
+        )
+      }
+      {
+        thisPageWatch.swap && thisPageWatch.response.keyboard.enabled && (
+          <div>
+            <Space>
+              <Text>Bind keys</Text>
+              <Item field={`${field}.bindKeyboard`} noStyle>
+                <AcceptedKeys />
+              </Item>
+            </Space>
+          </div>
+        )
+      }
+    </div>
+  );
+};
 
+
+/** field: advancedTimeline.pages[*] */
 export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => void }> = ({ field, pageIndex, remove }) => {
   const { form } = useFormContext();
   const layoutedDisplaysWatch = useWatch(`${field}.layoutedDisplays`, form);
@@ -170,7 +205,6 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
       form.setFieldValue(conditionField, ['response', 0, '==', []]);
     }
   };
-
 
   const cardTitle = (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -217,11 +251,11 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
           <LayoutEditor
             field={`${field}.layoutedDisplays`}
             renderItem={(layoutItemField, row, col) => <ATLayoutItem field={layoutItemField} page={pageIndex} row={row} col={col} />}
-            newItem={() => ['blank']}
+            newItem={emptyLayoutedDisplayItem}
           />
         </div>
 
-        <Divider style={{}} />
+        <Divider />
 
         <Space style={{ margin: '10px 0', width: '100%' }}>
           <IconSkipNext />
@@ -258,6 +292,22 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
           }
         </Space>
 
+        <Divider />
+
+        <Space style={{ margin: '10px 0', width: '100%' }}>
+          <Item field={`${field}.swap`} noStyle>
+            <Switch />
+          </Item>
+          <Text bold>Swap (shuffle) displays</Text>
+        </Space>
+        <li>You can randomly swap display items.</li>
+        <li>
+          When you enable both "swap" and "keyboard response",
+          in some settings where a key is used to repesent a stimuli item,
+          you may want to reverse the swap to get the participant's actual selection.
+          You can do this by binding key(s) to stimuli item.
+        </li>
+        <li>Each swapped display item must have at least one bind-key, and the bind-keys of different display items must be distinct.</li>
       </Card >
     </div>
   )
@@ -292,7 +342,7 @@ export const AdvancedTimeline: React.FC = () => {
                 index !== fields.length - 1 && <ATPageInterval field={`${field}.interval`} />
               ])
             }
-            <Button type='outline' icon={<IconPlus />} onClick={() => add(emptyPage)} style={{ color: '#FF8D1F', borderColor: '#FF8D1F' }}>Add page</Button>
+            <Button type='outline' icon={<IconPlus />} onClick={() => add(emptyPage())} style={{ color: '#FF8D1F', borderColor: '#FF8D1F' }}>Add page</Button>
           </Space>
         </>
       }</List>

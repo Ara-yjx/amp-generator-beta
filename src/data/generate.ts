@@ -156,6 +156,7 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
       displays: transformATDisplays(page.layoutedDisplays, universalLayout),
       response: transfromATResponse(page.response),
       interval: pageIndex === pages.length - 1 ? undefined : (page.interval ?? 0),
+      swap: transformATSwap(page),
     }))
   };
 
@@ -173,8 +174,9 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
       range(sum(universalLayout)).map(keyZeroBased => [String(keyZeroBased + 1), null])
     );
     layoutedDisplays.forEach((ldRow, ldRowIndex) => {
-      ldRow.forEach((displaySrc, ldColIndex) => {
+      ldRow.forEach((ldCol, ldColIndex) => {
         const displayKey = getKeyInLayout(ldRowIndex, ldColIndex, universalLayout);
+        const { displaySrc } = ldCol;
         if (displaySrc[0] === 'blank') {
           result[displayKey] = ['pool', 0];
         } else if (displaySrc[0] === 'pool') {
@@ -197,5 +199,21 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
       result.timeout = { duration: response.timeout.duration };
     }
     return result;
+  }
+
+  function transformATSwap(page: AT.Page) {
+    if (page.swap) {
+      const result: { [displayKey: string]: { bindKeyboard: string[] } } = {};
+      page.layoutedDisplays.forEach((ldRow, ldRowIndex) => {
+        ldRow.forEach((ldCol, ldColIndex) => {
+          const displayKey = getKeyInLayout(ldRowIndex, ldColIndex, universalLayout);
+          const { swap, bindKeyboard } = ldCol;
+          if (swap) {
+            result[displayKey] = { bindKeyboard: bindKeyboard ?? [] };
+          }
+        })
+      })
+      return result;
+    }
   }
 }
