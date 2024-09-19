@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "https://ara-yjx.github.io/amp-generator-beta/static/css/main.ef77f83a.css",
-    "main.js": "https://ara-yjx.github.io/amp-generator-beta/static/js/main.c9527903.js",
-    "static/js/787.028f531c.chunk.js": "https://ara-yjx.github.io/amp-generator-beta/static/js/787.028f531c.chunk.js",
+    "main.css": "https://ara-yjx.github.io/amp-generator-beta/static/css/main.c8a27486.css",
+    "main.js": "https://ara-yjx.github.io/amp-generator-beta/static/js/main.88b4f7d8.js",
+    "static/js/453.eae8a547.chunk.js": "https://ara-yjx.github.io/amp-generator-beta/static/js/453.eae8a547.chunk.js",
     "index.html": "https://ara-yjx.github.io/amp-generator-beta/index.html",
-    "main.ef77f83a.css.map": "https://ara-yjx.github.io/amp-generator-beta/static/css/main.ef77f83a.css.map",
-    "main.c9527903.js.map": "https://ara-yjx.github.io/amp-generator-beta/static/js/main.c9527903.js.map",
-    "787.028f531c.chunk.js.map": "https://ara-yjx.github.io/amp-generator-beta/static/js/787.028f531c.chunk.js.map"
+    "main.c8a27486.css.map": "https://ara-yjx.github.io/amp-generator-beta/static/css/main.c8a27486.css.map",
+    "main.88b4f7d8.js.map": "https://ara-yjx.github.io/amp-generator-beta/static/js/main.88b4f7d8.js.map",
+    "453.eae8a547.chunk.js.map": "https://ara-yjx.github.io/amp-generator-beta/static/js/453.eae8a547.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.ef77f83a.css",
-    "static/js/main.c9527903.js"
+    "static/css/main.c8a27486.css",
+    "static/js/main.88b4f7d8.js"
   ]
 }
