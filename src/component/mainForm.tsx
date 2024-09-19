@@ -19,6 +19,7 @@ import { WarnTotalTrials } from './warnTotalTrials';
 import { IconCloudDownload, IconQuestionCircle } from '@arco-design/web-react/icon';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import { AdvancedTimeline } from './advancedTimeline';
+import { Debugger } from './debugger';
 
 const { Item } = Form;
 const RadioGroup = Radio.Group;
@@ -68,6 +69,7 @@ export const MainForm: React.FC<{}> = ({ }) => {
         initialValues={emptyAmpParams}
         onValuesChange={onValuesChange}
       >
+        {window.location.hostname === 'localhost' && <Debugger />}
         <LoadSave />
         <h3 style={{ textAlign: 'left' }}>Stimuli Pool</h3>
         <StimuliPool />
