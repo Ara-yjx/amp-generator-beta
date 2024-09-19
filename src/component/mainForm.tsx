@@ -17,6 +17,7 @@ import { Timeline } from './timeline';
 import { TrialHtml } from './trialHtml';
 import { WarnTotalTrials } from './warnTotalTrials';
 import { IconCloudDownload, IconQuestionCircle } from '@arco-design/web-react/icon';
+import { Debugger } from './debugger';
 
 const { Item } = Form;
 
@@ -66,6 +67,7 @@ export const MainForm: React.FC<{}> = ({ }) => {
         initialValues={emptyAmpParams}
         onValuesChange={onValuesChange}
       >
+        {window.location.hostname === 'localhost' && <Debugger />}
         <LoadSave />
         <h3 style={{ textAlign: 'left' }}>Stimuli Pool</h3>
         <StimuliPool />
