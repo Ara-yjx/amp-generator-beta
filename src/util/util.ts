@@ -1,5 +1,5 @@
 import { range, sum } from 'lodash';
-import { AmpParams, AmpStimuli, AmpStimuliItem, AmpStimuliPrimeItem, AT } from '../data/ampTypes';
+import { AmpParams, AmpStimuli, AmpStimuliItem, AmpStimuliPrimeItem, AmpTimeline, AT, DisplayLayout } from '../data/ampTypes';
 
 export type UidDetail = {
   type: 'stimuli',
@@ -39,15 +39,19 @@ export function isAnyPrimeOverridePerRound(stimuli: AmpStimuli) {
   return stimuli.prime.some(prime => Array.isArray(prime.overrideCount));
 }
 
-export function getLayoutFromLayoutDisplays(layoutedDisplays: AT.Page['layoutedDisplays']): AT.Layout {
+export function getLayoutFromLayoutDisplays(layoutedDisplays: AT.Page['layoutedDisplays']): DisplayLayout {
   return layoutedDisplays.map(x => x.length);
 }
 
-export function getATUniversalLayout(advancedTimeline: AT.AdvancedTimeline): AT.Layout {
+export function getATUniversalLayout(advancedTimeline: AT.AdvancedTimeline): DisplayLayout {
   return getUniversalLayout(advancedTimeline.pages.map(page => getLayoutFromLayoutDisplays(page.layoutedDisplays)));
 }
 
-export function getUniversalLayout(layouts: AT.Layout[]): AT.Layout {
+export function getCDUniversalLayout(concurrentDisplays: AmpTimeline['concurrentDisplays']): DisplayLayout {
+  return concurrentDisplays ? getUniversalLayout(concurrentDisplays.map(display => display.map(x => x.length))) : [1];
+}
+
+export function getUniversalLayout(layouts: DisplayLayout[]): DisplayLayout {
   if (layouts.length === 0) {
     return [1];
   }
@@ -60,6 +64,6 @@ export function getUniversalLayout(layouts: AT.Layout[]): AT.Layout {
   ));
 }
 
-export function getKeyInLayout(row: number, col: number, layout: AT.Layout) {
+export function getKeyInLayout(row: number, col: number, layout: DisplayLayout) {
   return String(sum(layout.slice(0, row)) + col + 1);
 }

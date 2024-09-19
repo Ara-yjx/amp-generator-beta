@@ -1,7 +1,7 @@
 import { range, sum } from 'lodash';
 import qsfTemplate from '../assets/qsfTemplate.json';
-import { type UidDetail, getATUniversalLayout, getKeyInLayout, getUidDetail } from '../util/util';
-import type { AmpParams, AmpStimuliPrimeItem, AT } from './ampTypes';
+import { type UidDetail, getATUniversalLayout, getCDUniversalLayout, getKeyInLayout, getUidDetail } from '../util/util';
+import type { AmpParams, AmpStimuliPrimeItem, AmpTimeline, AT, DisplayLayout } from './ampTypes';
 import { renderATTrialHtml, renderTrialHtml } from './renderTrialHtml';
 
 interface EmbeddedDataTemplate {
@@ -44,7 +44,11 @@ export function hydrateQsf(params: AmpParams) {
   if (params.trialType === 'advanced' && params.advancedTimeline) {
     setEd('timeline', transformAdvancedTimeline(params.advancedTimeline!));
   } else {
-    setEd('timeline', params.timeline);
+    if (params.timeline?.concurrentDisplays) {
+      setEd('timeline', { ...params.timeline, concurrentDisplays: transformConcurrentDisplays(params.timeline.concurrentDisplays) });
+    } else {
+      setEd('timeline', params.timeline);
+    }
   }
   setEd('primes', exportPrime(params));
   setEd('acceptedKeys', params.acceptedKeys.join(','));
@@ -129,20 +133,18 @@ function exportOverrideCount(overrideCount: AmpStimuliPrimeItem['overrideCount']
   }
 }
 
-// /** @deprecated */
-// function transformConcurrentDisplays(concurrentDisplays: AmpTimeline['concurrentDisplays']) {
-//   const universalLayout = getUniversalLayout(concurrentDisplays);
-//   return concurrentDisplays?.map(elementPoolMapping => (
-//     elementPoolMapping.map((row, rowIndex) => (
-//       row.map((col, colIndex) => ({
-//         key: `${getIndexInLayoutByRowCol(rowIndex, colIndex, universalLayout) + 1}`,
-//         pool: typeof col === 'number' ? col + 1 : 0, // empty
-//       }))
-//     )).flat()
-//   ));
-// }
+function transformConcurrentDisplays(concurrentDisplays: AmpTimeline['concurrentDisplays']) {
+  const universalLayout = getCDUniversalLayout(concurrentDisplays);
+  return concurrentDisplays?.map(elementPoolMapping => (
+    elementPoolMapping.map((row, rowIndex) => (
+      row.map((col, colIndex) => ({
+        key: getKeyInLayout(rowIndex, colIndex, universalLayout),
+        pool: typeof col === 'number' ? col + 1 : 0, // empty
+      }))
+    )).flat()
+  ));
+}
 
-// 
 
 type ExportPageDisplaySrc = ['pool', number] | ['copy', number, string] | null;
 
@@ -160,7 +162,7 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
     }))
   };
 
-  function transformATCondition(condition: AT.Page['condition'], universalLayout: AT.Layout) {
+  function transformATCondition(condition: AT.Page['condition'], universalLayout: DisplayLayout) {
     if (condition) {
       const conditionCopy = [...condition] as AT.Condition;
       conditionCopy[1] += 1;
@@ -175,7 +177,7 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
     }
   }
 
-  function transformATDisplays(layoutedDisplays: AT.Page['layoutedDisplays'], universalLayout: AT.Layout) {
+  function transformATDisplays(layoutedDisplays: AT.Page['layoutedDisplays'], universalLayout: DisplayLayout) {
     // Init all items with null (display:none)
     const result: { [key: string]: ExportPageDisplaySrc } = Object.fromEntries(
       range(sum(universalLayout)).map(keyZeroBased => [String(keyZeroBased + 1), null])
@@ -197,7 +199,7 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
     return result;
   }
 
-  function transfromATResponse(page: AT.Page, universalLayout: AT.Layout) {
+  function transfromATResponse(page: AT.Page, universalLayout: DisplayLayout) {
     const result: any = {};
     const { response, layoutedDisplays } = page;
     if (response.keyboard.enabled) {

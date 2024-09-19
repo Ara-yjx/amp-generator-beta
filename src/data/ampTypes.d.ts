@@ -50,9 +50,11 @@ export interface AmpTimeline {
   concurrentDisplays?: ElementPoolMapping[],
 }
 
+
+export type DisplayLayout = number[];
+
 export namespace AT {
 
-  type Layout = number[];
   type DisplaySrc = ['pool', number] | ['copy', number, number, number] | ['blank'];
   type Condition = ['response', number, '==' | '!=', string[]]; // temp
 
