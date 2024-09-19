@@ -17,9 +17,12 @@ import useOptionGuards from '../hooks/useOptionGuard';
 const { Item, List } = Form;
 const { Text, Title } = Typography;
 
-const emptyLayoutedDisplayItem = (): AT.layoutedDisplayItem => (
-  { displaySrc: ['blank'] }
-);
+const emptyLayoutedDisplayItem = (): AT.layoutedDisplayItem => ({
+  displaySrc: ['blank'],
+  mouseClick: true,
+  // although it's convenient to make all items clickable by default
+  // a more semantic way is: when response.mouseClick->true, item.mouseClick ??= true
+});
 
 const emptyPage = (): AT.Page => ({
   // layout: [1],
@@ -28,6 +31,7 @@ const emptyPage = (): AT.Page => ({
   response: {
     keyboard: { enabled: false, keys: [], delayBefore: 0, delayAfter: 0 },
     timeout: { enabled: true, duration: 1000 },
+    mouseClick: { enabled: false },
   },
   interval: 0,
 });
@@ -57,17 +61,25 @@ export const ATPageCondition: React.FC<{ field: string, pageIndex: number }> = (
     label: `Page #${index + 1}`, value: index,
   }));
   const pagesWatch = useWatch('advancedTimeline.pages', form) as AT.Page[] | undefined;
-  const selectedPageResponseWatch = pagesWatch?.[conditionWatch[1]]?.response;
+  const selectedPageWatch = pagesWatch?.[conditionWatch[1]];
+  const selectedPageResponseWatch = selectedPageWatch?.response;
   // const selectedPageResponseWatch = useWatch(`advancedTimeline.pages[${conditionWatch[1]}].response`, form) as AT.Page['response'] | undefined;
   // console.log('selectedPageResponseWatch', `advancedTimeline.pages[${conditionWatch[1]}].response`, selectedPageResponseWatch)
   const conditionResponseOptions = [];
   if (selectedPageResponseWatch?.timeout.enabled) {
-    conditionResponseOptions.push({ label: `Fixed duration`, value: '_AP' })
+    conditionResponseOptions.push({ label: `Fixed duration`, value: '_AP' }) // todo : change to "TIMEOUT"
   }
   if (selectedPageResponseWatch?.keyboard.enabled) {
     selectedPageResponseWatch?.keyboard.keys.map(key =>
-      conditionResponseOptions.push({ label: key, value: key })
+      conditionResponseOptions.push({ label: `Keyboard ${key}`, value: key })
     );
+  }
+  if (selectedPageResponseWatch?.mouseClick.enabled) {
+    selectedPageWatch?.layoutedDisplays.forEach((ldRow, ldRowIndex) => {
+      ldRow.filter(displaySrc => displaySrc.mouseClick).forEach((ldCol, ldColIndex) => {
+        conditionResponseOptions.push({ label: `Click ${ldRowIndex + 1}-${ldColIndex + 1}`, value: `_MOUSE.${ldRowIndex}.${ldColIndex}` })
+      })
+    })
   }
 
   useOptionGuards(`${field}.condition[1]`, conditionPageOptions);
@@ -165,7 +177,7 @@ const ATLayoutItem: React.FC<{ field: string, page: number, row: number, col: nu
         thisPageWatch.swap && (
           <div style={{ margin: '4px 0' }}>
             <Space>
-              <Item field={`${field}.swap`} noStyle>
+              <Item field={`${field}.swap`} triggerPropName='checked' noStyle>
                 <Checkbox>Swap</Checkbox>
               </Item>
             </Space>
@@ -181,6 +193,15 @@ const ATLayoutItem: React.FC<{ field: string, page: number, row: number, col: nu
                 <AcceptedKeys />
               </Item>
             </Space>
+          </div>
+        )
+      }
+      {
+        thisPageWatch.response.mouseClick.enabled && (
+          <div>
+            <Item field={`${field}.mouseClick`} triggerPropName='checked' noStyle>
+              <Checkbox>Clickable</Checkbox>
+            </Item>
           </div>
         )
       }
@@ -262,7 +283,7 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
           <Text bold>Go to next page when</Text>
         </Space>
 
-        <Space wrap size={[0, -14]} style={{ paddingLeft: 10, width: '100%' }}>
+        <Space wrap size={[0, -18]} style={{ paddingLeft: 10, width: '100%' }}>
           <Item field={`${field}.response.timeout.enabled`} triggerPropName='checked' layout='inline'>
             <Checkbox>
               <div style={{ display: 'inline-block', width: '10em' }}>After fixed duration</div>
@@ -290,6 +311,14 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
               </Item>
             ]
           }
+        </Space>
+
+        <Space wrap size={[0, -18]} style={{ paddingLeft: 10, width: '100%' }}>
+          <Item field={`${field}.response.mouseClick.enabled`} triggerPropName='checked' layout='inline'>
+            <Checkbox>
+              <div style={{ display: 'inline-block' }}>Mouse click response</div>
+            </Checkbox>
+          </Item>
         </Space>
 
         <Divider />

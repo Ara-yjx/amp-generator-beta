@@ -60,6 +60,7 @@ export namespace AT {
     displaySrc: DisplaySrc;
     swap?: boolean;
     bindKeyboard?: string[];
+    mouseClick?: boolean;
   };
 
   interface Page {
@@ -71,6 +72,7 @@ export namespace AT {
     response: {
       keyboard: { enabled: boolean, keys: string[], delayBefore?: number, delayAfter?: number },
       timeout: { enabled: boolean, duration: number },
+      mouseClick: { enabled: boolean },
     },
     swap?: boolean,
     interval?: number;

@@ -152,18 +152,25 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
   return {
     advanced: true,
     pages: pages.map((page, pageIndex) => ({
-      condition: transformATCondition(page.condition),
+      condition: transformATCondition(page.condition, universalLayout),
       displays: transformATDisplays(page.layoutedDisplays, universalLayout),
-      response: transfromATResponse(page.response),
+      response: transfromATResponse(page, universalLayout),
       interval: pageIndex === pages.length - 1 ? undefined : (page.interval ?? 0),
       swap: transformATSwap(page),
     }))
   };
 
-  function transformATCondition(condition: AT.Page['condition']) {
+  function transformATCondition(condition: AT.Page['condition'], universalLayout: AT.Layout) {
     if (condition) {
-      const conditionCopy = [...condition];
-      (conditionCopy as AT.Condition)[1] += 1;
+      const conditionCopy = [...condition] as AT.Condition;
+      conditionCopy[1] += 1;
+      conditionCopy[3].forEach((conditionValue, conditionValueIndex) => {
+        const [type, row, col] = conditionValue.split('.');
+        if (type === '_MOUSE') {
+          const mouseClickKey = getKeyInLayout(parseInt(row), parseInt(col), universalLayout);
+          conditionCopy[3][conditionValueIndex] = mouseClickKey;
+        }
+      })
       return conditionCopy;
     }
   }
@@ -190,13 +197,21 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
     return result;
   }
 
-  function transfromATResponse(response: AT.Page['response']) {
+  function transfromATResponse(page: AT.Page, universalLayout: AT.Layout) {
     const result: any = {};
+    const { response, layoutedDisplays } = page;
     if (response.keyboard.enabled) {
       result.keyboard = { keys: response.keyboard.keys, delayBefore: response.keyboard.delayBefore };
     }
     if (response.timeout.enabled) {
       result.timeout = { duration: response.timeout.duration };
+    }
+    if (response.mouseClick.enabled) {
+      result.mouseClick = layoutedDisplays.flatMap((ldRow, ldRowIndex) => (
+        ldRow.filter(displaySrc => displaySrc.mouseClick).map((displaySrc, ldColIndex) => (
+          getKeyInLayout(ldRowIndex, ldColIndex, universalLayout)
+        ))
+      ))
     }
     return result;
   }
