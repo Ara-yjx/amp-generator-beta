@@ -1,3 +1,4 @@
+import { forEach2d } from '../util/util';
 import type { AmpParams, AT } from './ampTypes';
 import { emptyAmpParams } from './emptyAmpParams';
 
@@ -37,13 +38,14 @@ export function transformOldValues(values: AmpParams) {
       //   AT.Page['layoutedDisplay'] = DisplaySrc[][] 
       // Now it's further wrapped
       //   AT.Page['layoutedDisplay'] = { displaySrc: DisplaySrc, ... }[][]
-      page.layoutedDisplays.forEach((row, rowIndex) => {
-        row.forEach((col: unknown, colIndex) => {
-          if ((col as AT.LayoutedDisplayItem).displaySrc === undefined && typeof (col as AT.DisplaySrc)[0] === 'string') {
-            page.layoutedDisplays[rowIndex][colIndex] = { displaySrc: (col as AT.DisplaySrc) };
-          }
-        })
-      });
+      forEach2d(page.layoutedDisplays as unknown[][], (displayItem, row, col) => {
+        if (
+          (displayItem as AT.LayoutedDisplayItem).displaySrc === undefined &&
+          typeof (displayItem as AT.DisplaySrc)[0] === 'string'
+        ) {
+          page.layoutedDisplays[row][col] = { displaySrc: (displayItem as AT.DisplaySrc) };
+        }
+      })
     }
   }
 

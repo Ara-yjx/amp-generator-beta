@@ -5,7 +5,7 @@ import { cloneDeep } from "lodash";
 import React, { useEffect, useRef, useState } from "react";
 import type { AmpParams, AmpTimeline, AT, ConcurrentDisplayFrame } from "../data/ampTypes";
 import { getATUniversalLayout, getCDUniversalLayout, getElementPoolMappingOfLayout, renderATTrialHtml, renderTrialHtml } from "../data/renderTrialHtml";
-import { getLayoutFromLayoutDisplays } from "../util/util";
+import { getDisplayKey, getLayoutFromLayoutDisplays } from "../util/util";
 import { StimuliThumbnail } from "./stimuliThumbnail";
 
 const { Item } = Form;
@@ -130,10 +130,10 @@ const ConcurrentPreviewSelector: React.FC<{ onUidsChange: RenderPreviewFunction 
 
             return row.map((col, colIndex) => (
 
-              <Form.Item label={`Row${rowIndex + 1}-Col${colIndex + 1}`}>
+              <Form.Item layout='inline' label={getDisplayKey(rowIndex, colIndex)}>
                 <Select
                   placeholder={col === 'empty' ? '(empty)' : undefined}
-                  style={{ width: 200, height: 32 }}
+                  style={{ width: 160, height: 32 }}
                   disabled={col === 'empty'}
                   value={uids[rowIndex]?.[colIndex]}
                   onChange={uid => updateOneUid(rowIndex, colIndex, uid)}

@@ -1,16 +1,17 @@
-import { Button, Form, Grid, Modal, Select } from '@arco-design/web-react';
+import { Button, Form, Grid, Modal, Select, Tag } from '@arco-design/web-react';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import { IconEdit } from '@arco-design/web-react/icon';
 import React from 'react';
 import type { AmpStimuli, ConcurrentDisplayFrame } from '../data/ampTypes';
 import { AddRemoveButtons } from './addRemoveButtons';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
+import { getDisplayKey } from '../util/util';
 
 const ROW_HEIGHT = 100;
 
 const { Row, Col } = Grid;
 
-const ContentPoolSelector: React.FC<{ field: string }> = ({ field }) => {
+const ContentPoolSelector: React.FC<{ field: string, rowIndex: number, colIndex: number }> = ({ field, rowIndex, colIndex }) => {
   const { form } = Form.useFormContext();
   const stimuliWatch = Form.useWatch('stimuli', form) as AmpStimuli[];
 
@@ -24,6 +25,8 @@ const ContentPoolSelector: React.FC<{ field: string }> = ({ field }) => {
   const margin = 10;
   return (
     <div style={{ display: 'inline-block', width: 140, height: ROW_HEIGHT - margin * 2, margin: margin, border: '1px solid grey', backgroundColor: 'white' }}>
+      <Tag color='orange' bordered>{getDisplayKey(rowIndex, colIndex)}</Tag>
+
       <Form.Item field={field}>
         <Select options={options} style={{ width: 140 }} />
       </Form.Item>
@@ -67,12 +70,12 @@ export const ConcurrentDisplayFrameEditor: React.FC<{ field: string }> = ({ fiel
                   <>
                     <div style={{ border: '1px solid rgb(var(--orange-6))', marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                       {
-                        rowFields.map(rowField => (
+                        rowFields.map((rowField, rowIndex) => (
                           <div key={rowField.key} style={{ display: 'flex', justifyContent: 'center', flexWrap: 'nowrap' }}>
                             <Form.List field={rowField.field}>{
-                              (columnFields) => (
-                                columnFields.map(columnField => (
-                                  <ContentPoolSelector {...columnField} />
+                              colFields => (
+                                colFields.map((colField, colIndex) => (
+                                  <ContentPoolSelector {...colField} rowIndex={rowIndex} colIndex={colIndex} />
                                 ))
                               )
                             }</Form.List>

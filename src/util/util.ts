@@ -74,7 +74,7 @@ export function toAZRepresentation(x: number): String {
 }
 
 
-export function forEach2d<T>(array2d: Array<Array<T>>, operation: (value: T, row: number, col: number) => void): void {
+export function forEach2d<T>(array2d: T[][], operation: (value: T, row: number, col: number) => void): void {
   array2d.forEach((row, rowIndex) => {
     row.forEach((col, colIndex) => {
       operation(col, rowIndex, colIndex);
@@ -82,7 +82,7 @@ export function forEach2d<T>(array2d: Array<Array<T>>, operation: (value: T, row
   });
 };
 
-export function map2d<T, K>(array2d: Array<Array<T>>, operation: (value: T, row: number, col: number) => K): Array<Array<K>> {
+export function map2d<T, K>(array2d: T[][], operation: (value: T, row: number, col: number) => K): K[][] {
   return array2d.map((row, rowIndex) => (
     row.map((col, colIndex) => (
       operation(col, rowIndex, colIndex)
@@ -90,6 +90,6 @@ export function map2d<T, K>(array2d: Array<Array<T>>, operation: (value: T, row:
   ));
 };
 
-export function flatMap2d<T, K>(array2d: Array<Array<T>>, operation: (value: T, row: number, col: number) => K): Array<K> {
+export function flatMap2d<T, K>(array2d: T[][], operation: (value: T, row: number, col: number) => K): K[] {
   return map2d(array2d, operation).flat();
 }
