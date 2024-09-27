@@ -38,16 +38,15 @@ export interface AmpTrialHtml {
   text?: string; // use instruction
 }
 
-export type ElementPoolMapping = (number | 'empty')[][]; // [row][column]; 'empty' will map to -1; also called 'frame' in larger context
-// export type HeteroElementPoolMapping = (number | 'empty' | null)[][];
-
+export type ConcurrentDisplayFrame = (number | 'empty')[][]; // [row][column]; 'empty' will map to -1; also called 'frame' in larger context
+export type DisplayLayout = number[];
 
 export interface AmpTimeline {
   durationsAndIntervals: [number, number][],
   delayBeforeKeyboard: number,
   delayAfterKeyboard: number,
   autoProceedTimeout: number | null,
-  concurrentDisplays?: ElementPoolMapping[],
+  concurrentDisplays?: ConcurrentDisplayFrame[],
 }
 
 export interface AmpParams {

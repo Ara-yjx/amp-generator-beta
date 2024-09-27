@@ -1,12 +1,11 @@
 import { Form, Select, Space, Typography } from "@arco-design/web-react";
-import useWatch from "@arco-design/web-react/es/Form/hooks/useWatch";
-import React, { useEffect, useRef, useState } from "react";
-import type { AmpParams, AmpStimuliItem, AmpTimeline, ElementPoolMapping } from "../data/ampTypes";
-import { getElementPoolMappingOfLayout, getUniversalLayout, renderTrialHtml } from "../data/renderTrialHtml";
-import { StimuliThumbnail } from "./stimuliThumbnail";
 import useFormContext from "@arco-design/web-react/es/Form/hooks/useContext";
-import { cloneDeep, range } from "lodash";
-import { cp } from "fs";
+import useWatch from "@arco-design/web-react/es/Form/hooks/useWatch";
+import { cloneDeep } from "lodash";
+import React, { useEffect, useRef, useState } from "react";
+import type { AmpParams, AmpTimeline, ConcurrentDisplayFrame } from "../data/ampTypes";
+import { getCDUniversalLayout, getElementPoolMappingOfLayout, renderTrialHtml } from "../data/renderTrialHtml";
+import { StimuliThumbnail } from "./stimuliThumbnail";
 
 const { Item } = Form;
 const { Option } = Select;
@@ -70,8 +69,8 @@ const ConcurrentPreviewSelector: React.FC<{ onUidsChange: RenderPreviewFunction 
   const { form } = useFormContext();
   const stimuliWatch = useWatch('stimuli', form) as AmpParams['stimuli'];
   const [displayIndex, setDisplayIndex] = useState(0);
-  const concurrentDisplaysWatch = useWatch('timeline.concurrentDisplays', form) as ElementPoolMapping[];
-  const universalLayout = getUniversalLayout(concurrentDisplaysWatch);
+  const concurrentDisplaysWatch = useWatch('timeline.concurrentDisplays', form) as ConcurrentDisplayFrame[];
+  const universalLayout = getCDUniversalLayout(concurrentDisplaysWatch);
 
   // same structure as selected display. 'undefined' means empty (no selected stimuli item to display)
   const [uids, setUids] = useState<(number | undefined)[][]>(() => concurrentDisplaysWatch[displayIndex].map(row => row.map(col => undefined)));
@@ -95,7 +94,7 @@ const ConcurrentPreviewSelector: React.FC<{ onUidsChange: RenderPreviewFunction 
   };
 
   // Reset when layout change of display index change
-  useEffect(resetUids, [JSON.stringify(getUniversalLayout([concurrentDisplaysWatch[displayIndex]]))]);
+  useEffect(resetUids, [JSON.stringify(getCDUniversalLayout([concurrentDisplaysWatch[displayIndex]]))]);
 
   /** Update one uid in uidsRef */
   const updateOneUid = (row: number, col: number, uid: number | undefined) => {

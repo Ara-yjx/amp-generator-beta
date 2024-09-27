@@ -1,7 +1,7 @@
 import type { AmpParams, AmpStimuliPrimeItem, AmpTimeline } from './ampTypes';
 import qsfTemplate from '../assets/qsfTemplate.json';
-import { getIndexInLayoutByRowCol, getUniversalLayout, renderTrialHtml } from './renderTrialHtml';
-import { type UidDetail, getUidDetail } from '../util/util';
+import { getCDUniversalLayout, getIndexInLayoutByRowCol, renderTrialHtml } from './renderTrialHtml';
+import { type UidDetail, getDisplayKey, getUidDetail, map2d } from '../util/util';
 
 interface EmbeddedDataTemplate {
   Description: string;
@@ -115,13 +115,10 @@ function exportOverrideCount(overrideCount: AmpStimuliPrimeItem['overrideCount']
 }
 
 function transformConcurrentDisplays(concurrentDisplays: AmpTimeline['concurrentDisplays']) {
-  const universalLayout = getUniversalLayout(concurrentDisplays);
-  return concurrentDisplays?.map(elementPoolMapping => (
-    elementPoolMapping.map((row, rowIndex) => (
-      row.map((col, colIndex) => ({
-        key: `${getIndexInLayoutByRowCol(rowIndex, colIndex, universalLayout) + 1}`,
-        pool: typeof col === 'number' ? col + 1 : 0, // empty
-      }))
-    )).flat()
+  return concurrentDisplays?.map(frame => (
+    map2d(frame, (pool, row, col) => ({
+      key: getDisplayKey(row, col),
+      pool: typeof pool === 'number' ? pool + 1 : 0, // empty
+    })).flat()
   ));
 }

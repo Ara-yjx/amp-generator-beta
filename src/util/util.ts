@@ -1,4 +1,5 @@
-import { AmpParams, AmpStimuli, AmpStimuliItem, AmpStimuliPrimeItem } from '../data/ampTypes';
+import { sum } from 'lodash';
+import { AmpStimuli, AmpStimuliItem, AmpStimuliPrimeItem, DisplayLayout } from '../data/ampTypes';
 
 export type UidDetail = {
   type: 'stimuli',
@@ -36,4 +37,56 @@ export function findPrimeRepresentationFromUid(uid: number, stimuli: AmpStimuli)
 
 export function isAnyPrimeOverridePerRound(stimuli: AmpStimuli) {
   return stimuli.prime.some(prime => Array.isArray(prime.overrideCount));
+}
+
+
+
+/** @deprecated */
+export function getKeyInLayout(row: number, col: number, layout: DisplayLayout) {
+  return String(sum(layout.slice(0, row)) + col + 1);
+}
+
+export function getDisplayKey(row: number, col: number) {
+  return `${toAZRepresentation(row + 1)}${col + 1}`;
+}
+
+/** 
+ * Input must be > 0.
+ * 1 -> 'A', 2 -> 'B', 26 -> 'Z', 27 -> 'AA', 703 -> 'AAA' 
+ */
+export function toAZRepresentation(x: number): String {
+  // This is actually not 26-based conversion, but shifted
+  // In "AA"=27, the first A represents 1*26 rather than 0*26; the seconds A represents 1 rather than 0
+  // Generally, in digits [dk,...,d2,d1,d0], digit di means (di+1)*26^i
+  // So, although it's 26-carry-on, the value range of a digit is 1~26 instead of 0~25.
+  // Thus when processing each digit, we need to -1 to counteract this offset
+  const digits = []; // each digit is 0~25 here
+  while (x > 0) {
+    x--;
+    digits.unshift(x % 26);
+    x = Math.floor(x / 26);
+  };
+  const result = digits.map(n => String.fromCharCode(65 + n)).join('');
+  return result;
+}
+
+
+export function forEach2d<T>(array2d: Array<Array<T>>, operation: (value: T, row: number, col: number) => void): void {
+  array2d.forEach((row, rowIndex) => {
+    row.forEach((col, colIndex) => {
+      operation(col, rowIndex, colIndex);
+    })
+  });
+};
+
+export function map2d<T, K>(array2d: Array<Array<T>>, operation: (value: T, row: number, col: number) => K): Array<Array<K>> {
+  return array2d.map((row, rowIndex) => (
+    row.map((col, colIndex) => (
+      operation(col, rowIndex, colIndex)
+    ))
+  ));
+};
+
+export function flatMap2d<T, K>(array2d: Array<Array<T>>, operation: (value: T, row: number, col: number) => K): Array<K> {
+  return map2d(array2d, operation).flat();
 }
