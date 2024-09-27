@@ -39,6 +39,9 @@ export function isAnyPrimeOverridePerRound(stimuli: AmpStimuli) {
   return stimuli.prime.some(prime => Array.isArray(prime.overrideCount));
 }
 
+export function getLayoutFromLayoutDisplays(layoutedDisplays: any[][]): number[] {
+  return layoutedDisplays.map(x => x.length);
+}
 
 
 /** @deprecated */
