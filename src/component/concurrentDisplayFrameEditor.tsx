@@ -63,6 +63,7 @@ export const ConcurrentDisplayFrameEditor: React.FC<{ field: string }> = ({ fiel
         <p>If you select same stimuli pool twice, then two items will be picked from the pool. And the pool size should be {'>='} (2 * Number of total trials).</p>
         <span style={{ color: 'rgb(var(--orange-6))' }}>Trial Question Container</span>
         <Row>
+          {/* Row items */}
           <Col span={18}>
             <div>
               <Form.List field={field}>{
@@ -75,7 +76,7 @@ export const ConcurrentDisplayFrameEditor: React.FC<{ field: string }> = ({ fiel
                             <Form.List field={rowField.field}>{
                               colFields => (
                                 colFields.map((colField, colIndex) => (
-                                  <ContentPoolSelector {...colField} rowIndex={rowIndex} colIndex={colIndex} />
+                                  <ContentPoolSelector field={colField.field} key={colField.key} rowIndex={rowIndex} colIndex={colIndex} />
                                 ))
                               )
                             }</Form.List>
@@ -91,12 +92,13 @@ export const ConcurrentDisplayFrameEditor: React.FC<{ field: string }> = ({ fiel
               }</Form.List>
             </div>
           </Col>
+          {/* AddRemove buttons */}
           <Col span={6} style={{ paddingLeft: 10 }}>
             <Form.List field={field}>
               {
                 (rowFields, rowActions) => (
                   rowFields.map((rowField, rowIndex) => (
-                    <Form.List {...rowField}>{
+                    <Form.List field={rowField.field} key={rowField.key}>{
                       (colFields, colActions) => (
                         <div style={{ height: ROW_HEIGHT, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                           <AddRemoveButtons

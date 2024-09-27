@@ -3,10 +3,10 @@ import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import { IconApps, IconArrowFall, IconBranch, IconDelete, IconEdit, IconPlus, IconSkipNext } from '@arco-design/web-react/icon';
 import { range } from 'lodash';
-import React from 'react';
+import React, { Fragment } from 'react';
 import type { AT, AmpParams } from '../data/ampTypes';
 import useOptionGuards from '../hooks/useOptionGuard';
-import { forEach2d, getDisplayKey, getLayoutFromLayoutDisplays } from '../util/util';
+import { flatMap2d, forEach2d, getDisplayKey, getLayoutFromLayoutDisplays } from '../util/util';
 import { AcceptedKeys } from './acceptedKeys';
 import { LayoutEditor } from './layoutEditor';
 
@@ -132,14 +132,14 @@ const ATLayoutItem: React.FC<{ field: string, page: number, row: number, col: nu
   const poolOptions = poolsWatch.map((_, index) => ({
     label: `Pool ${index + 1}`, value: ['pool', index].join('.')
   }));
-  const copyOptions = pagesWatch.slice(0, page).flatMap((p, pIndex) =>
-    p.layoutedDisplays.flatMap((ldRow, ldRowIndex) =>
-      ldRow.filter(ldCol => ldCol.displaySrc?.[0] === 'pool').map((ldCol, ldColIndex) => ({
-        label: `Copy Page#${pIndex + 1} Item${ldRowIndex + 1}-${ldColIndex + 1} (Pool ${ldCol.displaySrc![1]! + 1})`,
-        value: ['copy', pIndex, ldRowIndex, ldColIndex].join('.'),
+  const copyOptions = pagesWatch.slice(0, page).flatMap(({ layoutedDisplays }, pIndex) => (
+    flatMap2d(layoutedDisplays, (item, row, col) => ({ item, row, col }))
+      .filter(({ item }) => item.displaySrc?.[0] === 'pool')
+      .map(({ item, row, col }) => ({
+        label: `Copy Page#${pIndex + 1} ${getDisplayKey(row, col)} (Pool ${item.displaySrc![1]! + 1})`,
+        value: ['copy', pIndex, row, col].join('.'),
       }))
-    )
-  );
+  ));
   const blankOption = { label: '(blank)', value: 'blank' }
   // TODO: current page copyOptions
   const layoutItemOptions = [blankOption, ...poolOptions, ...copyOptions];
@@ -353,10 +353,12 @@ export const AdvancedTimeline: React.FC = () => {
             <Typography style={{ color: '#FF8D1F' }}>Start Trial</Typography>
             <IconArrowFall style={{ fontSize: 20, color: '#FF8D1F' }} />
             {
-              fields.map(({ key, field }, index) => [
-                <ATPage field={field} pageIndex={index} key={key} remove={() => remove(index)} />,
-                index !== fields.length - 1 && <ATPageInterval field={`${field}.interval`} />
-              ])
+              fields.map(({ key, field }, index) => (
+                <Fragment key={key}>
+                  <ATPage field={field} pageIndex={index} remove={() => remove(index)} />
+                  {(index !== fields.length - 1) && <ATPageInterval field={`${field}.interval`} />}
+                </Fragment>
+              ))
             }
             <Button type='outline' icon={<IconPlus />} onClick={() => add(emptyPage())} style={{ color: '#FF8D1F', borderColor: '#FF8D1F' }}>Add page</Button>
           </Space>
