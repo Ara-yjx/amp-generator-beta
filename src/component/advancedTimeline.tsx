@@ -163,49 +163,40 @@ const ATLayoutItem: React.FC<{ field: string, page: number, row: number, col: nu
   useOptionGuards(`${field}.displaySrc`, layoutItemOptions, { formatter: serializeDisplaySrcOption, defaultValue: ['blank'] });
 
   return (
-    <div style={{ border: '1px dashed lightgrey', padding: 5 }}>
-      <div>
-        {/* @ts-ignore */}
-        <Item field={`${field}.displaySrc`} normalize={deserializeDisplaySrcOption} formatter={serializeDisplaySrcOption} noStyle>
-          <Select
-            style={{ width: 240 }}
-            options={layoutItemOptions}
-          />
-        </Item>
-      </div>
+    <Space direction='vertical' style={{ border: '1px dashed grey', padding: 5 }}>
+      <Tag color='orange' bordered>{row}-{col}</Tag>
+      {/* @ts-ignore */}
+      <Item field={`${field}.displaySrc`} normalize={deserializeDisplaySrcOption} formatter={serializeDisplaySrcOption} noStyle>
+        <Select
+          style={{ width: 240 }}
+          options={layoutItemOptions}
+        />
+      </Item>
       {
         thisPageWatch.swap && (
-          <div style={{ margin: '4px 0' }}>
-            <Space>
-              <Item field={`${field}.swap`} triggerPropName='checked' noStyle>
-                <Checkbox>Swap</Checkbox>
-              </Item>
-            </Space>
-          </div>
+          <Item field={`${field}.swap`} triggerPropName='checked' noStyle>
+            <Checkbox>Swappable</Checkbox>
+          </Item>
         )
       }
       {
         thisPageWatch.swap && thisPageWatch.response.keyboard.enabled && (
-          <div>
-            <Space>
-              <Text>Bind keys</Text>
-              <Item field={`${field}.bindKeyboard`} noStyle>
-                <AcceptedKeys />
-              </Item>
-            </Space>
-          </div>
+          <Space>
+            <Text>Bind keys</Text>
+            <Item field={`${field}.bindKeyboard`} noStyle>
+              <AcceptedKeys />
+            </Item>
+          </Space>
         )
       }
       {
         thisPageWatch.response.mouseClick.enabled && (
-          <div>
-            <Item field={`${field}.mouseClick`} triggerPropName='checked' noStyle>
-              <Checkbox>Clickable</Checkbox>
-            </Item>
-          </div>
+          <Item field={`${field}.mouseClick`} triggerPropName='checked' noStyle>
+            <Checkbox>Clickable</Checkbox>
+          </Item>
         )
       }
-    </div>
+    </Space>
   );
 };
 
@@ -268,7 +259,7 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
           <Text bold>Page layout: {layoutStringify}</Text>
         </Space>
 
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 10 }}>
           <LayoutEditor
             field={`${field}.layoutedDisplays`}
             renderItem={(layoutItemField, row, col) => <ATLayoutItem field={layoutItemField} page={pageIndex} row={row} col={col} />}

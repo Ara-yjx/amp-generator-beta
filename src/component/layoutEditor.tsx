@@ -20,7 +20,7 @@ export const LayoutEditor: React.FC<{
       <Form.List field={field}>{
         (rowFields, rowOp) => (
           <>
-            <div style={{ border: '1px solid black', }}>
+            <div style={{ border: '1px solid grey', padding: 10 }}>
               {
                 rowFields.map((rowField, rowIndex) => (
                   <div key={rowField.key}>
@@ -36,7 +36,7 @@ export const LayoutEditor: React.FC<{
                           }
                           <div style={{ width: 1 }}>
                             <AddRemoveButtons
-                              style={{ margin: 4 }}
+                              style={{ marginLeft: 20 }}
                               size='mini'
                               onAdd={() => colOp.add(newItem?.())}
                               onRemove={() => colOp.remove(colFields.length - 1)}
@@ -52,7 +52,7 @@ export const LayoutEditor: React.FC<{
             </div>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <AddRemoveButtons
-                style={{ margin: 4 }}
+                style={{ marginTop: 10 }}
                 size='mini'
                 onAdd={() => rowOp.add([newItem?.()])}
                 onRemove={() => rowOp.remove(rowFields.length - 1)}
