@@ -1,12 +1,13 @@
 import { Card, Divider, Form, FormInstance, InputNumber, Select, Space, Switch, Tag, Tooltip, Typography } from '@arco-design/web-react';
 import { IconArrowFall, IconQuestionCircle } from '@arco-design/web-react/icon';
 import React, { Fragment, useEffect } from 'react';
-import type { AmpStimuli, AmpTimeline, ElementPoolMapping } from '../data/ampTypes';
+import type { AmpStimuli, AmpTimeline, ConcurrentDisplayFrame } from '../data/ampTypes';
 import { AddRemoveButtons } from './addRemoveButtons';
-import { ElementLayoutMappingEditor } from './elementLayoutMappingEditor';
+import { ConcurrentDisplayFrameEditor } from './concurrentDisplayFrameEditor';
 import { addToList, removeFromList } from '../util/formUtil';
 import { AcceptedKeys } from './acceptedKeys';
 import { AutoProceedTimeout } from './autoProceedTimeout';
+import { forEach2d } from '../util/util';
 
 const { Item } = Form;
 const { Text } = Typography;
@@ -66,12 +67,10 @@ export const Timeline: React.FC = () => {
     } else {
       // For concurrent display, update display to empty when stimuli pool is deleted
       concurrentDisplaysWatch!.forEach((frame, frameIndex) => {
-        frame.forEach((row, rowIndex) => {
-          row.forEach((col, colIndex) => {
-            if (typeof col === 'number' && col >= stimuliWatch.length) {
-              form.setFieldValue(`timeline.concurrentDisplays[${frameIndex}][${rowIndex}][${colIndex}]`, 'empty');
-            }
-          })
+        forEach2d(frame, (displayItem, row, col) => {
+          if (typeof displayItem === 'number' && displayItem >= stimuliWatch.length) {
+            form.setFieldValue(`timeline.concurrentDisplays[${frameIndex}][${row}][${col}]`, 'empty');
+          }
         })
       });
     }
@@ -79,7 +78,7 @@ export const Timeline: React.FC = () => {
 
   const onConcurrentDisplaysSwitchChange = (isConcurent: boolean) => {
     if (isConcurent) {
-      const compatibleElementPoolMapping: ElementPoolMapping[] = stimuliWatch.map((v, index) => [[index]]);
+      const compatibleElementPoolMapping: ConcurrentDisplayFrame[] = stimuliWatch.map((v, index) => [[index]]);
       form.setFieldValue('timeline.concurrentDisplays', compatibleElementPoolMapping);
     } else {
       resizeDurationsAndIntervalsArray(form, stimuliWatch.length);
@@ -127,7 +126,7 @@ export const Timeline: React.FC = () => {
                 isConcurrentDisplaysEnabled && (
                   <>
                     <div style={{ width: 210, flexShrink: 0 }}><Divider /></div>
-                    <ElementLayoutMappingEditor field={`timeline.concurrentDisplays[${index}]`} />
+                    <ConcurrentDisplayFrameEditor field={`timeline.concurrentDisplays[${index}]`} />
                   </>
                 )
               }
@@ -180,7 +179,7 @@ export const Timeline: React.FC = () => {
           isConcurrentDisplaysEnabled && (
             <div style={{ marginBottom: 'auto', display: 'flex', height: 30, justifyContent: 'flex-start', alignItems: 'center', gap: 10, flexShrink: 0 }}>
               <div style={{ width: 22 }}><Divider /></div>
-              <ElementLayoutMappingEditor field={`timeline.concurrentDisplays[${concurrentDisplaysWatch!.length - 1}]`} />
+              <ConcurrentDisplayFrameEditor field={`timeline.concurrentDisplays[${concurrentDisplaysWatch!.length - 1}]`} />
             </div>
           )
         }

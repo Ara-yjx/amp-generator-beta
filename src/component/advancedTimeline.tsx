@@ -1,23 +1,19 @@
-import { Button, Card, Checkbox, Divider, Form, FormInstance, InputNumber, Select, Space, Switch, Tag, Tooltip, Typography } from '@arco-design/web-react';
-import { IconApps, IconArrowDown, IconArrowFall, IconBranch, IconDelete, IconDown, IconEdit, IconPlus, IconQuestionCircle, IconSkipNext } from '@arco-design/web-react/icon';
-import React, { Fragment, useEffect, useState } from 'react';
-import type { AmpStimuli, AmpTimeline, ElementPoolMapping, AT, AmpParams } from '../data/ampTypes';
-import { AddRemoveButtons } from './addRemoveButtons';
-import { ElementLayoutMappingEditor } from './elementLayoutMappingEditor';
-import { addToList, removeFromList } from '../util/formUtil';
-import { AcceptedKeys } from './acceptedKeys';
-import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
-import useForm from '@arco-design/web-react/es/Form/useForm';
+import { Button, Card, Checkbox, Divider, Form, InputNumber, Select, Space, Switch, Tag, Typography } from '@arco-design/web-react';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
-import { dropWhile, range } from 'lodash';
-import { LayoutEditor } from './layoutEditor';
-import { getLayoutFromLayoutDisplays } from '../util/util';
+import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
+import { IconApps, IconArrowFall, IconBranch, IconDelete, IconEdit, IconPlus, IconSkipNext } from '@arco-design/web-react/icon';
+import { range } from 'lodash';
+import React from 'react';
+import type { AT, AmpParams } from '../data/ampTypes';
 import useOptionGuards from '../hooks/useOptionGuard';
+import { forEach2d, getDisplayKey, getLayoutFromLayoutDisplays } from '../util/util';
+import { AcceptedKeys } from './acceptedKeys';
+import { LayoutEditor } from './layoutEditor';
 
 const { Item, List } = Form;
 const { Text, Title } = Typography;
 
-const emptyLayoutedDisplayItem = (): AT.layoutedDisplayItem => ({
+const emptyLayoutedDisplayItem = (): AT.LayoutedDisplayItem => ({
   displaySrc: ['blank'],
   mouseClick: true,
   // although it's convenient to make all items clickable by default
@@ -75,10 +71,10 @@ export const ATPageCondition: React.FC<{ field: string, pageIndex: number }> = (
     );
   }
   if (selectedPageResponseWatch?.mouseClick.enabled) {
-    selectedPageWatch?.layoutedDisplays.forEach((ldRow, ldRowIndex) => {
-      ldRow.filter(displaySrc => displaySrc.mouseClick).forEach((ldCol, ldColIndex) => {
-        conditionResponseOptions.push({ label: `Click ${ldRowIndex + 1}-${ldColIndex + 1}`, value: `_MOUSE.${ldRowIndex}.${ldColIndex}` })
-      })
+    selectedPageWatch && forEach2d(selectedPageWatch.layoutedDisplays, (displayItem, row, col) => {
+      if (displayItem.mouseClick) {
+        conditionResponseOptions.push({ label: `Click ${getDisplayKey(row, col)}`, value: `_MOUSE.${row}.${col}` })
+      }
     })
   }
 
@@ -164,7 +160,7 @@ const ATLayoutItem: React.FC<{ field: string, page: number, row: number, col: nu
 
   return (
     <Space direction='vertical' style={{ border: '1px dashed grey', padding: 5 }}>
-      <Tag color='orange' bordered>{row}-{col}</Tag>
+      <Tag color='orange' bordered>{getDisplayKey(row, col)}</Tag>
       {/* @ts-ignore */}
       <Item field={`${field}.displaySrc`} normalize={deserializeDisplaySrcOption} formatter={serializeDisplaySrcOption} noStyle>
         <Select

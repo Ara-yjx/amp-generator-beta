@@ -2,7 +2,7 @@ import { Button, Form, Grid, Modal, Select } from '@arco-design/web-react';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import { IconEdit } from '@arco-design/web-react/icon';
 import React from 'react';
-import type { AmpStimuli, ElementPoolMapping } from '../data/ampTypes';
+import type { AmpStimuli, ConcurrentDisplayFrame } from '../data/ampTypes';
 import { AddRemoveButtons } from './addRemoveButtons';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 
@@ -33,11 +33,11 @@ const ContentPoolSelector: React.FC<{ field: string }> = ({ field }) => {
 
 
 
-export const ElementLayoutMappingEditor: React.FC<{ field: string }> = ({ field }) => {
+export const ConcurrentDisplayFrameEditor: React.FC<{ field: string }> = ({ field }) => {
   const [isModalVisible, setIsModalVisible] = React.useState(false);
 
   const { form } = useFormContext();
-  const layout = useWatch(field, form) as ElementPoolMapping;
+  const layout = useWatch(field, form) as ConcurrentDisplayFrame;
   const textPreview = layout?.map(row => {
     const colTexts = row.map(c => typeof c === 'number' ? `Pool${c + 1}` : c);
     return `[${colTexts.join(', ')}]`;

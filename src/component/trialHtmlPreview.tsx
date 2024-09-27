@@ -1,13 +1,12 @@
 import { Form, Select, Space, Typography } from "@arco-design/web-react";
-import useWatch from "@arco-design/web-react/es/Form/hooks/useWatch";
-import React, { useEffect, useRef, useState } from "react";
-import type { AmpParams, AmpStimuliItem, AmpTimeline, AT, ElementPoolMapping } from "../data/ampTypes";
-import { getElementPoolMappingOfLayout, getUniversalLayout, renderATTrialHtml, renderTrialHtml, renderTrialHtmlForLayout } from "../data/renderTrialHtml";
-import { StimuliThumbnail } from "./stimuliThumbnail";
 import useFormContext from "@arco-design/web-react/es/Form/hooks/useContext";
-import { cloneDeep, range } from "lodash";
-import { cp } from "fs";
-import { getATUniversalLayout, getLayoutFromLayoutDisplays } from "../util/util";
+import useWatch from "@arco-design/web-react/es/Form/hooks/useWatch";
+import { cloneDeep } from "lodash";
+import React, { useEffect, useRef, useState } from "react";
+import type { AmpParams, AmpTimeline, AT, ConcurrentDisplayFrame } from "../data/ampTypes";
+import { getATUniversalLayout, getCDUniversalLayout, getElementPoolMappingOfLayout, renderATTrialHtml, renderTrialHtml } from "../data/renderTrialHtml";
+import { getLayoutFromLayoutDisplays } from "../util/util";
+import { StimuliThumbnail } from "./stimuliThumbnail";
 
 const { Item } = Form;
 const { Option } = Select;
@@ -71,8 +70,8 @@ const ConcurrentPreviewSelector: React.FC<{ onUidsChange: RenderPreviewFunction 
   const { form } = useFormContext();
   const stimuliWatch = useWatch('stimuli', form) as AmpParams['stimuli'];
   const [previewFrameIndex, setPreviewFrameIndex] = useState(0);
-  const concurrentDisplaysWatch = useWatch('timeline.concurrentDisplays', form) as ElementPoolMapping[];
-  const universalLayout = getUniversalLayout(concurrentDisplaysWatch);
+  const concurrentDisplaysWatch = useWatch('timeline.concurrentDisplays', form) as ConcurrentDisplayFrame[];
+  const universalLayout = getCDUniversalLayout(concurrentDisplaysWatch);
 
   // stimuli items to display (by uid)
   // same structure as selected display. 'undefined' means empty (no selected stimuli item to display)
@@ -98,7 +97,7 @@ const ConcurrentPreviewSelector: React.FC<{ onUidsChange: RenderPreviewFunction 
   };
 
   // Reset when layout change of display index change
-  useEffect(resetUids, [JSON.stringify(getUniversalLayout([concurrentDisplaysWatch[previewFrameIndex]]))]);
+  useEffect(resetUids, [JSON.stringify(getCDUniversalLayout([concurrentDisplaysWatch[previewFrameIndex]]))]);
 
   /** Update one uid in uidsRef */
   const updateOneUid = (row: number, col: number, uid: number | undefined) => {

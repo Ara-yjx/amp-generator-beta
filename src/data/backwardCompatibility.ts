@@ -33,11 +33,13 @@ export function transformOldValues(values: AmpParams) {
       page.response.timeout ??= { enabled: false, duration: 1000 };
       page.response.mouseClick ??= { enabled: false };
 
-      // Previouisly  AT.Page['layoutedDisplay'] = DisplaySrc[][] 
-      // Now it's further wrapped                = { displaySrc: DisplaySrc, ... }[][]
+      // Previouisly LayoutedDisplayItem is same as ED: 
+      //   AT.Page['layoutedDisplay'] = DisplaySrc[][] 
+      // Now it's further wrapped
+      //   AT.Page['layoutedDisplay'] = { displaySrc: DisplaySrc, ... }[][]
       page.layoutedDisplays.forEach((row, rowIndex) => {
         row.forEach((col: unknown, colIndex) => {
-          if ((col as AT.layoutedDisplayItem).displaySrc === undefined && typeof (col as AT.DisplaySrc)[0] === 'string') {
+          if ((col as AT.LayoutedDisplayItem).displaySrc === undefined && typeof (col as AT.DisplaySrc)[0] === 'string') {
             page.layoutedDisplays[rowIndex][colIndex] = { displaySrc: (col as AT.DisplaySrc) };
           }
         })

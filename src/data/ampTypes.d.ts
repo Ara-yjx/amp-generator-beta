@@ -38,16 +38,14 @@ export interface AmpTrialHtml {
   text?: string; // use instruction
 }
 
-export type ElementPoolMapping = (number | 'empty')[][]; // [row][column]; 'empty' will map to -1; also called 'frame' in larger context
-// export type HeteroElementPoolMapping = (number | 'empty' | null)[][];
-
+export type ConcurrentDisplayFrame = (number | 'empty')[][]; // [row][column]; 'empty' will map to -1; also called 'frame' in larger context
 
 export interface AmpTimeline {
   durationsAndIntervals: [number, number][],
   delayBeforeKeyboard: number,
   delayAfterKeyboard: number,
   autoProceedTimeout: number | null,
-  concurrentDisplays?: ElementPoolMapping[],
+  concurrentDisplays?: ConcurrentDisplayFrame[],
 }
 
 
@@ -55,10 +53,13 @@ export type DisplayLayout = number[];
 
 export namespace AT {
 
-  type DisplaySrc = ['pool', number] | ['copy', number, number, number] | ['blank'];
+  type DisplaySrc =
+    | ['pool', number] // poolIndex
+    | ['copy', number, number, number] // page, row, col
+    | ['blank'];
   type Condition = ['response', number, '==' | '!=', string[]]; // temp
 
-  type layoutedDisplayItem = {
+  type LayoutedDisplayItem = {
     displaySrc: DisplaySrc;
     swap?: boolean;
     bindKeyboard?: string[];
@@ -70,7 +71,7 @@ export namespace AT {
     condition?: Condition,
     // layout: Layout,
     // displays: { row: int, col: int, src: DisplaySrc }[],
-    layoutedDisplays: layoutedDisplayItem[][],
+    layoutedDisplays: LayoutedDisplayItem[][],
     response: {
       keyboard: { enabled: boolean, keys: string[], delayBefore?: number, delayAfter?: number },
       timeout: { enabled: boolean, duration: number },

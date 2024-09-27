@@ -1,7 +1,6 @@
-import { range, sum } from 'lodash';
 import qsfTemplate from '../assets/qsfTemplate.json';
-import { type UidDetail, getATUniversalLayout, getCDUniversalLayout, getKeyInLayout, getUidDetail } from '../util/util';
-import type { AmpParams, AmpStimuliPrimeItem, AmpTimeline, AT, DisplayLayout } from './ampTypes';
+import { type UidDetail, forEach2d, getDisplayKey, getUidDetail, map2d } from '../util/util';
+import type { AmpParams, AmpStimuliPrimeItem, AmpTimeline, AT } from './ampTypes';
 import { renderATTrialHtml, renderTrialHtml } from './renderTrialHtml';
 
 interface EmbeddedDataTemplate {
@@ -134,14 +133,11 @@ function exportOverrideCount(overrideCount: AmpStimuliPrimeItem['overrideCount']
 }
 
 function transformConcurrentDisplays(concurrentDisplays: AmpTimeline['concurrentDisplays']) {
-  const universalLayout = getCDUniversalLayout(concurrentDisplays);
-  return concurrentDisplays?.map(elementPoolMapping => (
-    elementPoolMapping.map((row, rowIndex) => (
-      row.map((col, colIndex) => ({
-        key: getKeyInLayout(rowIndex, colIndex, universalLayout),
-        pool: typeof col === 'number' ? col + 1 : 0, // empty
-      }))
-    )).flat()
+  return concurrentDisplays?.map(frame => (
+    map2d(frame, (pool, row, col) => ({
+      key: getDisplayKey(row, col),
+      pool: typeof pool === 'number' ? pool + 1 : 0, // empty
+    })).flat()
   ));
 }
 
@@ -149,27 +145,26 @@ function transformConcurrentDisplays(concurrentDisplays: AmpTimeline['concurrent
 type ExportPageDisplaySrc = ['pool', number] | ['copy', number, string] | null;
 
 function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
-  const universalLayout = getATUniversalLayout(advancedTimeline);
   const { pages } = advancedTimeline;
   return {
     advanced: true,
     pages: pages.map((page, pageIndex) => ({
-      condition: transformATCondition(page.condition, universalLayout),
-      displays: transformATDisplays(page.layoutedDisplays, universalLayout),
-      response: transfromATResponse(page, universalLayout),
+      condition: transformATCondition(page.condition),
+      displays: transformATDisplays(page.layoutedDisplays),
+      response: transfromATResponse(page),
       interval: pageIndex === pages.length - 1 ? undefined : (page.interval ?? 0),
       swap: transformATSwap(page),
     }))
   };
 
-  function transformATCondition(condition: AT.Page['condition'], universalLayout: DisplayLayout) {
+  function transformATCondition(condition: AT.Page['condition']) {
     if (condition) {
       const conditionCopy = [...condition] as AT.Condition;
       conditionCopy[1] += 1;
       conditionCopy[3].forEach((conditionValue, conditionValueIndex) => {
         const [type, row, col] = conditionValue.split('.');
-        if (type === '_MOUSE') {
-          const mouseClickKey = getKeyInLayout(parseInt(row), parseInt(col), universalLayout);
+        if (type === '_MOUSE') { // TODO: use displayKey directly which matches the actual response
+          const mouseClickKey = getDisplayKey(parseInt(row), parseInt(col));
           conditionCopy[3][conditionValueIndex] = mouseClickKey;
         }
       })
@@ -177,29 +172,23 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
     }
   }
 
-  function transformATDisplays(layoutedDisplays: AT.Page['layoutedDisplays'], universalLayout: DisplayLayout) {
-    // Init all items with null (display:none)
-    const result: { [key: string]: ExportPageDisplaySrc } = Object.fromEntries(
-      range(sum(universalLayout)).map(keyZeroBased => [String(keyZeroBased + 1), null])
-    );
-    layoutedDisplays.forEach((ldRow, ldRowIndex) => {
-      ldRow.forEach((ldCol, ldColIndex) => {
-        const displayKey = getKeyInLayout(ldRowIndex, ldColIndex, universalLayout);
-        const { displaySrc } = ldCol;
-        if (displaySrc[0] === 'blank') {
-          result[displayKey] = ['pool', 0];
-        } else if (displaySrc[0] === 'pool') {
-          result[displayKey] = ['pool', displaySrc[1] + 1];
-        } else if (displaySrc[0] === 'copy') {
-          const [_, copyPage, copyRow, copyCol] = displaySrc;
-          result[displayKey] = ['copy', copyPage + 1, getKeyInLayout(copyRow, copyCol, universalLayout)];
-        }
-      })
-    })
+  function transformATDisplays(layoutedDisplays: AT.Page['layoutedDisplays']) {
+    const result: { [key: string]: ExportPageDisplaySrc } = {};
+    forEach2d(layoutedDisplays, ({ displaySrc }, row, col) => {
+      const displayKey = getDisplayKey(row, col);
+      if (displaySrc[0] === 'blank') {
+        result[displayKey] = ['pool', 0];
+      } else if (displaySrc[0] === 'pool') {
+        result[displayKey] = ['pool', displaySrc[1] + 1];
+      } else if (displaySrc[0] === 'copy') {
+        const [_, copyPage, copyRow, copyCol] = displaySrc;
+        result[displayKey] = ['copy', copyPage + 1, getDisplayKey(copyRow, copyCol)];
+      }
+    });
     return result;
   }
 
-  function transfromATResponse(page: AT.Page, universalLayout: DisplayLayout) {
+  function transfromATResponse(page: AT.Page) {
     const result: any = {};
     const { response, layoutedDisplays } = page;
     if (response.keyboard.enabled) {
@@ -209,11 +198,9 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
       result.timeout = { duration: response.timeout.duration };
     }
     if (response.mouseClick.enabled) {
-      result.mouseClick = layoutedDisplays.flatMap((ldRow, ldRowIndex) => (
-        ldRow.filter(displaySrc => displaySrc.mouseClick).map((displaySrc, ldColIndex) => (
-          getKeyInLayout(ldRowIndex, ldColIndex, universalLayout)
-        ))
-      ))
+      result.mouseClick = map2d(layoutedDisplays, (_, row, col) => (
+        getDisplayKey(row, col)
+      )).flat();
     }
     return result;
   }
@@ -221,15 +208,11 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
   function transformATSwap(page: AT.Page) {
     if (page.swap) {
       const result: { [displayKey: string]: { bindKeyboard: string[] } } = {};
-      page.layoutedDisplays.forEach((ldRow, ldRowIndex) => {
-        ldRow.forEach((ldCol, ldColIndex) => {
-          const displayKey = getKeyInLayout(ldRowIndex, ldColIndex, universalLayout);
-          const { swap, bindKeyboard } = ldCol;
-          if (swap) {
-            result[displayKey] = { bindKeyboard: bindKeyboard ?? [] };
-          }
-        })
-      })
+      forEach2d(page.layoutedDisplays, ({ swap, bindKeyboard }, row, col) => {
+        if (swap) {
+          result[getDisplayKey(row, col)] = { bindKeyboard: bindKeyboard ?? [] };
+        }
+      });
       return result;
     }
   }

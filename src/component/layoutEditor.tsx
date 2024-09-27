@@ -2,7 +2,7 @@ import { Button, Form, Grid, Modal, Select, Space } from '@arco-design/web-react
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import { IconEdit } from '@arco-design/web-react/icon';
 import React, { CSSProperties, ReactNode } from 'react';
-import type { AmpStimuli, ElementPoolMapping } from '../data/ampTypes';
+import type { AmpStimuli, ConcurrentDisplayFrame } from '../data/ampTypes';
 import { AddRemoveButtons } from './addRemoveButtons';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 
