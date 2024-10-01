@@ -148,7 +148,8 @@ const AdvancedPreviewSelector: React.FC<PreviewUidsSelector> = ({ previewUids, u
   const stimuliWatch = useWatch('stimuli', form) as AmpParams['stimuli'];
   const [previewFrameIndex, setPreviewFrameIndex] = useState<number>();
   const advancedTimelineWatch = useWatch('advancedTimeline', form) as AT.AdvancedTimeline;
-  const selectedPageLayoutedDisplays = previewFrameIndex !== undefined && advancedTimelineWatch.pages[previewFrameIndex]?.layoutedDisplays;
+  const selectedPage = typeof previewFrameIndex === 'number' ? advancedTimelineWatch.pages[previewFrameIndex] : undefined;
+  const selectedPageLayoutedDisplays = selectedPage?.layoutedDisplays;
 
   useEffect(() => {
     if (previewFrameIndex !== undefined && previewFrameIndex >= advancedTimelineWatch.pages.length) {
@@ -156,10 +157,12 @@ const AdvancedPreviewSelector: React.FC<PreviewUidsSelector> = ({ previewUids, u
     }
   }, [previewFrameIndex, advancedTimelineWatch.pages.length]);
 
-  // Layouted uids that fit the layout of selected page
-  const resizedUids = selectedPageLayoutedDisplays ? (
-    map2d(selectedPageLayoutedDisplays, (_, row, col) => previewUids[row]?.[col] ?? 'empty')
-  ) : [[]];
+  // Layouted uids that fit the layout and  of selected page
+  const resizedUids = selectedPageLayoutedDisplays ? map2d(selectedPageLayoutedDisplays, (selectedPageDisplayItem, row, col) => ({
+    uid: previewUids[row]?.[col]?.uid ?? 'empty',
+    accuratePoint: selectedPage.response.mouseClick.enabled && selectedPageDisplayItem.mouseClickAccuratePoint,
+  })) : [[]];
+
   useEffect(() => {
     if (!isEqual(resizedUids, previewUids)) {
       updatePreviewUids(resizedUids);
@@ -168,8 +171,7 @@ const AdvancedPreviewSelector: React.FC<PreviewUidsSelector> = ({ previewUids, u
 
   /** Update one uid in uidsRef */
   const updateOneUid = (row: number, col: number, uid: number | 'empty') => {
-    const previewFrame = typeof previewFrameIndex === 'number' ? advancedTimelineWatch.pages[previewFrameIndex] : undefined;
-    const accuratePoint = previewFrame?.response.mouseClick.enabled && previewFrame.layoutedDisplays[row][col].mouseClickAccuratePoint;
+    const accuratePoint = selectedPage?.response.mouseClick.enabled && selectedPage.layoutedDisplays[row][col].mouseClickAccuratePoint;
     const uidsClone = cloneDeep(resizedUids);
     uidsClone[row][col] = { uid, accuratePoint };
     updatePreviewUids(uidsClone);
@@ -182,23 +184,32 @@ const AdvancedPreviewSelector: React.FC<PreviewUidsSelector> = ({ previewUids, u
     col: number;
   }> = ({ item, row, col }) => {
     const { displaySrc } = item;
+    const thisSelectorValue = resizedUids[row][col].uid;
     // When displaySrc is blank, reset selected uid to 'empty'
     useEffect(() => {
-      if (displaySrc[0] === 'blank' && resizedUids[row][col].uid !== 'empty') {
+      if (displaySrc[0] === 'blank' && thisSelectorValue !== 'empty') {
         updateOneUid(row, col, 'empty');
       }
     });
+    const optionItems = Boolean(displaySrc[0] === 'pool') && stimuliWatch[displaySrc[1] as number].items || undefined;
+    // When current uid is not in option list, reset to 'empty'
+    const optionUids = optionItems?.map(x => x.uid);
+    useEffect(() => {
+      if (thisSelectorValue !== 'empty' && !optionUids?.includes(thisSelectorValue)) {
+        updateOneUid(row, col, 'empty');
+      }
+    }, []);
     return (
       <Form.Item label={getDisplayKey(row, col)}>
         <Select
           placeholder={displaySrc[0] === 'blank' ? '(empty)' : undefined}
           style={{ width: 200, height: 32 }}
           disabled={displaySrc[0] === 'blank'}
-          value={resizedUids[row][col].uid}
+          value={thisSelectorValue}
           onChange={uid => updateOneUid(row, col, uid ?? 'empty')}
         >
           {
-            Boolean(displaySrc[0] === 'pool') && stimuliWatch[displaySrc[1] as number].items.map((item, itemIndex) => (
+            optionItems?.map((item, itemIndex) => (
               <Option key={item.uid} value={item.uid}>
                 <StimuliThumbnail {...item} indexDisplay={`${(displaySrc[1] as number) + 1}-${itemIndex + 1}`} />
               </Option>

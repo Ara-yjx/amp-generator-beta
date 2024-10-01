@@ -1,3 +1,4 @@
+import { cloneDeep, range } from 'lodash';
 import qsfTemplate from '../assets/qsfTemplate.json';
 import { type UidDetail, flatMap2d, forEach2d, getDisplayKey, getUidDetail, map2d } from '../util/util';
 import type { AmpParams, AmpStimuliPrimeItem, AmpTimeline, AT } from './ampTypes';
@@ -10,7 +11,7 @@ interface EmbeddedDataTemplate {
   Value?: string;
 }
 export function hydrateQsf(params: AmpParams) {
-  const template = qsfTemplate;
+  const template = cloneDeep(qsfTemplate);
 
   // Set embedded data
 
@@ -52,6 +53,8 @@ export function hydrateQsf(params: AmpParams) {
   setEd('primes', exportPrime(params));
   setEd('acceptedKeys', params.acceptedKeys.join(','));
   setEd('darkMode', params.trialHtml.darkMode);
+
+  addOutputEdForMouseTracking(params, template);
 
   // Render trial html
 
@@ -154,6 +157,7 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
       response: transfromATResponse(page),
       interval: pageIndex === pages.length - 1 ? undefined : (page.interval ?? 0),
       swap: transformATSwap(page),
+      mouseTracking: transformATMouseTracking(page),
     }))
   };
 
@@ -216,6 +220,38 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
         }
       });
       return result;
+    }
+  }
+
+  function transformATMouseTracking(page: AT.Page) {
+    return page.response.mouseClick.enabled && page.mouseTracking;
+  }
+}
+
+function addOutputEdForMouseTracking(params: AmpParams, template: any) {
+  if (!(params.trialType === 'advanced' && params.advancedTimeline)) return;
+  /* @ts-ignore */
+  const outputEd = template.SurveyElements[1].Payload.Flow[1].EmbeddedData as EmbeddedDataTemplate[];
+  function addOutputEd(name: string, value = '') {
+    outputEd.push({
+      Description: name,
+      Type: 'Recipient',
+      Field: name,
+      VariableType: 'String',
+      DataVisibility: [],
+      AnalyzeText: false,
+      Value: value,
+    } as EmbeddedDataTemplate)
+  }
+  for (const iRound of range(params.totalRounds)) {
+    for (const iTrial of range(params.totalTrials)) {
+      params.advancedTimeline.pages.forEach((page, iPage) => {
+        if (page.response.mouseClick.enabled && page.mouseTracking) {
+          addOutputEd(`spt_MT_x_r=${iRound + 1}_t=${iTrial + 1}_p=${iPage + 1}`);
+          addOutputEd(`spt_MT_y_r=${iRound + 1}_t=${iTrial + 1}_p=${iPage + 1}`);
+          addOutputEd(`spt_MT_t_r=${iRound + 1}_t=${iTrial + 1}_p=${iPage + 1}`);
+        }
+      })
     }
   }
 }

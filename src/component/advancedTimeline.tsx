@@ -3,7 +3,7 @@ import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import { IconApps, IconArrowFall, IconBranch, IconDelete, IconEdit, IconPlus, IconSkipNext } from '@arco-design/web-react/icon';
 import { range } from 'lodash';
-import React, { Fragment } from 'react';
+import React, { Fragment, useEffect } from 'react';
 import type { AT, AmpParams } from '../data/ampTypes';
 import useOptionGuards from '../hooks/useOptionGuard';
 import { flatMap2d, forEach2d, getDisplayKey, getLayoutFromLayoutDisplays } from '../util/util';
@@ -192,7 +192,7 @@ const ATLayoutItem: React.FC<{ field: string, page: number, row: number, col: nu
             <Checkbox>Clickable</Checkbox>
           </Item>
           <Item field={`${field}.mouseClickAccuratePoint`} triggerPropName='checked' noStyle>
-            <Checkbox>Accurate point</Checkbox>
+            <Checkbox>Add accurate point</Checkbox>
           </Item>
           </Space>
         )
@@ -237,6 +237,15 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
       </Space>
     </div>
   );
+
+  // When mouseClick disabled, disable mouseTracking too
+  const mouseClickEnabledWatch = useWatch(`${field}.response.mouseClick.enabled`, form) as AT.Page['response']['mouseClick'];
+  const mouseTrackingWatch = useWatch(`${field}.mouseTracking`, form) as AT.Page['mouseTracking'];
+  useEffect(() => {
+    if (!mouseClickEnabledWatch && mouseTrackingWatch) {
+      form.setFieldValue(`${field}.mouseTracking`, undefined);
+    }
+  }, [mouseClickEnabledWatch]);
 
   return (
     <div>
@@ -309,6 +318,11 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
           <Item field={`${field}.response.mouseClick.enabled`} triggerPropName='checked' layout='inline'>
             <Checkbox>
               <div style={{ display: 'inline-block' }}>Mouse click response</div>
+            </Checkbox>
+          </Item>
+          <Item field={`${field}.mouseTracking`} triggerPropName='checked' layout='inline'>
+            <Checkbox disabled={!mouseClickEnabledWatch}>
+              <div style={{ display: 'inline-block' }}>Record mouse tracking</div>
             </Checkbox>
           </Item>
         </Space>

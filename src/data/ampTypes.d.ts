@@ -79,7 +79,8 @@ export namespace AT {
       mouseClick: { enabled: boolean },
     },
     swap?: boolean,
-    interval?: number;
+    interval?: number,
+    mouseTracking?: boolean,
   }
 
   type AdvancedTimeline = { pages: AT.Page[] };
