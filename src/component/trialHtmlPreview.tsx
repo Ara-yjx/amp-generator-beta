@@ -3,7 +3,7 @@ import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import { cloneDeep, isEqual } from 'lodash';
 import React, { useEffect, useRef, useState } from 'react';
-import type { AmpParams, AmpTimeline, AT, ConcurrentDisplayFrame } from '../data/ampTypes';
+import type { AmpParams, AmpStimuliItem, AmpTimeline, AT, ConcurrentDisplayFrame } from '../data/ampTypes';
 import { renderATTrialHtml, renderTrialHtml } from '../data/renderTrialHtml';
 import { forEach2d, getDisplayKey, map2d } from '../util/util';
 import { StimuliThumbnail } from './stimuliThumbnail';
@@ -309,7 +309,7 @@ body {
 }
 `;
 
-type StimuliItemToDisplay = { type: 'image' | 'text' | 'empty', content: string } | null;
+type StimuliItemToDisplay = { type: AmpStimuliItem['type'] | 'empty', content: string } | null;
 
 function renderTrialPreview(
   previewRef: React.MutableRefObject<HTMLIFrameElement | null>,
@@ -339,35 +339,53 @@ function renderTrialPreview(
 function simulateDisplay(stimuliItems: StimuliItemToDisplay[][], container: Document) {
   simulateClear(container);
   forEach2d(stimuliItems, (stimuliItem, row, col) => {
-    const contentEl = container.querySelector<HTMLDivElement>(`.spt-trial-content.spt-trial-content-${getDisplayKey(row, col)}`);
-    if (contentEl) {
-      if (stimuliItem !== null) {
+    const key = getDisplayKey(row, col);
+    const contentEl = container.querySelector<HTMLDivElement>('.spt-trial-content.spt-trial-content-' + key);
+    if (contentEl && stimuliItem !== null) {
+      if (stimuliItem.type === 'text') {
         const textEl = contentEl.querySelector<HTMLDivElement>('.spt-trial-text');
-        const imageEl = contentEl.querySelector<HTMLImageElement>('.spt-trial-image');
-        if (stimuliItem.type === 'text') {
-          if (textEl) textEl.style.visibility = '';
-          if (textEl) textEl.innerHTML = stimuliItem.content;
-          if (imageEl) imageEl.style.visibility = 'hidden';
-          if (imageEl) imageEl.src = '';
-        } else if (stimuliItem.type === 'image') {
-          if (textEl) textEl.style.visibility = 'hidden';
-          if (textEl) textEl.innerHTML = '';
-          if (imageEl) imageEl.style.visibility = '';
-          if (imageEl) imageEl.src = stimuliItem.content;
+        if (textEl) {
+          textEl.style.display = '';
+          textEl.innerHTML = stimuliItem.content;
         }
-        contentEl.style.display = '';
+      } else if (stimuliItem.type === 'image') {
+        const imageEl = contentEl.querySelector<HTMLImageElement>('.spt-trial-image');
+        if (imageEl) {
+          imageEl.style.display = '';
+          imageEl.src = stimuliItem.content;
+        }
+      } else if (stimuliItem.type === 'button') {
+        const buttonEl = contentEl.querySelector<HTMLDivElement>('.spt-trial-button');
+        if (buttonEl) {
+          buttonEl.style.display = '';
+          buttonEl.innerHTML = stimuliItem.content || ' '; // at least show button outline
+        }
       }
+      contentEl.style.display = 'flex';
     }
-  })
+  });
 }
 function simulateClear(container: Document) {
-  (container.querySelectorAll<HTMLDivElement>('.spt-trial-content')).forEach(contentEl => {
+  container.querySelectorAll<HTMLDivElement>('.spt-trial-content').forEach(contentEl => {
+    const previewEl = contentEl.querySelector<HTMLDivElement>('.spt-trial-preview');
+    if (previewEl) {
+      previewEl.style.display = 'none';
+    }
     const textEl = contentEl.querySelector<HTMLDivElement>('.spt-trial-text');
+    if (textEl) {
+      textEl.style.display = 'none';
+      textEl.innerHTML = '';
+    }
     const imageEl = contentEl.querySelector<HTMLImageElement>('.spt-trial-image');
-    if (textEl) textEl.style.visibility = 'hidden';
-    if (textEl) textEl.innerHTML = '';
-    if (imageEl) imageEl.style.visibility = 'hidden';
-    if (imageEl) imageEl.src = '';
+    if (imageEl) {
+      imageEl.style.display = 'none';
+      imageEl.src = '';
+    }
+    const buttonEl = contentEl.querySelector<HTMLDivElement>('.spt-trial-button');
+    if (buttonEl) {
+      buttonEl.style.display = 'none';
+      buttonEl.innerHTML = '';
+    }
     contentEl.style.display = 'none';
   })
 }

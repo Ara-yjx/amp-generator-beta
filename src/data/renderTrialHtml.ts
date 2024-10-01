@@ -35,9 +35,10 @@ export function getElementPoolMappingOfLayout<T = null>(layout: number[], fillWi
 function renderItem(props: AmpTrialHtml, rowIndex: number, colIndex: number) {
   return trim(`
     <!-- Item -->
-    <div class="spt-trial-content spt-trial-content-${getDisplayKey(rowIndex, colIndex)}" style="margin-left: ${props.concurrentHorizontalGap ?? 0}px; width: ${props.width}px; height: ${props.height}px; position: relative;">
-      <img class="spt-trial-image" style="position: absolute; width: 100%; height: 100%; object-fit: contain;"/>
-      <div class="spt-trial-text" style="position: absolute; width: 100%; height: 100%; white-space: ${props.textWrap ? 'pre-line' : 'pre'}; color: ${props.textColor ?? 'auto'}; font-weight: ${props.textIsBold ? 'bold' : 'normal'}; font-size: ${props.textFontSize}px; line-height: 1.5em; display: flex; justify-content: center; align-items: center;"></div>
+    <div class="spt-trial-content spt-trial-content-${getDisplayKey(rowIndex, colIndex)}" style="margin-left: ${props.concurrentHorizontalGap ?? 0}px; width: ${props.width}px; height: ${props.height}px; display: flex; justify-content: center; align-items: center; text-align: center; ">
+      <img class="spt-trial-image" style="width: 100%; height: 100%; object-fit: contain; display: none;"/>
+      <div class="spt-trial-text" style="width: 100%; height: 100%; white-space: ${props.textWrap ? 'pre-line' : 'pre'}; overflow-wrap: break-word; color: ${props.textColor ?? 'auto'}; font-weight: ${props.textIsBold ? 'bold' : 'normal'}; font-size: ${props.textFontSize}px; line-height: 1.5em; display: none;"></div>
+      <div class="spt-trial-button" style="max-width: 100%; white-space: 'pre-line'; overflow-wrap: break-word; color: #000; font-size: 20px; line-height: 1.2em; border: 1px solid #000; border-radius: 4px; background-color: #f3f3f3; padding: 0 4px; cursor: pointer; display: none;" onmouseenter="this.style.boxShadow='0 0 4px 0 #ccc'" onmouseleave="this.style.boxShadow=''"></div>
     </div>
   `);
 }

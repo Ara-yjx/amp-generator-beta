@@ -74,7 +74,7 @@ const ImageItem: React.FC<{
         </Col>
         <Col flex={`${WIDTH_TYPE_SELECTOR + GUTTER}px`}>
           <Item field={field + '.type'} noStyle>
-            <Select options={['image', 'text']} style={{ width: WIDTH_TYPE_SELECTOR }} />
+            <Select options={['image', 'text', 'button']} style={{ width: WIDTH_TYPE_SELECTOR }} />
           </Item>
         </Col>
         <Col flex={1}>
