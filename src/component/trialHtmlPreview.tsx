@@ -3,7 +3,7 @@ import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import { cloneDeep, isEqual } from 'lodash';
 import React, { useEffect, useRef, useState } from 'react';
-import type { AmpParams, AmpStimuliItem, AmpTimeline, AT, ConcurrentDisplayFrame } from '../data/ampTypes';
+import type { AmpParams, AmpStimuliItem, AmpTimeline, AT, ConcurrentDisplayFrame, DisplayLayout } from '../data/ampTypes';
 import { renderATTrialHtml, renderTrialHtml } from '../data/renderTrialHtml';
 import { forEach2d, getDisplayKey, map2d } from '../util/util';
 import { StimuliThumbnail } from './stimuliThumbnail';
@@ -14,10 +14,10 @@ const { Text } = Typography;
 
 
 
-type LayoutedDisplayUids = (number | 'empty')[][];
+type PreviewUids = { uid: number | 'empty', accuratePoint?: boolean }[][];
 interface PreviewUidsSelector {
-  previewUids: LayoutedDisplayUids;
-  updatePreviewUids: (previewUids: LayoutedDisplayUids) => void;
+  previewUids: PreviewUids;
+  updatePreviewUids: (previewUids: PreviewUids) => void;
 }
 
 
@@ -33,7 +33,7 @@ const SinglePreviewSelector: React.FC<PreviewUidsSelector> = ({ previewUids, upd
 
   const updateUid = (uid: number | undefined) => {
     setUid(uid);
-    updatePreviewUids([[uid ?? 'empty']]);
+    updatePreviewUids([[{ uid: uid ?? 'empty' }]]);
   }
 
   // If stimuli updates and the previewStimuliItem is deleted, reset previewStimuliItem
@@ -96,7 +96,7 @@ const ConcurrentPreviewSelector: React.FC<PreviewUidsSelector> = ({ previewUids,
   /** Update one uid in uidsRef */
   const updateOneUid = (row: number, col: number, uid: number | 'empty') => {
     const uidsClone = cloneDeep(resizedUids);
-    uidsClone[row][col] = uid;
+    uidsClone[row][col] = { uid };
     updatePreviewUids(uidsClone);
   };
 
@@ -121,7 +121,7 @@ const ConcurrentPreviewSelector: React.FC<PreviewUidsSelector> = ({ previewUids,
                   placeholder={col === 'empty' ? '(empty)' : undefined}
                   style={{ width: 160, height: 32 }}
                   disabled={col === 'empty'}
-                  value={resizedUids[rowIndex][colIndex]}
+                  value={resizedUids[rowIndex][colIndex].uid}
                   onChange={uid => updateOneUid(rowIndex, colIndex, uid ?? 'empty')}
                 >
                   {
@@ -168,8 +168,10 @@ const AdvancedPreviewSelector: React.FC<PreviewUidsSelector> = ({ previewUids, u
 
   /** Update one uid in uidsRef */
   const updateOneUid = (row: number, col: number, uid: number | 'empty') => {
-    const uidsClone = cloneDeep(previewUids);
-    uidsClone[row][col] = uid;
+    const previewFrame = typeof previewFrameIndex === 'number' ? advancedTimelineWatch.pages[previewFrameIndex] : undefined;
+    const accuratePoint = previewFrame?.response.mouseClick.enabled && previewFrame.layoutedDisplays[row][col].mouseClickAccuratePoint;
+    const uidsClone = cloneDeep(resizedUids);
+    uidsClone[row][col] = { uid, accuratePoint };
     updatePreviewUids(uidsClone);
   };
 
@@ -182,7 +184,7 @@ const AdvancedPreviewSelector: React.FC<PreviewUidsSelector> = ({ previewUids, u
     const { displaySrc } = item;
     // When displaySrc is blank, reset selected uid to 'empty'
     useEffect(() => {
-      if (displaySrc[0] === 'blank' && resizedUids[row][col] !== 'empty') {
+      if (displaySrc[0] === 'blank' && resizedUids[row][col].uid !== 'empty') {
         updateOneUid(row, col, 'empty');
       }
     });
@@ -192,7 +194,7 @@ const AdvancedPreviewSelector: React.FC<PreviewUidsSelector> = ({ previewUids, u
           placeholder={displaySrc[0] === 'blank' ? '(empty)' : undefined}
           style={{ width: 200, height: 32 }}
           disabled={displaySrc[0] === 'blank'}
-          value={resizedUids[row][col]}
+          value={resizedUids[row][col].uid}
           onChange={uid => updateOneUid(row, col, uid ?? 'empty')}
         >
           {
@@ -241,19 +243,20 @@ export const TrialHtmlPreview: React.FC = () => {
     advancedTimelineWatch ? renderATTrialHtml(trialHtmlWatch, advancedTimelineWatch) : renderTrialHtml(trialHtmlWatch, concurrentDisplaysWatch)
   );
 
-  const [uids, setUids] = useState<LayoutedDisplayUids>([[]]);
+  const [previewUids, setPreviewUids] = useState<PreviewUids>([[]]);
 
   const renderPreview = () => {
-    const previewStimuliItems = map2d(uids, uid => {
+    const previewStimuliItems = map2d(previewUids, ({ uid, accuratePoint }) => {
       if (uid === 'empty') {
-        return { type: 'empty', content: '' } as const;
+        return { type: 'empty', content: '', accuratePoint } as const;
       } else if (typeof uid === 'number') {
-        return stimuliWatch.flatMap(stimuli => stimuli.items).find(i => i.uid === uid) ?? { type: 'empty', content: '' } as const;
+        const stimuliOfUid = stimuliWatch.flatMap(stimuli => stimuli.items).find(i => i.uid === uid);
+        return stimuliOfUid ? { ...stimuliOfUid, accuratePoint } : { type: 'empty', content: '', accuratePoint } as const;
       } else {
         return null;
       }
     });
-    renderTrialPreview(previewRef, previewInnerHtml, previewStimuliItems, trialHtmlWatch.darkMode)
+    renderTrialPreview(previewRef, previewInnerHtml, previewStimuliItems, trialHtmlWatch.darkMode);
   };
   useEffect(renderPreview);
 
@@ -261,9 +264,9 @@ export const TrialHtmlPreview: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }} >
       {
-        trialTypeWatch === 'advanced' && advancedTimelineWatch ? <AdvancedPreviewSelector previewUids={uids} updatePreviewUids={setUids} /> :
-          concurrentDisplaysWatch ? <ConcurrentPreviewSelector previewUids={uids} updatePreviewUids={setUids} /> :
-            <SinglePreviewSelector previewUids={uids} updatePreviewUids={setUids} />
+        trialTypeWatch === 'advanced' && advancedTimelineWatch ? <AdvancedPreviewSelector previewUids={previewUids} updatePreviewUids={setPreviewUids} /> :
+          concurrentDisplaysWatch ? <ConcurrentPreviewSelector previewUids={previewUids} updatePreviewUids={setPreviewUids} /> :
+            <SinglePreviewSelector previewUids={previewUids} updatePreviewUids={setPreviewUids} />
       }
 
       <iframe style={{ flexGrow: 1 }} ref={previewRef} height={700} title='HTML Preview'></iframe>
@@ -309,7 +312,7 @@ body {
 }
 `;
 
-type StimuliItemToDisplay = { type: AmpStimuliItem['type'] | 'empty', content: string } | null;
+type StimuliItemToDisplay = { type: AmpStimuliItem['type'] | 'empty', content: string, accuratePoint?: boolean } | null;
 
 function renderTrialPreview(
   previewRef: React.MutableRefObject<HTMLIFrameElement | null>,
@@ -337,28 +340,37 @@ function renderTrialPreview(
 
 /** Copied form trial.js */
 function simulateDisplay(stimuliItems: StimuliItemToDisplay[][], container: Document) {
+  console.debug('simulateDisplay', stimuliItems);
   simulateClear(container);
   forEach2d(stimuliItems, (stimuliItem, row, col) => {
     const key = getDisplayKey(row, col);
     const contentEl = container.querySelector<HTMLDivElement>('.spt-trial-content.spt-trial-content-' + key);
-    if (contentEl && stimuliItem !== null) {
-      if (stimuliItem.type === 'text') {
-        const textEl = contentEl.querySelector<HTMLDivElement>('.spt-trial-text');
-        if (textEl) {
-          textEl.style.display = '';
-          textEl.innerHTML = stimuliItem.content;
+    if (contentEl) {
+      if (stimuliItem !== null) {
+        if (stimuliItem.type === 'text') {
+          const textEl = contentEl.querySelector<HTMLDivElement>('.spt-trial-text');
+          if (textEl) {
+            textEl.style.display = '';
+            textEl.innerHTML = stimuliItem.content;
+          }
+        } else if (stimuliItem.type === 'image') {
+          const imageEl = contentEl.querySelector<HTMLImageElement>('.spt-trial-image');
+          if (imageEl) {
+            imageEl.style.display = '';
+            imageEl.src = stimuliItem.content;
+          }
+        } else if (stimuliItem.type === 'button') {
+          const buttonEl = contentEl.querySelector<HTMLDivElement>('.spt-trial-button');
+          if (buttonEl) {
+            buttonEl.style.display = '';
+            buttonEl.innerHTML = stimuliItem.content || ' '; // at least show button outline
+          }
         }
-      } else if (stimuliItem.type === 'image') {
-        const imageEl = contentEl.querySelector<HTMLImageElement>('.spt-trial-image');
-        if (imageEl) {
-          imageEl.style.display = '';
-          imageEl.src = stimuliItem.content;
-        }
-      } else if (stimuliItem.type === 'button') {
-        const buttonEl = contentEl.querySelector<HTMLDivElement>('.spt-trial-button');
-        if (buttonEl) {
-          buttonEl.style.display = '';
-          buttonEl.innerHTML = stimuliItem.content || ' '; // at least show button outline
+        if (stimuliItem.accuratePoint) {
+          const accuratePointEl = contentEl.querySelector<HTMLDivElement>('.spt-trial-accurate-point');
+          if (accuratePointEl) {
+            accuratePointEl.style.display = '';
+          }
         }
       }
       contentEl.style.display = 'flex';

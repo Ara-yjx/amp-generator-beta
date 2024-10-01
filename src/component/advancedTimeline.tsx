@@ -187,9 +187,14 @@ const ATLayoutItem: React.FC<{ field: string, page: number, row: number, col: nu
       }
       {
         thisPageWatch.response.mouseClick.enabled && (
+          <Space>
           <Item field={`${field}.mouseClick`} triggerPropName='checked' noStyle>
             <Checkbox>Clickable</Checkbox>
           </Item>
+          <Item field={`${field}.mouseClickAccuratePoint`} triggerPropName='checked' noStyle>
+            <Checkbox>Accurate point</Checkbox>
+          </Item>
+          </Space>
         )
       }
     </Space>

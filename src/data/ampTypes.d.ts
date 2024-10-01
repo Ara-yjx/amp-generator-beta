@@ -64,6 +64,7 @@ export namespace AT {
     swap?: boolean;
     bindKeyboard?: string[];
     mouseClick?: boolean;
+    mouseClickAccuratePoint?: boolean;
   };
 
   interface Page {

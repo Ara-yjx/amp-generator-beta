@@ -1,5 +1,5 @@
 import qsfTemplate from '../assets/qsfTemplate.json';
-import { type UidDetail, forEach2d, getDisplayKey, getUidDetail, map2d } from '../util/util';
+import { type UidDetail, flatMap2d, forEach2d, getDisplayKey, getUidDetail, map2d } from '../util/util';
 import type { AmpParams, AmpStimuliPrimeItem, AmpTimeline, AT } from './ampTypes';
 import { renderATTrialHtml, renderTrialHtml } from './renderTrialHtml';
 
@@ -198,9 +198,11 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
       result.timeout = { duration: response.timeout.duration };
     }
     if (response.mouseClick.enabled) {
-      result.mouseClick = map2d(layoutedDisplays, (_, row, col) => (
-        getDisplayKey(row, col)
-      )).flat();
+      result.mouseClick = Object.fromEntries(
+        flatMap2d(layoutedDisplays, (displayItem, row, col) => ({ key: getDisplayKey(row, col), displayItem }))
+          .filter(({ displayItem }) => displayItem.mouseClick)
+          .map(({ key, displayItem }) => [key, displayItem.mouseClickAccuratePoint ? { accuratePoint: true } : {}])
+      );
     }
     return result;
   }
