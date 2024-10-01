@@ -1,7 +1,7 @@
 import { Button, Card, Checkbox, Divider, Form, InputNumber, Select, Space, Switch, Tag, Typography } from '@arco-design/web-react';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
-import { IconApps, IconArrowFall, IconBranch, IconDelete, IconEdit, IconPlus, IconSkipNext } from '@arco-design/web-react/icon';
+import { IconApps, IconArrowFall, IconBranch, IconDelete, IconEdit, IconPlus, IconSkipNext, IconToTop } from '@arco-design/web-react/icon';
 import { range } from 'lodash';
 import React, { Fragment, useEffect } from 'react';
 import type { AT, AmpParams } from '../data/ampTypes';
@@ -188,12 +188,12 @@ const ATLayoutItem: React.FC<{ field: string, page: number, row: number, col: nu
       {
         thisPageWatch.response.mouseClick.enabled && (
           <Space>
-          <Item field={`${field}.mouseClick`} triggerPropName='checked' noStyle>
-            <Checkbox>Clickable</Checkbox>
-          </Item>
-          <Item field={`${field}.mouseClickAccuratePoint`} triggerPropName='checked' noStyle>
-            <Checkbox>Add accurate point</Checkbox>
-          </Item>
+            <Item field={`${field}.mouseClick`} triggerPropName='checked' noStyle>
+              <Checkbox>Clickable</Checkbox>
+            </Item>
+            <Item field={`${field}.mouseClickAccuratePoint`} triggerPropName='checked' noStyle>
+              <Checkbox>Add accurate point</Checkbox>
+            </Item>
           </Space>
         )
       }
@@ -343,6 +343,14 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
           You can do this by binding key(s) to stimuli item.
         </li>
         <li>Each swapped display item must have at least one bind-key, and the bind-keys of different display items must be distinct.</li>
+
+
+        <Divider />
+
+        <Item field={`${field}.style.offsetY`} label={<Space><IconToTop />Extra space at page top</Space>} layout='inline'>
+          <InputNumber suffix='px' style={{ width: 100 }} />
+        </Item>
+
       </Card >
     </div>
   )

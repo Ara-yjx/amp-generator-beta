@@ -20,6 +20,11 @@ interface PreviewUidsSelector {
   updatePreviewUids: (previewUids: PreviewUids) => void;
 }
 
+interface PreviewPageStyle {
+  previewStyle: AT.Page['style'];
+  updatePreviewStyle: (previewStyle: AT.Page['style']) => void;
+}
+
 
 const SinglePreviewSelector: React.FC<PreviewUidsSelector> = ({ previewUids, updatePreviewUids }) => {
   const { form } = useFormContext();
@@ -142,7 +147,7 @@ const ConcurrentPreviewSelector: React.FC<PreviewUidsSelector> = ({ previewUids,
 }
 
 
-const AdvancedPreviewSelector: React.FC<PreviewUidsSelector> = ({ previewUids, updatePreviewUids }) => {
+const AdvancedPreviewSelector: React.FC<PreviewUidsSelector & PreviewPageStyle> = ({ previewUids, updatePreviewUids, previewStyle, updatePreviewStyle }) => {
 
   const { form } = useFormContext();
   const stimuliWatch = useWatch('stimuli', form) as AmpParams['stimuli'];
@@ -150,6 +155,12 @@ const AdvancedPreviewSelector: React.FC<PreviewUidsSelector> = ({ previewUids, u
   const advancedTimelineWatch = useWatch('advancedTimeline', form) as AT.AdvancedTimeline;
   const selectedPage = typeof previewFrameIndex === 'number' ? advancedTimelineWatch.pages[previewFrameIndex] : undefined;
   const selectedPageLayoutedDisplays = selectedPage?.layoutedDisplays;
+
+  useEffect(() => {
+    if (!isEqual(previewStyle, selectedPage?.style)) {
+      updatePreviewStyle(selectedPage?.style);
+    }
+  });
 
   useEffect(() => {
     if (previewFrameIndex !== undefined && previewFrameIndex >= advancedTimelineWatch.pages.length) {
@@ -255,6 +266,7 @@ export const TrialHtmlPreview: React.FC = () => {
   );
 
   const [previewUids, setPreviewUids] = useState<PreviewUids>([[]]);
+  const [previewStyle, setPreviewStyle] = useState<AT.Page['style']>();
 
   const renderPreview = () => {
     const previewStimuliItems = map2d(previewUids, ({ uid, accuratePoint }) => {
@@ -267,7 +279,7 @@ export const TrialHtmlPreview: React.FC = () => {
         return null;
       }
     });
-    renderTrialPreview(previewRef, previewInnerHtml, previewStimuliItems, trialHtmlWatch.darkMode);
+    renderTrialPreview(previewRef, previewInnerHtml, previewStimuliItems, previewStyle, trialHtmlWatch.darkMode);
   };
   useEffect(renderPreview);
 
@@ -275,7 +287,7 @@ export const TrialHtmlPreview: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }} >
       {
-        trialTypeWatch === 'advanced' && advancedTimelineWatch ? <AdvancedPreviewSelector previewUids={previewUids} updatePreviewUids={setPreviewUids} /> :
+        trialTypeWatch === 'advanced' && advancedTimelineWatch ? <AdvancedPreviewSelector previewUids={previewUids} updatePreviewUids={setPreviewUids} previewStyle={previewStyle} updatePreviewStyle={setPreviewStyle} /> :
           concurrentDisplaysWatch ? <ConcurrentPreviewSelector previewUids={previewUids} updatePreviewUids={setPreviewUids} /> :
             <SinglePreviewSelector previewUids={previewUids} updatePreviewUids={setPreviewUids} />
       }
@@ -329,6 +341,7 @@ function renderTrialPreview(
   previewRef: React.MutableRefObject<HTMLIFrameElement | null>,
   previewInnerHtml: string,
   previewStimuliItems: StimuliItemToDisplay[][],
+  previewStyle: AT.Page['style'],
   darkMode: boolean,
 ) {
   const iframeDocument = previewRef.current?.contentDocument;
@@ -345,7 +358,8 @@ function renderTrialPreview(
     // Simulate mode page background
     iframeDocument.body.style.backgroundColor = darkMode ? 'black' : 'initial';
     // Simulate stimuli preview
-    iframeDocument && simulateDisplay(previewStimuliItems, iframeDocument);
+    simulateDisplay(previewStimuliItems, iframeDocument);
+    simulateContainerStyle(previewStyle, iframeDocument);
   }
 }
 
@@ -411,4 +425,16 @@ function simulateClear(container: Document) {
     }
     contentEl.style.display = 'none';
   })
+}
+function simulateContainerStyle(style: AT.Page['style'], container: Document) {
+  const containerEl = container.querySelector<HTMLDivElement>('.spt-trial-container');
+  if (containerEl) {
+    if (style) {
+      if (style.offsetY !== undefined) {
+        containerEl.style.transform = 'translateY(' + style.offsetY + 'px)';
+      }
+    } else {
+      containerEl.style.transform = '';
+    }
+  }
 }

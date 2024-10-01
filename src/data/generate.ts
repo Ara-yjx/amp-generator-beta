@@ -158,6 +158,7 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
       interval: pageIndex === pages.length - 1 ? undefined : (page.interval ?? 0),
       swap: transformATSwap(page),
       mouseTracking: transformATMouseTracking(page),
+      style: page.style,
     }))
   };
 

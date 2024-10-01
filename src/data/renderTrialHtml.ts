@@ -71,7 +71,7 @@ export function renderTrialHtmlForLayout(props: AmpTrialHtml, layout: number[]) 
   const containerHeight = (props.height + (props.concurrentVerticalGap ?? 0)) * layout.length;
   return trim(`
 <!-- Container. Fixed-height so that the instruction won't move. Flex prevents margin collapse with external. -->
-<div style="display: flex; flex-direction: column; height: ${containerHeight}px; box-sizing: content-box; padding-top: ${props.marginTop ?? 0}px; margin-top: ${-(props.concurrentVerticalGap ?? 0)}px;">
+<div class="spt-trial-container" style="display: flex; flex-direction: column; height: ${containerHeight}px; box-sizing: content-box; padding-top: ${props.marginTop ?? 0}px; margin-top: ${-(props.concurrentVerticalGap ?? 0)}px;">
 ${layout.map((numOfCols, rowIndex) => renderRow(props, numOfCols, rowIndex)).join('\n')}
 </div>
 <!-- Instruction -->
