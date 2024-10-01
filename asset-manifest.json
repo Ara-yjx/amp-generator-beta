@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "https://ara-yjx.github.io/amp-generator-beta/static/css/main.c8a27486.css",
-    "main.js": "https://ara-yjx.github.io/amp-generator-beta/static/js/main.6f71746a.js",
+    "main.js": "https://ara-yjx.github.io/amp-generator-beta/static/js/main.b40c2b44.js",
     "static/js/453.eae8a547.chunk.js": "https://ara-yjx.github.io/amp-generator-beta/static/js/453.eae8a547.chunk.js",
     "index.html": "https://ara-yjx.github.io/amp-generator-beta/index.html",
     "main.c8a27486.css.map": "https://ara-yjx.github.io/amp-generator-beta/static/css/main.c8a27486.css.map",
-    "main.6f71746a.js.map": "https://ara-yjx.github.io/amp-generator-beta/static/js/main.6f71746a.js.map",
+    "main.b40c2b44.js.map": "https://ara-yjx.github.io/amp-generator-beta/static/js/main.b40c2b44.js.map",
     "453.eae8a547.chunk.js.map": "https://ara-yjx.github.io/amp-generator-beta/static/js/453.eae8a547.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.c8a27486.css",
-    "static/js/main.6f71746a.js"
+    "static/js/main.b40c2b44.js"
   ]
 }
