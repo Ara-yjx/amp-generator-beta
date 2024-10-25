@@ -6,7 +6,7 @@ import type { ArcoFormItem } from '../util/arco';
 import { StimuliThumbnail } from './stimuliThumbnail';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
-import { IconRefresh, IconToLeft, IconToRight } from '@arco-design/web-react/icon';
+import { IconRefresh, IconToLeft, IconToRight, IconToTop } from '@arco-design/web-react/icon';
 import { CompactPicker } from 'react-color';
 import { TrialHtmlPreview } from './trialHtmlPreview';
 
@@ -81,7 +81,7 @@ const ConfigModeForm: React.FC = () => {
         </Item>
       </Space>
 
-      <Item field='trialHtml.marginTop' label={<b>Blank space above content</b>} layout='vertical' style={{ width: 200 }}>
+      <Item field='trialHtml.marginTop' label={<b style={{whiteSpace: 'nowrap'}}><IconToTop /> Blank space above content</b>} layout='vertical' style={{ width: 200 }}>
         <InputNumber suffix='px' />
       </Item>
 

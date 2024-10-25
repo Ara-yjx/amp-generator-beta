@@ -24,7 +24,7 @@ export interface AmpStimuli {
 export interface AmpTrialHtml {
   width: number;
   height: number;
-  marginTop: number;
+  marginTop: number; // corresponds to  AT containerTopBlank
   instruction: string;
   textFontSize: number;
   textIsBold: boolean;
@@ -67,6 +67,10 @@ export namespace AT {
     mouseClickAccuratePoint?: boolean;
   };
 
+  type Style = {
+    containerTopBlank?: number,
+  }
+
   interface Page {
     // isConditionEnabled: boolean,
     condition?: Condition,
@@ -81,12 +85,12 @@ export namespace AT {
     swap?: boolean,
     interval?: number,
     mouseTracking?: boolean,
-    style?: {
-      offsetY?: number,
-    }
+    style?: Style,
   }
 
-  type AdvancedTimeline = { pages: AT.Page[] };
+  type AdvancedTimeline = { 
+    pages: AT.Page[],
+  };
 }
 
 export interface AmpParams {

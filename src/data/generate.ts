@@ -42,7 +42,7 @@ export function hydrateQsf(params: AmpParams) {
   setEd('totalRounds', params.totalRounds);
   // need to check params.advancedTimeline here, because the moment the toggle is clicked, advancedTimeline is not generated immediately yet and is still undef
   if (params.trialType === 'advanced' && params.advancedTimeline) {
-    setEd('timeline', transformAdvancedTimeline(params.advancedTimeline!));
+    setEd('timeline', transformAdvancedTimeline(params.advancedTimeline));
   } else {
     if (params.timeline?.concurrentDisplays) {
       setEd('timeline', { ...params.timeline, concurrentDisplays: transformConcurrentDisplays(params.timeline.concurrentDisplays) });

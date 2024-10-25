@@ -1,5 +1,4 @@
-import { sum } from 'lodash';
-import range from 'lodash/range';
+import { sum, range, max } from 'lodash';
 import { getDisplayKey, getLayoutFromLayoutDisplays } from '../util/util';
 import { AmpTimeline, AmpTrialHtml, AT, DisplayLayout } from './ampTypes';
 
@@ -36,7 +35,7 @@ function renderItem(props: AmpTrialHtml, rowIndex: number, colIndex: number) {
   return trim(`
     <!-- Item -->
     <div class="spt-trial-content spt-trial-content-${getDisplayKey(rowIndex, colIndex)}" style="margin-left: ${props.concurrentHorizontalGap ?? 0}px; width: ${props.width}px; height: ${props.height}px; position: relative; display: flex; justify-content: center; align-items: center; text-align: center; ">
-      <img class="spt-trial-image" style="width: 100%; height: 100%; object-fit: contain; display: none;"/>
+      <img class="spt-trial-image" style="width: 100%; height: 100% !important; object-fit: contain; display: none;"/>
       <div class="spt-trial-text" style="width: 100%; height: 100%; white-space: ${props.textWrap ? 'pre-line' : 'pre'}; overflow-wrap: break-word; color: ${props.textColor ?? 'auto'}; font-weight: ${props.textIsBold ? 'bold' : 'normal'}; font-size: ${props.textFontSize}px; line-height: 1.5em; display: none;"></div>
       <div class="spt-trial-button" style="max-width: 100%; white-space: 'pre-line'; overflow-wrap: break-word; color: #000; font-size: 20px; line-height: 1.2em; border: 1px solid #000; border-radius: 4px; background-color: #f3f3f3; padding: 0 4px; cursor: pointer; display: none;" onmouseenter="this.style.boxShadow='0 0 4px 0 #ccc'" onmouseleave="this.style.boxShadow=''"></div>
       <div class="spt-trial-accurate-point" style="position: absolute; bottom: -30px; width: 15px; height: 15px; border: 1px solid #000; border-radius: 50%; background-color: #f3f3f3; display: none;" onmouseenter="this.style.boxShadow='0 0 4px 0 #ccc'" onmouseleave="this.style.boxShadow=''"></div>
@@ -64,15 +63,18 @@ export function renderTrialHtml(props: AmpTrialHtml, concurrentDisplays: AmpTime
 }
 
 export function renderATTrialHtml(props: AmpTrialHtml, advancedTimeline: AT.AdvancedTimeline) {
-  return renderTrialHtmlForLayout(props, getATUniversalLayout(advancedTimeline));
+  const additionalContainerHeight = max(advancedTimeline.pages.map(page => page.style?.containerTopBlank ?? 0));
+  return renderTrialHtmlForLayout(props, getATUniversalLayout(advancedTimeline), additionalContainerHeight);
 } 
 
-export function renderTrialHtmlForLayout(props: AmpTrialHtml, layout: number[]) {
-  const containerHeight = (props.height + (props.concurrentVerticalGap ?? 0)) * layout.length;
+export function renderTrialHtmlForLayout(props: AmpTrialHtml, layout: number[], additionalContainerHeight = 0) {
+  const containerHeight = (props.height + (props.concurrentVerticalGap ?? 0)) * layout.length + additionalContainerHeight;
   return trim(`
 <!-- Container. Fixed-height so that the instruction won't move. Flex prevents margin collapse with external. -->
-<div class="spt-trial-container" style="display: flex; flex-direction: column; height: ${containerHeight}px; box-sizing: content-box; padding-top: ${props.marginTop ?? 0}px; margin-top: ${-(props.concurrentVerticalGap ?? 0)}px;">
+<div class="spt-trial-container" style="height: ${containerHeight}px; box-sizing: content-box; padding-top: ${props.marginTop ?? 0}px;">
+<div class="spt-trial-container-inner" style="display: flex; flex-direction: column; margin-top: ${-(props.concurrentVerticalGap ?? 0)}px;">
 ${layout.map((numOfCols, rowIndex) => renderRow(props, numOfCols, rowIndex)).join('\n')}
+</div>
 </div>
 <!-- Instruction -->
 <div style="display: flex; justify-content: space-around; margin-top: 6em; white-space: pre-wrap; color: ${props.darkMode ? 'white' : 'black'}; text-align: center">${props.instruction}</div>

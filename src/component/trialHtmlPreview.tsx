@@ -21,8 +21,8 @@ interface PreviewUidsSelector {
 }
 
 interface PreviewPageStyle {
-  previewStyle: AT.Page['style'];
-  updatePreviewStyle: (previewStyle: AT.Page['style']) => void;
+  previewStyle: AT.Style | undefined;
+  updatePreviewStyle: (previewStyle: AT.Style | undefined) => void;
 }
 
 
@@ -156,6 +156,7 @@ const AdvancedPreviewSelector: React.FC<PreviewUidsSelector & PreviewPageStyle> 
   const selectedPage = typeof previewFrameIndex === 'number' ? advancedTimelineWatch.pages[previewFrameIndex] : undefined;
   const selectedPageLayoutedDisplays = selectedPage?.layoutedDisplays;
 
+  // On selected page change, update preview style
   useEffect(() => {
     if (!isEqual(previewStyle, selectedPage?.style)) {
       updatePreviewStyle(selectedPage?.style);
@@ -266,7 +267,7 @@ export const TrialHtmlPreview: React.FC = () => {
   );
 
   const [previewUids, setPreviewUids] = useState<PreviewUids>([[]]);
-  const [previewStyle, setPreviewStyle] = useState<AT.Page['style']>();
+  const [previewStyle, setPreviewStyle] = useState<AT.Style>();
 
   const renderPreview = () => {
     const previewStimuliItems = map2d(previewUids, ({ uid, accuratePoint }) => {
@@ -283,13 +284,25 @@ export const TrialHtmlPreview: React.FC = () => {
   };
   useEffect(renderPreview);
 
+  // Reset previewStyle when not AT
+  useEffect(() => {
+    if (!(trialTypeWatch === 'advanced' && advancedTimelineWatch)) {
+      if (previewStyle !== undefined) {
+        setPreviewStyle(undefined);
+      }
+    }
+  });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }} >
       {
-        trialTypeWatch === 'advanced' && advancedTimelineWatch ? <AdvancedPreviewSelector previewUids={previewUids} updatePreviewUids={setPreviewUids} previewStyle={previewStyle} updatePreviewStyle={setPreviewStyle} /> :
-          concurrentDisplaysWatch ? <ConcurrentPreviewSelector previewUids={previewUids} updatePreviewUids={setPreviewUids} /> :
-            <SinglePreviewSelector previewUids={previewUids} updatePreviewUids={setPreviewUids} />
+        trialTypeWatch === 'advanced' && advancedTimelineWatch ? (
+          <AdvancedPreviewSelector previewUids={previewUids} updatePreviewUids={setPreviewUids} previewStyle={previewStyle} updatePreviewStyle={setPreviewStyle} />
+        ) : concurrentDisplaysWatch ? (
+          <ConcurrentPreviewSelector previewUids={previewUids} updatePreviewUids={setPreviewUids} />
+        ) : (
+          <SinglePreviewSelector previewUids={previewUids} updatePreviewUids={setPreviewUids} />
+        )
       }
 
       <iframe style={{ flexGrow: 1 }} ref={previewRef} height={700} title='HTML Preview'></iframe>
@@ -341,7 +354,7 @@ function renderTrialPreview(
   previewRef: React.MutableRefObject<HTMLIFrameElement | null>,
   previewInnerHtml: string,
   previewStimuliItems: StimuliItemToDisplay[][],
-  previewStyle: AT.Page['style'],
+  previewStyle: AT.Style | undefined,
   darkMode: boolean,
 ) {
   const iframeDocument = previewRef.current?.contentDocument;
@@ -426,15 +439,13 @@ function simulateClear(container: Document) {
     contentEl.style.display = 'none';
   })
 }
-function simulateContainerStyle(style: AT.Page['style'], container: Document) {
-  const containerEl = container.querySelector<HTMLDivElement>('.spt-trial-container');
-  if (containerEl) {
-    if (style) {
-      if (style.offsetY !== undefined) {
-        containerEl.style.transform = 'translateY(' + style.offsetY + 'px)';
-      }
+function simulateContainerStyle(style: AT.Style | undefined, container: Document) {
+  const containerInnerEl = container.querySelector<HTMLDivElement>('.spt-trial-container-inner');
+  if (containerInnerEl) {
+    if (typeof style?.containerTopBlank === 'number') {
+      containerInnerEl.style.paddingTop = style.containerTopBlank + 'px';
     } else {
-      containerEl.style.transform = '';
+      containerInnerEl.style.paddingTop = '0px';
     }
   }
 }

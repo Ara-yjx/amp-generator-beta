@@ -1,7 +1,7 @@
-import { Button, Card, Checkbox, Divider, Form, InputNumber, Select, Space, Switch, Tag, Typography } from '@arco-design/web-react';
+import { Button, Card, Checkbox, Divider, Form, InputNumber, Select, Space, Switch, Tag, Tooltip, Typography } from '@arco-design/web-react';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
-import { IconApps, IconArrowFall, IconBranch, IconDelete, IconEdit, IconPlus, IconSkipNext, IconToTop } from '@arco-design/web-react/icon';
+import { IconApps, IconArrowFall, IconBranch, IconDelete, IconEdit, IconPlus, IconQuestionCircle, IconSkipNext, IconToTop } from '@arco-design/web-react/icon';
 import { range } from 'lodash';
 import React, { Fragment, useEffect } from 'react';
 import type { AT, AmpParams } from '../data/ampTypes';
@@ -347,10 +347,14 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
 
         <Divider />
 
-        <Item field={`${field}.style.offsetY`} label={<Space><IconToTop />Extra space at page top</Space>} layout='inline'>
-          <InputNumber suffix='px' style={{ width: 100 }} />
-        </Item>
-
+        <Space style={{ margin: '10px 0', width: '100%' }}>
+          <Item field={`${field}.style.containerTopBlank`} label={<Space><IconToTop />Extra space at page top</Space>} layout='inline' style={{ marginBottom: 0 }}>
+            <InputNumber suffix='px' style={{ width: 100 }} />
+          </Item>
+          <Tooltip content='Page-wise blank space, which acts atop of the "Blank space above content" configuration in Trial Block HTML.'>
+            <IconQuestionCircle />
+          </Tooltip>
+        </Space>
       </Card >
     </div>
   )
