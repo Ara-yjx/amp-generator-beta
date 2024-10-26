@@ -40,5 +40,6 @@ export const emptyAmpParams: AmpParams = {
     textColor: undefined,
     textWrap: true,
     darkMode: false,
-  }
+  },
+  surveyIdentifier: undefined,
 };

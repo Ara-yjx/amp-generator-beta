@@ -55,6 +55,7 @@ export function hydrateQsf(params: AmpParams) {
   setEd('darkMode', params.trialHtml.darkMode);
 
   addOutputEdForMouseTracking(params, template);
+  addSurveyIdentifier(params, template);
 
   // Render trial html
 
@@ -229,6 +230,7 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
   }
 }
 
+/** In-place. */
 function addOutputEdForMouseTracking(params: AmpParams, template: any) {
   if (!(params.trialType === 'advanced' && params.advancedTimeline)) return;
   /* @ts-ignore */
@@ -254,5 +256,35 @@ function addOutputEdForMouseTracking(params: AmpParams, template: any) {
         }
       })
     }
+  }
+}
+
+/** In-place */
+function addSurveyIdentifier(params: AmpParams, template: any) {
+  if (params.surveyIdentifier) { 
+    // Rename all EDs
+    /* @ts-ignore */
+    const inputEd = template.SurveyElements[1].Payload.Flow[0].EmbeddedData as EmbeddedDataTemplate[];    
+    inputEd.forEach(ed => {
+      ed.Field += `:${params.surveyIdentifier}`;
+      ed.Description += `:${params.surveyIdentifier}`;
+    });
+    /* @ts-ignore */
+    const outputEd = template.SurveyElements[1].Payload.Flow[1].EmbeddedData as EmbeddedDataTemplate[];
+    outputEd.forEach(ed => {
+      ed.Field += `:${params.surveyIdentifier}`;
+      ed.Description += `:${params.surveyIdentifier}`;
+    });
+
+    // Add sptSurveyIdentifier ED
+    inputEd.unshift({
+      Description: 'sptSurveyIdentifier',
+      Type: 'Custom',
+      Field: 'sptSurveyIdentifier',
+      VariableType: 'String',
+      DataVisibility: [],
+      AnalyzeText: false,
+      Value: params.surveyIdentifier,
+    } as EmbeddedDataTemplate);
   }
 }

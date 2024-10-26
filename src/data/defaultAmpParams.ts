@@ -67,5 +67,6 @@ export const defaultAmpParams: AmpParams = {
     textColor: '#000000',
     textWrap: true,
     darkMode: false,
-  }
+  },
+  surveyIdentifier: undefined,
 };

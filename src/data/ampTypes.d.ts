@@ -102,4 +102,5 @@ export interface AmpParams {
   totalTrials: number;
   totalRounds: number;
   trialHtml: AmpTrialHtml;
+  surveyIdentifier?: string;
 }
