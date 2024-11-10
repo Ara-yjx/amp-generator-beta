@@ -1,3 +1,5 @@
+import type { BranchNode, LeafNode, TreeNode } from '../component/tree';
+
 export interface AmpStimuliItem {
   uid: number;
   type: 'image' | 'text' | 'button';
@@ -51,6 +53,9 @@ export interface AmpTimeline {
 
 export type DisplayLayout = number[];
 
+export type BranchData = 'and' | 'or';
+export type LeafData = AT.ResponseCondition | AT.PoolSelectionCondition | [undefined];
+
 export namespace AT {
 
   type DisplaySrc =
@@ -58,8 +63,14 @@ export namespace AT {
     | ['copy', number, number, number] // page, row, col
     | ['copy'] // undefined copy
     | ['blank'];
-  type Condition = ['response', number, '==' | '!=', string[]]; // temp
-
+  //                                  pageIndex             responses
+  type ResponseCondition = ['response', number, '==' | '!=', string[]]
+  //                                            pageIndex  key                  pools
+  type PoolSelectionCondition = ['poolSelection', number, string, '==' | '!=', number[]]
+  type Condition =
+    | ResponseCondition
+    | PoolSelectionCondition
+    | ['and' | 'or', ...Condition[]];
   type LayoutedDisplayItem = {
     displaySrc: DisplaySrc;
     swap?: boolean;
@@ -72,9 +83,11 @@ export namespace AT {
     containerTopBlank?: number,
   }
 
+  type ConditionTree = TreeNode<BranchData, LeafData>;
   interface Page {
     // isConditionEnabled: boolean,
-    condition?: Condition,
+    // condition?: Condition,
+    condition?: ConditionTree,
     // layout: Layout,
     // displays: { row: int, col: int, src: DisplaySrc }[],
     layoutedDisplays: LayoutedDisplayItem[][],
@@ -89,7 +102,7 @@ export namespace AT {
     style?: Style,
   }
 
-  type AdvancedTimeline = { 
+  type AdvancedTimeline = {
     pages: AT.Page[],
   };
 }

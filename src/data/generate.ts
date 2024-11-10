@@ -163,19 +163,49 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
     }))
   };
 
-  function transformATCondition(condition: AT.Page['condition']) {
-    if (condition) {
-      const conditionCopy = [...condition] as AT.Condition;
-      conditionCopy[1] += 1;
-      conditionCopy[3].forEach((conditionValue, conditionValueIndex) => {
-        const [type, row, col] = conditionValue.split('.');
-        if (type === '_MOUSE') { // TODO: use displayKey directly which matches the actual response
-          const mouseClickKey = getDisplayKey(parseInt(row), parseInt(col));
-          conditionCopy[3][conditionValueIndex] = mouseClickKey;
-        }
-      })
-      return conditionCopy;
+
+  function transformATConditionTree(node: AT.ConditionTree): AT.Condition | undefined {
+    if ('children' in node) {
+      const transformedChildren = node.children.map(transformATConditionTree).filter(x => x != undefined) as AT.Condition[];
+      if (transformedChildren.length) {
+        return [node.data, ...transformedChildren];
+      } else {
+        return undefined;
+      }
+    } else if (node.data?.[0] !== undefined) {
+      return node.data;
+    } else return undefined;
+  }
+
+  function transformATCondition(conditionTree: AT.Page['condition']) {
+    function transformATConditionRecursive(condition: AT.Condition) {
+      if (condition[0] === 'response') {
+        condition[1] += 1;
+        condition[3].forEach((conditionValue, conditionValueIndex) => {
+          const [type, row, col] = conditionValue.split('.');
+          if (type === '_MOUSE') { // TODO: use displayKey directly which matches the actual response
+            const mouseClickKey = getDisplayKey(parseInt(row), parseInt(col));
+            condition[3][conditionValueIndex] = mouseClickKey;
+          }
+        })
+      } else if (condition[0] === 'poolSelection') {
+        condition[1] += 1;
+        condition[4] = condition[4].map(poolIndex => poolIndex + 1);
+      } else if (condition[0] === 'and' || condition[0] === 'or') {
+        const [_, ...children] = condition;
+        children.forEach(transformATConditionRecursive);
+      }
     }
+
+    if (!conditionTree) return;
+    // console.error(printTree(conditionTree))
+    const conditionTreeClone = cloneDeep(conditionTree);
+    const condition = transformATConditionTree(conditionTreeClone);
+    console.warn('condition', JSON.stringify(condition))
+    if (!condition) return;
+    transformATConditionRecursive(condition);
+    console.log(JSON.stringify(condition))
+    return condition;
   }
 
   function transformATDisplays(layoutedDisplays: AT.Page['layoutedDisplays']) {

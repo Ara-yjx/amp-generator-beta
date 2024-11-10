@@ -10,6 +10,7 @@ import { flatMap2d, forEach2d, getDisplayKey, getLayoutFromLayoutDisplays } from
 import { AcceptedKeys } from './acceptedKeys';
 import { LayoutEditor } from './layoutEditor';
 import { ArcoFormItem } from '../util/arco';
+import { AdvancedTimelineCondition } from './advancedTimelineCondition';
 
 const { Item, List } = Form;
 const { Text, Title } = Typography;
@@ -177,7 +178,7 @@ const ATLayoutItemSrcSelector: React.FC<ArcoFormItem<AT.DisplaySrc> & { pageInde
       <Item style={{ marginBottom: 4 }}>
         <Select
           style={{ width: 240 }}
-          options={[{ label: '(blank)', value: 'blank' }, { label: 'Pick from pool randomly', value: 'pool' }, { label: 'Copy item', value: 'copy', disabled: pageIndex === 0 }]}
+          options={[{ label: '(blank)', value: 'blank' }, { label: 'Pick from pool', value: 'pool' }, { label: 'Copy item', value: 'copy', disabled: pageIndex === 0 }]}
           value={value?.[0]}
           onChange={onSrcTypeChange}
         />
@@ -269,7 +270,7 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
     if (form.getFieldValue(conditionField)) {
       form.setFieldValue(conditionField, undefined);
     } else {
-      form.setFieldValue(conditionField, ['response', 0, '==', []]);
+      form.setFieldValue(conditionField, { data: ['response', 0, '==', []] } as AT.ConditionTree);
     }
   };
 
@@ -307,7 +308,9 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
         Boolean(conditionWatch) && (
           <div style={{ display: 'flex' }}>
             <div style={{ borderWidth: 1, borderColor: '#FF8D1F', borderBottomWidth: 0, borderStyle: conditionWatch ? 'dashed' : 'solid', padding: '5px 16px', }}>
-              <ATPageCondition field={field} pageIndex={pageIndex} />
+              <Item field={`${field}.condition`}>
+                <AdvancedTimelineCondition field={`${field}.condition`} pageIndex={pageIndex} />
+              </Item>
             </div>
           </div>
         )
