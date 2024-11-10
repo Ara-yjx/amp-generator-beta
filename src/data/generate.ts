@@ -146,7 +146,7 @@ function transformConcurrentDisplays(concurrentDisplays: AmpTimeline['concurrent
 }
 
 
-type ExportPageDisplaySrc = ['pool', number] | ['copy', number, string] | null;
+type ExportPageDisplaySrc = ['pool', number[]] | ['copy', number, string] | null;
 
 function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
   const { pages } = advancedTimeline;
@@ -183,12 +183,14 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
     forEach2d(layoutedDisplays, ({ displaySrc }, row, col) => {
       const displayKey = getDisplayKey(row, col);
       if (displaySrc[0] === 'blank') {
-        result[displayKey] = ['pool', 0];
+        result[displayKey] = ['pool', [0]];
       } else if (displaySrc[0] === 'pool') {
-        result[displayKey] = ['pool', displaySrc[1] + 1];
+        result[displayKey] = ['pool', displaySrc[1].map(poolIndex => poolIndex + 1)];
       } else if (displaySrc[0] === 'copy') {
         const [_, copyPage, copyRow, copyCol] = displaySrc;
-        result[displayKey] = ['copy', copyPage + 1, getDisplayKey(copyRow, copyCol)];
+        if (copyPage !== undefined && copyRow !== undefined && copyCol !== undefined) {
+          result[displayKey] = ['copy', copyPage + 1, getDisplayKey(copyRow, copyCol)];
+        }
       }
     });
     return result;
@@ -261,10 +263,10 @@ function addOutputEdForMouseTracking(params: AmpParams, template: any) {
 
 /** In-place */
 function addSurveyIdentifier(params: AmpParams, template: any) {
-  if (params.surveyIdentifier) { 
+  if (params.surveyIdentifier) {
     // Rename all EDs
     /* @ts-ignore */
-    const inputEd = template.SurveyElements[1].Payload.Flow[0].EmbeddedData as EmbeddedDataTemplate[];    
+    const inputEd = template.SurveyElements[1].Payload.Flow[0].EmbeddedData as EmbeddedDataTemplate[];
     inputEd.forEach(ed => {
       ed.Field += `:${params.surveyIdentifier}`;
       ed.Description += `:${params.surveyIdentifier}`;

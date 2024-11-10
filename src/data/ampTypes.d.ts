@@ -54,8 +54,9 @@ export type DisplayLayout = number[];
 export namespace AT {
 
   type DisplaySrc =
-    | ['pool', number] // poolIndex
+    | ['pool', number[]] // poolIndexes
     | ['copy', number, number, number] // page, row, col
+    | ['copy'] // undefined copy
     | ['blank'];
   type Condition = ['response', number, '==' | '!=', string[]]; // temp
 

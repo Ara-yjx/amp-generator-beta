@@ -2,13 +2,14 @@ import { Button, Card, Checkbox, Divider, Form, InputNumber, Select, Space, Swit
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import { IconApps, IconArrowFall, IconBranch, IconDelete, IconEdit, IconPlus, IconQuestionCircle, IconSkipNext, IconToTop } from '@arco-design/web-react/icon';
-import { range } from 'lodash';
+import { isEqual, range, sortBy, sortedUniq } from 'lodash';
 import React, { Fragment, useEffect } from 'react';
 import type { AT, AmpParams } from '../data/ampTypes';
 import useOptionGuards from '../hooks/useOptionGuard';
 import { flatMap2d, forEach2d, getDisplayKey, getLayoutFromLayoutDisplays } from '../util/util';
 import { AcceptedKeys } from './acceptedKeys';
 import { LayoutEditor } from './layoutEditor';
+import { ArcoFormItem } from '../util/arco';
 
 const { Item, List } = Form;
 const { Text, Title } = Typography;
@@ -122,51 +123,104 @@ export const ATPageCondition: React.FC<{ field: string, pageIndex: number }> = (
   )
 }
 
+/** field: advancedTimeline.pages[*].layoutedDisplays[row][col] */
+const ATLayoutItemSrcSelector: React.FC<ArcoFormItem<AT.DisplaySrc> & { pageIndex: number }> = ({ pageIndex, value, onChange }) => {
+  const { form } = useFormContext();
+  const poolsWatch = useWatch('stimuli', form) as AmpParams['stimuli'];
+  const pagesWatch = useWatch('advancedTimeline.pages', form) as AT.Page[];
+  const onSrcTypeChange = (newType: String) => {
+    if (newType === 'pool') onChange?.(['pool', []]);
+    else if (newType === 'copy') onChange?.(['copy']);
+    else onChange?.(['blank']);
+  };
+  const getPoolOptions = () => poolsWatch.map((_, index) => ({
+    label: `Pool ${index + 1}`, value: index
+  }));
+  // [item, page, row, col] similar to in DisplaySrc as ['copy', page, row, col] 
+  const getCopyOptionValues = (): (Readonly<[AT.LayoutedDisplayItem, number, number, number]>)[] =>
+    pagesWatch.slice(0, pageIndex).flatMap(({ layoutedDisplays }, copiedPageIndex) => (
+      flatMap2d(layoutedDisplays, (item, row, col) => ([item, copiedPageIndex, row, col] as const))
+        .filter(([item]) => item.displaySrc?.[0] === 'pool')
+    ));
+  const getCopyOptions = () => getCopyOptionValues().map(([item, copiedPageIndex, row, col]) => {
+    const copiedPoolsIndexStr = (item.displaySrc as ['pool', number[]])[1]?.map(poolIndex => poolIndex + 1).join('/');
+    return {
+      label: `Copy Page#${copiedPageIndex + 1} ${getDisplayKey(row, col)} (Pool ${copiedPoolsIndexStr})`,
+      value: JSON.stringify(['copy', copiedPageIndex, row, col]),
+    };
+  })
+  // Option guards
+  useEffect(() => {
+    if (value?.[0] === 'pool') {
+      const validPools = value[1].filter(x => x < poolsWatch.length);
+      if (!isEqual(value[1], validPools)) {
+        onChange?.(['pool', validPools]);
+      }
+    }
+  });
+  useEffect(() => {
+    if (value?.[0] === 'copy') {
+      // If current value is non-null and not in option, reset to null
+      if (value[1] !== undefined) {
+        const isValid = getCopyOptionValues().some(([item, copiedPageIndex, row, col]) => (
+          isEqual([copiedPageIndex, row, col], [value[1], value[2], value[3]])
+        ));
+        if (!isValid) {
+          onChange?.(['copy']);
+        }
+      }
+    }
+  });
+  return (
+    <div style={{ height: 70 }}>
+
+      <Item style={{ marginBottom: 4 }}>
+        <Select
+          style={{ width: 240 }}
+          options={[{ label: '(blank)', value: 'blank' }, { label: 'Pick from pool randomly', value: 'pool' }, { label: 'Copy item', value: 'copy', disabled: pageIndex === 0 }]}
+          value={value?.[0]}
+          onChange={onSrcTypeChange}
+        />
+      </Item>
+      {
+        (value?.[0] === 'pool') && (
+          <Item validateStatus={value[1].length > 0 ? undefined : 'warning'} style={{ marginBottom: 4 }}>
+            <Select
+              mode='multiple'
+              style={{ width: 240 }}
+              options={getPoolOptions()}
+              value={value?.[1] ?? []}
+              onChange={(v: number[]) => onChange?.(['pool', sortBy(v)])}
+            />
+          </Item>
+        )
+      }
+      {
+        (value?.[0] === 'copy') && (
+          <Item validateStatus={value[1] !== undefined ? undefined : 'warning'} style={{ marginBottom: 4 }}>
+            <Select
+              style={{ width: 240 }}
+              options={getCopyOptions()}
+              value={isEqual(value, ['copy']) ? undefined : JSON.stringify(value)}
+              onChange={(v: string) => onChange?.(JSON.parse(v))}
+            />
+          </Item>
+        )
+      }
+    </div>
+  );
+}
 
 /** field: advancedTimeline.pages[*].layoutedDisplays[row][col] */
 const ATLayoutItem: React.FC<{ field: string, page: number, row: number, col: number, options?: { label: string, value: number }[] }> = ({ field, page, row, col }) => {
   const { form } = useFormContext();
-  const poolsWatch = useWatch('stimuli', form) as AmpParams['stimuli'];
-  const pagesWatch = useWatch('advancedTimeline.pages', form) as AT.Page[];
   const thisPageWatch = useWatch(`advancedTimeline.pages[${page}]`, form) as AT.Page;
-  const poolOptions = poolsWatch.map((_, index) => ({
-    label: `Pool ${index + 1}`, value: ['pool', index].join('.')
-  }));
-  const copyOptions = pagesWatch.slice(0, page).flatMap(({ layoutedDisplays }, pIndex) => (
-    flatMap2d(layoutedDisplays, (item, row, col) => ({ item, row, col }))
-      .filter(({ item }) => item.displaySrc?.[0] === 'pool')
-      .map(({ item, row, col }) => ({
-        label: `Copy Page#${pIndex + 1} ${getDisplayKey(row, col)} (Pool ${item.displaySrc![1]! + 1})`,
-        value: ['copy', pIndex, row, col].join('.'),
-      }))
-  ));
-  const blankOption = { label: '(blank)', value: 'blank' }
-  // TODO: current page copyOptions
-  const layoutItemOptions = [blankOption, ...poolOptions, ...copyOptions];
-
-  function deserializeDisplaySrcOption(v: string | undefined): AT.DisplaySrc | undefined {
-    if (v === undefined) return undefined;
-    const split = v.split('.');
-    // Parse string to number except first item;
-    const splitToInt = split.map((item, index) => index === 0 ? item : parseInt(item)) as AT.DisplaySrc;
-    return splitToInt;
-  }
-  function serializeDisplaySrcOption(v: AT.DisplaySrc | undefined): string | undefined {
-    if (v === undefined) return undefined;
-    return v?.join('.') ?? 'null';
-  }
-
-  useOptionGuards(`${field}.displaySrc`, layoutItemOptions, { formatter: serializeDisplaySrcOption, defaultValue: ['blank'] });
 
   return (
     <Space direction='vertical' style={{ border: '1px dashed grey', padding: 5 }}>
       <Tag color='orange' bordered>{getDisplayKey(row, col)}</Tag>
-      {/* @ts-ignore */}
-      <Item field={`${field}.displaySrc`} normalize={deserializeDisplaySrcOption} formatter={serializeDisplaySrcOption} noStyle>
-        <Select
-          style={{ width: 240 }}
-          options={layoutItemOptions}
-        />
+      <Item field={`${field}.displaySrc`} noStyle>
+        <ATLayoutItemSrcSelector pageIndex={page} />
       </Item>
       {
         thisPageWatch.swap && (
@@ -303,14 +357,14 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
             </Checkbox>
           </Item>
           {
-            keyboardResponseEnabledWatch && [
+            keyboardResponseEnabledWatch && <>
               <Item field={`${field}.response.keyboard.keys`} label='Accepted keys' layout='inline' >
                 <AcceptedKeys />
-              </Item>,
+              </Item>
               <Item field={`${field}.response.keyboard.delayBefore`} label='Delay before accepting keyboard' layout='inline' >
                 <InputNumber suffix='ms' min={0} style={{ width: 100, minWidth: 60 }} />
               </Item>
-            ]
+            </>
           }
         </Space>
 
