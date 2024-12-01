@@ -203,11 +203,15 @@ const AdvancedPreviewSelector: React.FC<PreviewUidsSelector & PreviewPageStyle> 
         updateOneUid(row, col, 'empty');
       }
     });
-    const optionItems = Boolean(displaySrc[0] === 'pool') && stimuliWatch[displaySrc[1] as number].items || undefined;
+    const optionItems: { poolIndex: number, item: AmpStimuliItem }[] = Boolean(displaySrc[0] === 'pool')
+      ? (displaySrc[1] as number[]).flatMap(poolIndex =>
+        stimuliWatch[poolIndex].items.map(item => ({ poolIndex, item }))
+      )
+      : [];
     // When current uid is not in option list, reset to 'empty'
-    const optionUids = optionItems?.map(x => x.uid);
+    const optionUids = optionItems.map(x => x.item.uid);
     useEffect(() => {
-      if (thisSelectorValue !== 'empty' && !optionUids?.includes(thisSelectorValue)) {
+      if (thisSelectorValue !== 'empty' && !optionUids.includes(thisSelectorValue)) {
         updateOneUid(row, col, 'empty');
       }
     }, []);
@@ -221,9 +225,9 @@ const AdvancedPreviewSelector: React.FC<PreviewUidsSelector & PreviewPageStyle> 
           onChange={uid => updateOneUid(row, col, uid ?? 'empty')}
         >
           {
-            optionItems?.map((item, itemIndex) => (
+            optionItems.map(({ item, poolIndex }, itemIndex) => (
               <Option key={item.uid} value={item.uid}>
-                <StimuliThumbnail {...item} indexDisplay={`${(displaySrc[1] as number) + 1}-${itemIndex + 1}`} />
+                <StimuliThumbnail {...item} indexDisplay={`${poolIndex + 1}-${itemIndex + 1}`} />
               </Option>
             ))
           }
