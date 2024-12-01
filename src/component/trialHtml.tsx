@@ -54,6 +54,7 @@ const ConfigModeForm: React.FC = () => {
 
   const concurrentDisplaysWatch = useWatch('timeline.concurrentDisplays', form) as AmpTimeline['concurrentDisplays'];
   const isConcurrentDisplaysEnabled = Boolean(concurrentDisplaysWatch);
+  const isAdvancedTimelineEnabled = Boolean(useWatch('advancedTimeline', form));
 
   // Set default value when enabling concurrent; reset to undefined when disabling
   useEffect(() => {
@@ -90,9 +91,9 @@ const ConfigModeForm: React.FC = () => {
       </Item>
 
       {
-        isConcurrentDisplaysEnabled && (
+        (isConcurrentDisplaysEnabled || isAdvancedTimelineEnabled) && (
           <div>
-            <Item label={<b>Gap between contents (for Concurrent Display only)</b>}>
+            <Item label={<span><b>Gap between contents</b> (for Concurrent Display and Advanced Trial Flow)</span>}>
               <Space size='large'>
                 <Item field='trialHtml.concurrentVerticalGap' label={<b>Vertical gap</b>}>
                   <InputNumber suffix='px' style={{ width: 200 }} />
