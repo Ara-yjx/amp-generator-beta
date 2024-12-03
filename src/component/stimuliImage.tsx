@@ -1,12 +1,15 @@
-import { Button, Divider, Form, Grid, Image, Input, InputNumber, Select, Space, Switch, Tooltip, Typography } from '@arco-design/web-react';
+import { Button, Checkbox, Divider, Form, Grid, Image, Input, InputNumber, Modal, Select, Space, Switch, Tooltip, Typography } from '@arco-design/web-react';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
-import { IconArrowDown, IconArrowUp, IconDelete, IconPlus, IconQuestionCircle } from '@arco-design/web-react/icon';
-import React, { useContext } from 'react';
-import { AmpStimuli, AmpStimuliItem } from '../data/ampTypes';
+import { IconAlignLeft, IconArrowDown, IconArrowUp, IconBgColors, IconDelete, IconFontColors, IconLineHeight, IconPlus, IconQuestionCircle } from '@arco-design/web-react/icon';
+import React, { ReactNode, useContext } from 'react';
+import { AmpStimuli, AmpStimuliItem, AmpStimuliStyle } from '../data/ampTypes';
 import { uid } from '../data/uid';
 import { PrimeValidationContext } from './PrimeValidationContext';
 import { Prime } from './prime';
 import sumBy from 'lodash/sumBy';
+import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
+import { emptyAmpParams } from '../data/emptyAmpParams';
+import { TextColorPicker } from './textColorPicker';
 
 
 const { Item, List } = Form;
@@ -15,7 +18,7 @@ const { Text } = Typography;
 
 const WIDTH_INDEX_COL = 40;
 const WIDTH_TYPE_SELECTOR = 110;
-const WIDTH_IMAGE_PREVIEW = 32;
+const WIDTH_IMAGE_PREVIEW = 32; // same as Button of size='default' 
 const GUTTER = 10;
 
 const InputShuffle: React.FC<{ value?: any, onChange?: (v: any) => any }> = ({ value, onChange }) => {
@@ -27,16 +30,16 @@ const InputShuffle: React.FC<{ value?: any, onChange?: (v: any) => any }> = ({ v
   const maxRepeatValue = typeof value === 'number' ? value : undefined;
   const tooltip = (
     <Tooltip style={{ minWidth: '50em' }} content={
-    <div>
-      You can access the randomization result through these embeeded data:
-      <li>{`shuffled_{roundIndex}_{poolIndex}_{shuffledIndex}_item_index`}</li>
-      <li>{`shuffled_{roundIndex}_{poolIndex}_{shuffledIndex}_content`}</li>
-      <li>{`shuffled_{roundIndex}_{poolIndex}_{shuffledIndex}_type`}</li>
-      For example, "shuffled_1_2_3_content" gives you the <i>content</i> of the stimuli item which is at the <i>3rd position</i> after shuffling <i>Pool 2</i> in trial <i>Round 1</i>.
-      <li>If you did not check "Add more rounds" below, always use "1" for "roundIndex".</li>
-      <li>If shuffle is disbled, then the default item order is looping through all the items.</li>
-    </div>
-  } position='top'>
+      <div>
+        You can access the randomization result through these embeeded data:
+        <li>{`shuffled_{roundIndex}_{poolIndex}_{shuffledIndex}_item_index`}</li>
+        <li>{`shuffled_{roundIndex}_{poolIndex}_{shuffledIndex}_content`}</li>
+        <li>{`shuffled_{roundIndex}_{poolIndex}_{shuffledIndex}_type`}</li>
+        For example, "shuffled_1_2_3_content" gives you the <i>content</i> of the stimuli item which is at the <i>3rd position</i> after shuffling <i>Pool 2</i> in trial <i>Round 1</i>.
+        <li>If you did not check "Add more rounds" below, always use "1" for "roundIndex".</li>
+        <li>If shuffle is disbled, then the default item order is looping through all the items.</li>
+      </div>
+    } position='top'>
       <IconQuestionCircle />
     </Tooltip>
   );
@@ -52,8 +55,114 @@ const InputShuffle: React.FC<{ value?: any, onChange?: (v: any) => any }> = ({ v
   )
 }
 
+const defaultStyleValue: AmpStimuliStyle = {
+  fontSize: emptyAmpParams.trialHtml.textFontSize,
+  color: '#000',
+  textAlign: 'center',
+  buttonPaddingTopBottom: 0,
+  buttonPaddingLeftRight: 4,
+}
+
+/** Field can be either or AmpStimuliItem or AmpStimuli */
+const ItemStyleEditor: React.FC<{ field: string, isForPool?: boolean }> = ({ field, isForPool }) => {
+  const { form } = useFormContext();
+  const itemType = (useWatch(`${field}.type`, form) as AmpStimuliItem['type'] | undefined) ?? 'undefined';
+  const styleValue = useWatch(`${field}.style`, form) as AmpStimuliStyle | undefined;
+  const [visible, setVisible] = React.useState(false);
+  return (
+    <div>
+      <Button
+        icon={<IconFontColors />}
+        style={{ color: styleValue?.color }}
+        type='secondary'
+        disabled={itemType === 'image'}
+        onClick={() => setVisible(true)}
+      />
+      <Modal
+        title={isForPool ? 'Customize the style of all stimuli items in this pool' : 'Customize stimuli item style'}
+        visible={visible}
+        onOk={() => setVisible(false)}
+        closable={false}
+        footer={(cancelButtonNode: ReactNode, okButtonNode: ReactNode) => okButtonNode}
+        okText='Save'
+        autoFocus={false}
+        focusLock={true}
+      >
+        {
+          ['text', 'button', 'undefined'].includes(itemType) && (
+            <Space style={{ width: '100%' }} size={0}>
+              <Item layout='inline'>
+                <Checkbox checked={styleValue?.fontSize !== undefined} onChange={value => form.setFieldValue(`${field}.style.fontSize`, value ? defaultStyleValue.fontSize : undefined)} />
+              </Item>
+              <Item field={`${field}.style.fontSize`} label={<><IconLineHeight />&nbsp;Font size</>} layout='inline' disabled={styleValue?.fontSize === undefined}>
+                <InputNumber min={1} suffix='px' style={{ width: 120 }} />
+              </Item>
+            </Space>
+          )
+        }
+        {
+          ['text', 'button', 'undefined'].includes(itemType) && (
+            <Space style={{ width: '100%' }} size={0}>
+              <Item layout='inline'>
+                <Checkbox checked={styleValue?.color !== undefined} onChange={value => form.setFieldValue(`${field}.style.color`, value ? defaultStyleValue.color : undefined)} />
+              </Item>
+              <Item field={`${field}.style.color`} label={<><IconBgColors />&nbsp;Font color</>} layout='inline' disabled={styleValue?.color === undefined}>
+                <TextColorPicker showLabel={false} showUseDefaultButton={false} />
+              </Item>
+            </Space>
+          )
+        }
+        {
+          ['text', 'undefined'].includes(itemType) && (
+            <Space style={{ width: '100%' }} size={0}>
+              <Item layout='inline'>
+                <Checkbox checked={styleValue?.textAlign !== undefined} onChange={value => form.setFieldValue(`${field}.style.textAlign`, value ? defaultStyleValue.textAlign : undefined)} />
+              </Item>
+              <Item field={`${field}.style.textAlign`} label={<><IconAlignLeft />&nbsp;Text align</>} layout='inline' disabled={styleValue?.textAlign === undefined}>
+                <Select
+                  options={['left', 'center', 'right']}
+                  style={{ width: 120 }}
+                />
+              </Item>
+            </Space>
+          )
+        }
+        {
+          ['button', 'undefined'].includes(itemType) && (
+            <Space style={{ width: '100%' }} size={0}>
+              <Item layout='inline'>
+                <Checkbox checked={styleValue?.buttonPaddingTopBottom !== undefined} onChange={value => form.setFieldValue(`${field}.style.buttonPaddingTopBottom`, value ? defaultStyleValue.buttonPaddingTopBottom : undefined)} />
+              </Item>
+              <Item field={`${field}.style.buttonPaddingTopBottom`} label='Button padding (top and bottom)' layout='inline' disabled={styleValue?.buttonPaddingTopBottom === undefined}>
+                <InputNumber min={0} suffix='px' style={{ width: 120 }} />
+              </Item>
+            </Space>
+          )
+        }
+        {
+          ['button', 'undefined'].includes(itemType) && (
+            <Space style={{ width: '100%' }} size={0}>
+              <Item layout='inline'>
+                <Checkbox checked={styleValue?.buttonPaddingLeftRight !== undefined} onChange={value => form.setFieldValue(`${field}.style.buttonPaddingLeftRight`, value ? defaultStyleValue.buttonPaddingLeftRight : undefined)} />
+              </Item>
+              <Item field={`${field}.style.buttonPaddingLeftRight`} label='Button padding (left and right)' layout='inline' disabled={styleValue?.buttonPaddingLeftRight === undefined}>
+                <InputNumber min={0} suffix='px' style={{ width: 120 }} />
+              </Item>
+            </Space>
+          )
+        }
+        {
+          itemType === 'image' && (
+            <p>Image stimuli does not support customize style yet.</p>
+          )
+        }
+      </Modal>
+    </div>
+  );
+};
+
 const ImagePreview: React.FC<{ value?: AmpStimuliItem }> = ({ value }) => (
-  value?.type === 'image' ? <Image src={value?.content} width={`${WIDTH_IMAGE_PREVIEW}px`} height={`${WIDTH_IMAGE_PREVIEW}px`} /> : null
+  <Image src={value?.content} width={`${WIDTH_IMAGE_PREVIEW}px`} height={`${WIDTH_IMAGE_PREVIEW}px`} />
 );
 
 const ImageItem: React.FC<{
@@ -66,6 +175,8 @@ const ImageItem: React.FC<{
   const onClickRemove = () => { remove(index); };
   const onClickUp = () => { move(index, index - 1); };
   const onClickDown = () => { move(index, index + 1); };
+  const { form } = useFormContext();
+  const value = useWatch(field, form) as AmpStimuliItem | undefined;
   return (
     <div>
       <Row gutter={GUTTER} align='start' style={{ margin: 10 }}>
@@ -85,9 +196,10 @@ const ImageItem: React.FC<{
           </Item>
         </Col>
         <Col flex={`${WIDTH_IMAGE_PREVIEW + GUTTER}px`}>
-          <Item shouldUpdate field={field} noStyle>
-            <ImagePreview />
-          </Item>
+          {value?.type === 'image' && <ImagePreview value={value} />}
+        </Col>
+        <Col flex={`${WIDTH_IMAGE_PREVIEW + GUTTER}px`}>
+          <ItemStyleEditor field={field} />
         </Col>
         <Col flex='100px'>
           <Item field={field + '.count'} noStyle>
@@ -164,6 +276,9 @@ export const StimuliImage: React.FC<{ field: string, index: number }> = ({ field
         </Col>
         <Col flex={1}>
           Image URL or Text Content
+        </Col>
+        <Col flex={`${WIDTH_IMAGE_PREVIEW + GUTTER}px`}>
+          <ItemStyleEditor field={field} isForPool />
         </Col>
         <Col flex='100px'>
           Count

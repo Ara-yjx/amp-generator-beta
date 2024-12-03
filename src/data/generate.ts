@@ -1,7 +1,7 @@
 import { cloneDeep, range } from 'lodash';
 import qsfTemplate from '../assets/qsfTemplate.json';
 import { type UidDetail, flatMap2d, forEach2d, getDisplayKey, getUidDetail, map2d } from '../util/util';
-import type { AmpParams, AmpStimuliPrimeItem, AmpTimeline, AT } from './ampTypes';
+import type { AmpParams, AmpStimuliStyle, AmpStimuliPrimeItem, AmpTimeline, AT } from './ampTypes';
 import { renderATTrialHtml, renderTrialHtml } from './renderTrialHtml';
 
 interface EmbeddedDataTemplate {
@@ -32,9 +32,10 @@ export function hydrateQsf(params: AmpParams) {
   }
 
   const stimuliItems = [{
-    pools: params.stimuli.map(({ items, shuffle }) => ({
-      items: items.map(({ type, content, count }) => ({ type, content, count })),
+    pools: params.stimuli.map(({ items, shuffle, style }) => ({
+      items: items.map(item => ({ type: item.type, content: item.content, count: item.count, style: transformStyle(item.style) })),
       shuffle: shuffle,
+      style: transformStyle(style),
     })),
     totalTrials: params.totalTrials,
   }];
@@ -319,4 +320,19 @@ function addSurveyIdentifier(params: AmpParams, template: any) {
       Value: params.surveyIdentifier,
     } as EmbeddedDataTemplate);
   }
+}
+
+function transformStyle(style: AmpStimuliStyle | undefined) {
+  if (!style) return undefined;
+  const result: any = { ...style };
+  if (result.fontSize !== undefined) {
+    result.fontSize = result.fontSize + 'px';
+  }
+  if (result.buttonPaddingTopBottom !== undefined) {
+    result.buttonPaddingTopBottom = result.buttonPaddingTopBottom + 'px';
+  }
+  if (result.buttonPaddingLeftRight !== undefined) {
+    result.buttonPaddingLeftRight = result.buttonPaddingLeftRight + 'px';
+  }
+  return result;
 }

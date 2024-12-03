@@ -3,7 +3,7 @@ import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import { cloneDeep, isEqual } from 'lodash';
 import React, { useEffect, useRef, useState } from 'react';
-import type { AmpParams, AmpStimuliItem, AmpTimeline, AT, ConcurrentDisplayFrame, DisplayLayout } from '../data/ampTypes';
+import type { AmpParams, AmpStimuliItem, AmpStimuliStyle, AmpTimeline, AT, ConcurrentDisplayFrame } from '../data/ampTypes';
 import { renderATTrialHtml, renderTrialHtml } from '../data/renderTrialHtml';
 import { forEach2d, getDisplayKey, map2d } from '../util/util';
 import { StimuliThumbnail } from './stimuliThumbnail';
@@ -21,8 +21,8 @@ interface PreviewUidsSelector {
 }
 
 interface PreviewPageStyle {
-  previewStyle: AT.Style | undefined;
-  updatePreviewStyle: (previewStyle: AT.Style | undefined) => void;
+  previewContainerStyle: AT.Style | undefined;
+  updatePreviewContainerStyle: (previewContainerStyle: AT.Style | undefined) => void;
 }
 
 
@@ -147,7 +147,7 @@ const ConcurrentPreviewSelector: React.FC<PreviewUidsSelector> = ({ previewUids,
 }
 
 
-const AdvancedPreviewSelector: React.FC<PreviewUidsSelector & PreviewPageStyle> = ({ previewUids, updatePreviewUids, previewStyle, updatePreviewStyle }) => {
+const AdvancedPreviewSelector: React.FC<PreviewUidsSelector & PreviewPageStyle> = ({ previewUids, updatePreviewUids, previewContainerStyle, updatePreviewContainerStyle }) => {
 
   const { form } = useFormContext();
   const stimuliWatch = useWatch('stimuli', form) as AmpParams['stimuli'];
@@ -158,8 +158,8 @@ const AdvancedPreviewSelector: React.FC<PreviewUidsSelector & PreviewPageStyle> 
 
   // On selected page change, update preview style
   useEffect(() => {
-    if (!isEqual(previewStyle, selectedPage?.style)) {
-      updatePreviewStyle(selectedPage?.style);
+    if (!isEqual(previewContainerStyle, selectedPage?.style)) {
+      updatePreviewContainerStyle(selectedPage?.style);
     }
   });
 
@@ -271,7 +271,7 @@ export const TrialHtmlPreview: React.FC = () => {
   );
 
   const [previewUids, setPreviewUids] = useState<PreviewUids>([[]]);
-  const [previewStyle, setPreviewStyle] = useState<AT.Style>();
+  const [previewContainerStyle, setPreviewContainerStyle] = useState<AT.Style>();
 
   const renderPreview = () => {
     const previewStimuliItems = map2d(previewUids, ({ uid, accuratePoint }) => {
@@ -279,20 +279,23 @@ export const TrialHtmlPreview: React.FC = () => {
         return { type: 'empty', content: '', accuratePoint } as const;
       } else if (typeof uid === 'number') {
         const stimuliOfUid = stimuliWatch.flatMap(stimuli => stimuli.items).find(i => i.uid === uid);
-        return stimuliOfUid ? { ...stimuliOfUid, accuratePoint } : { type: 'empty', content: '', accuratePoint } as const;
+        if (!stimuliOfUid) return { type: 'empty', content: '', accuratePoint } as const;
+        const stimuliPoolOfUid = stimuliWatch.find(pool => pool.items.some(i => i.uid));
+        const style = { ...stimuliPoolOfUid?.style, ...stimuliOfUid.style };
+        return { ...stimuliOfUid, accuratePoint, style };
       } else {
         return null;
       }
     });
-    renderTrialPreview(previewRef, previewInnerHtml, previewStimuliItems, previewStyle, trialHtmlWatch.darkMode);
+    renderTrialPreview(previewRef, previewInnerHtml, previewStimuliItems, previewContainerStyle, trialHtmlWatch.darkMode);
   };
   useEffect(renderPreview);
 
-  // Reset previewStyle when not AT
+  // Reset previewContainerStyle when not AT
   useEffect(() => {
     if (!(trialTypeWatch === 'advanced' && advancedTimelineWatch)) {
-      if (previewStyle !== undefined) {
-        setPreviewStyle(undefined);
+      if (previewContainerStyle !== undefined) {
+        setPreviewContainerStyle(undefined);
       }
     }
   });
@@ -301,7 +304,7 @@ export const TrialHtmlPreview: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column' }} >
       {
         trialTypeWatch === 'advanced' && advancedTimelineWatch ? (
-          <AdvancedPreviewSelector previewUids={previewUids} updatePreviewUids={setPreviewUids} previewStyle={previewStyle} updatePreviewStyle={setPreviewStyle} />
+          <AdvancedPreviewSelector previewUids={previewUids} updatePreviewUids={setPreviewUids} previewContainerStyle={previewContainerStyle} updatePreviewContainerStyle={setPreviewContainerStyle} />
         ) : concurrentDisplaysWatch ? (
           <ConcurrentPreviewSelector previewUids={previewUids} updatePreviewUids={setPreviewUids} />
         ) : (
@@ -351,14 +354,19 @@ body {
   border: 1px solid grey;
 }
 `;
-
-type StimuliItemToDisplay = { type: AmpStimuliItem['type'] | 'empty', content: string, accuratePoint?: boolean } | null;
+// type TrialStimuliItemStyle = Record<keyof AmpStimuliStyle, string>;
+type StimuliItemToDisplay = { 
+  type: AmpStimuliItem['type'] | 'empty', 
+  content: string, 
+  accuratePoint?: boolean,
+  style?: AmpStimuliStyle,
+} | null;
 
 function renderTrialPreview(
   previewRef: React.MutableRefObject<HTMLIFrameElement | null>,
   previewInnerHtml: string,
   previewStimuliItems: StimuliItemToDisplay[][],
-  previewStyle: AT.Style | undefined,
+  previewContainerStyle: AT.Style | undefined,
   darkMode: boolean,
 ) {
   const iframeDocument = previewRef.current?.contentDocument;
@@ -376,7 +384,7 @@ function renderTrialPreview(
     iframeDocument.body.style.backgroundColor = darkMode ? 'black' : 'initial';
     // Simulate stimuli preview
     simulateDisplay(previewStimuliItems, iframeDocument);
-    simulateContainerStyle(previewStyle, iframeDocument);
+    simulateContainerStyle(previewContainerStyle, iframeDocument);
   }
 }
 
@@ -392,20 +400,23 @@ function simulateDisplay(stimuliItems: StimuliItemToDisplay[][], container: Docu
         if (stimuliItem.type === 'text') {
           const textEl = contentEl.querySelector<HTMLDivElement>('.spt-trial-text');
           if (textEl) {
-            textEl.style.display = '';
             textEl.innerHTML = stimuliItem.content;
+            textEl.style.display = '';
+            setStyle(textEl, stimuliItem.type, stimuliItem.style);
           }
         } else if (stimuliItem.type === 'image') {
           const imageEl = contentEl.querySelector<HTMLImageElement>('.spt-trial-image');
           if (imageEl) {
-            imageEl.style.display = '';
             imageEl.src = stimuliItem.content;
+            imageEl.style.display = '';
+            setStyle(imageEl, stimuliItem.type, stimuliItem.style);
           }
         } else if (stimuliItem.type === 'button') {
           const buttonEl = contentEl.querySelector<HTMLDivElement>('.spt-trial-button');
           if (buttonEl) {
-            buttonEl.style.display = '';
             buttonEl.innerHTML = stimuliItem.content || ' '; // at least show button outline
+            buttonEl.style.display = '';
+            setStyle(buttonEl, stimuliItem.type, stimuliItem.style);
           }
         }
         if (stimuliItem.accuratePoint) {
@@ -429,20 +440,72 @@ function simulateClear(container: Document) {
     if (textEl) {
       textEl.style.display = 'none';
       textEl.innerHTML = '';
+      clearStyle(textEl);
     }
     const imageEl = contentEl.querySelector<HTMLImageElement>('.spt-trial-image');
     if (imageEl) {
       imageEl.style.display = 'none';
       imageEl.src = '';
+      clearStyle(imageEl);
     }
     const buttonEl = contentEl.querySelector<HTMLDivElement>('.spt-trial-button');
     if (buttonEl) {
       buttonEl.style.display = 'none';
       buttonEl.innerHTML = '';
+      clearStyle(buttonEl)
+    }
+    const accuratePointEl = contentEl.querySelector<HTMLDivElement>('.spt-trial-accurate-point');
+    if (accuratePointEl) {
+      accuratePointEl.style.display = 'none';
     }
     contentEl.style.display = 'none';
   })
 }
+function setStyle(el: HTMLElement, type: AmpStimuliItem['type'], style?: AmpStimuliStyle) {
+  if (!el || !style) return;
+  const { fontSize, color, textAlign, buttonPaddingLeftRight, buttonPaddingTopBottom } = style;
+  if (fontSize && ['text', 'button'].includes(type)) {
+    setStyleAttribute(el, 'fontSize', fontSize + 'px');
+  }
+  if (color && ['text', 'button'].includes(type)) {
+    setStyleAttribute(el, 'color', color);
+  }
+  if (textAlign && type === 'text') {
+    setStyleAttribute(el, 'textAlign', textAlign);
+  }
+  if (buttonPaddingLeftRight && type === 'button') {
+    setStyleAttribute(el, 'paddingLeft', buttonPaddingLeftRight + 'px');
+    setStyleAttribute(el, 'paddingRight', buttonPaddingLeftRight + 'px');
+  }
+  if (buttonPaddingTopBottom && type === 'button') {
+    setStyleAttribute(el, 'paddingTop', buttonPaddingTopBottom + 'px');
+    setStyleAttribute(el, 'paddingBottom', buttonPaddingTopBottom + 'px');
+  }
+}
+type TrialStyleAttributes = 'fontSize' | 'color' | 'textAlign' | 'paddingLeft' | 'paddingRight' | 'paddingTop' | 'paddingBottom';
+function clearStyle(el: HTMLElement) {
+  for (const attributeName of
+    ['fontSize', 'color', 'textAlign', 'paddingLeft', 'paddingRight', 'paddingTop', 'paddingBottom'] as TrialStyleAttributes[]
+  ) {
+    clearStyleAttribute(el, attributeName);
+  }
+}
+function setStyleAttribute(el: HTMLElement, attributeName: TrialStyleAttributes, value: string) {
+  if (el.dataset[toDatasetName(attributeName)] === undefined) {
+    el.dataset[toDatasetName(attributeName)] = el.style[attributeName];
+  }
+  el.style[attributeName] = value;
+}
+function clearStyleAttribute(el: HTMLElement, attributeName: TrialStyleAttributes) {
+  if (el.dataset[toDatasetName(attributeName)] !== undefined) {
+    el.style[attributeName] = el.dataset[toDatasetName(attributeName)]!;
+    delete el.dataset[toDatasetName(attributeName)];
+  }
+}
+function toDatasetName(attributeName: TrialStyleAttributes) {
+  return 'original' + attributeName[0].toUpperCase() + attributeName.slice(1);
+}
+
 function simulateContainerStyle(style: AT.Style | undefined, container: Document) {
   const containerInnerEl = container.querySelector<HTMLDivElement>('.spt-trial-container-inner');
   if (containerInnerEl) {

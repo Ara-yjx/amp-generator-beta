@@ -1,10 +1,19 @@
 import type { BranchNode, LeafNode, TreeNode } from '../component/tree';
 
+export interface AmpStimuliStyle {
+  fontSize?: number;
+  color?: string;
+  textAlign?: string;
+  buttonPaddingLeftRight?: number;
+  buttonPaddingTopBottom?: number;
+}
+
 export interface AmpStimuliItem {
   uid: number;
   type: 'image' | 'text' | 'button';
   content: string;
   count: number;
+  style?: AmpStimuliStyle;
 }
 
 export type AmpStimuliPrimeItem = {
@@ -21,6 +30,7 @@ export interface AmpStimuli {
   shuffle: boolean | number;
   isEnablePriming: boolean;
   prime: AmpStimuliPrimeItem[];
+  style?: AmpStimuliStyle;
 }
 
 export interface AmpTrialHtml {

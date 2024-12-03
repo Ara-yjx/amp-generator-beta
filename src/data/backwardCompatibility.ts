@@ -43,7 +43,14 @@ export function transformOldValues(values: AmpParams) {
           (displayItem as AT.LayoutedDisplayItem).displaySrc === undefined &&
           typeof (displayItem as AT.DisplaySrc)[0] === 'string'
         ) {
-          page.layoutedDisplays[row][col] = { displaySrc: (displayItem as AT.DisplaySrc) };
+          const layoutedDisplayItem = { displaySrc: (displayItem as AT.DisplaySrc) }
+          page.layoutedDisplays[row][col] = layoutedDisplayItem;
+          // stimuliPool should be array instead of number
+          if (layoutedDisplayItem.displaySrc[0] === 'pool') {
+            if (typeof layoutedDisplayItem.displaySrc[1] === 'number') {
+              layoutedDisplayItem.displaySrc[1] = [layoutedDisplayItem.displaySrc[1]];
+            }
+          }
         }
       })
     }

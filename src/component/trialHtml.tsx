@@ -1,42 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Button, Checkbox, Form, Input, InputNumber, Popover, Radio, Select, Space, Switch, Typography } from '@arco-design/web-react';
-import type { AmpParams, AmpStimuliItem, AmpTimeline, AmpTrialHtml } from '../data/ampTypes';
-import { renderTrialHtml } from '../data/renderTrialHtml';
-import type { ArcoFormItem } from '../util/arco';
-import { StimuliThumbnail } from './stimuliThumbnail';
+import { Checkbox, Form, Input, InputNumber, Radio, Space, Switch, Typography } from '@arco-design/web-react';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
-import { IconRefresh, IconToLeft, IconToRight, IconToTop } from '@arco-design/web-react/icon';
-import { CompactPicker } from 'react-color';
+import { IconToLeft, IconToRight, IconToTop } from '@arco-design/web-react/icon';
+import React, { useEffect } from 'react';
+import type { AmpParams, AmpTimeline } from '../data/ampTypes';
+import { renderTrialHtml } from '../data/renderTrialHtml';
+import { TextColorPicker } from './textColorPicker';
 import { TrialHtmlPreview } from './trialHtmlPreview';
 
 const { Item } = Form;
-const { Option } = Select;
 const { Text } = Typography;
-
-const TextColorPicker: React.FC<ArcoFormItem<AmpTrialHtml['textColor']>> = ({ value, onChange }) => (
-  <Space size='mini'>
-    <Text type='secondary'>Font color</Text>
-    <Popover
-      trigger='click'
-      position='right'
-      content={
-        <Space direction='vertical'>
-          <CompactPicker color={value ?? '#000'} onChange={v => onChange?.(v.hex)} />
-          <Button size='mini' type='secondary' icon={<IconRefresh />} onClick={() => onChange?.(undefined)}>
-            Use default color of your Qualtrics skin
-          </Button>
-        </Space>
-      }
-    >
-      {
-        value === undefined ?
-          <Button size='mini' type='secondary'>(default)</Button> :
-          <Button size='mini' style={{ backgroundColor: value, boxShadow: 'grey 0 0 2px' }}></Button>
-      }
-    </Popover>
-  </Space>
-);
 
 
 const ConfigModeForm: React.FC = () => {
