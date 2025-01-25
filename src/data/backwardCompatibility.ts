@@ -52,7 +52,14 @@ export function transformOldValues(values: AmpParams) {
             }
           }
         }
-      })
+      });
+
+      // Type of page.condition updated from ResponseCondition to ConditionTree
+      if (page.condition && page.condition.data === undefined) {
+        if ((page.condition as unknown as AT.ResponseCondition)[0] === 'response') {
+          page.condition = { data: (page.condition as unknown as AT.ResponseCondition) };
+        }
+      }
     }
   }
 
