@@ -10,7 +10,7 @@ export interface AmpStimuliStyle {
 
 export interface AmpStimuliItem {
   uid: number;
-  type: 'image' | 'text' | 'button';
+  type: 'image' | 'text' | 'video' | 'button';
   content: string;
   count: number;
   style?: AmpStimuliStyle;

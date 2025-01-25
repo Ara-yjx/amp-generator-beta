@@ -17,7 +17,7 @@ const { Row, Col } = Grid;
 const { Text } = Typography;
 
 const WIDTH_INDEX_COL = 40;
-const WIDTH_TYPE_SELECTOR = 110;
+const WIDTH_TYPE_SELECTOR = 130;
 const WIDTH_IMAGE_PREVIEW = 32; // same as Button of size='default' 
 const GUTTER = 10;
 
@@ -165,6 +165,16 @@ const ImagePreview: React.FC<{ value?: AmpStimuliItem }> = ({ value }) => (
   <Image src={value?.content} width={`${WIDTH_IMAGE_PREVIEW}px`} height={`${WIDTH_IMAGE_PREVIEW}px`} />
 );
 
+const VideoPreview: React.FC<{ value?: AmpStimuliItem }> = ({ value }) => {
+  return (
+    <div style={{ width: WIDTH_IMAGE_PREVIEW, height: WIDTH_IMAGE_PREVIEW }}>
+      <a href={value?.content} target='_blank'>
+        <video src={value?.content} style={{ width: '100%', height: '100%', objectFit: 'cover' }} autoPlay loop muted />
+      </a>
+    </div>
+  )
+};
+
 const ImageItem: React.FC<{
   field: any,
   index: number,
@@ -185,7 +195,7 @@ const ImageItem: React.FC<{
         </Col>
         <Col flex={`${WIDTH_TYPE_SELECTOR + GUTTER}px`}>
           <Item field={field + '.type'} noStyle>
-            <Select options={['image', 'text', 'button']} style={{ width: WIDTH_TYPE_SELECTOR }} />
+            <Select options={['image', 'text', { label: 'video/audio', value: 'video' }, 'button']} style={{ width: WIDTH_TYPE_SELECTOR }} />
           </Item>
         </Col>
         <Col flex={1}>
@@ -197,6 +207,7 @@ const ImageItem: React.FC<{
         </Col>
         <Col flex={`${WIDTH_IMAGE_PREVIEW + GUTTER}px`}>
           {value?.type === 'image' && <ImagePreview value={value} />}
+          {value?.type === 'video' && <VideoPreview value={value} />}
         </Col>
         <Col flex={`${WIDTH_IMAGE_PREVIEW + GUTTER}px`}>
           <ItemStyleEditor field={field} />
