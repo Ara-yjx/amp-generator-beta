@@ -57,6 +57,14 @@ ${range(numOfCols).map(colIndex => renderItem(props, rowIndex, colIndex)).join('
   `);
 }
 
+function renderInstruction(props: AmpTrialHtml) {
+  if (!props.instruction) return '';
+  return trim(`
+<!-- Instruction -->
+<div style="display: flex; justify-content: space-around; margin-top: 6em; white-space: pre-wrap; color: ${props.darkMode ? 'white' : 'black'}; text-align: center">${props.instruction}</div>
+`);
+}
+
 
 // Todo: consider merging renderTrialHtml and renderATTrialHtml
 export function renderTrialHtml(props: AmpTrialHtml, concurrentDisplays: AmpTimeline['concurrentDisplays']) {
@@ -77,8 +85,7 @@ export function renderTrialHtmlForLayout(props: AmpTrialHtml, layout: number[], 
 ${layout.map((numOfCols, rowIndex) => renderRow(props, numOfCols, rowIndex)).join('\n')}
 </div>
 </div>
-<!-- Instruction -->
-<div style="display: flex; justify-content: space-around; margin-top: 6em; white-space: pre-wrap; color: ${props.darkMode ? 'white' : 'black'}; text-align: center">${props.instruction}</div>
+${renderInstruction(props)}
 `);
 }
 
