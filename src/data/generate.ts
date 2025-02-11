@@ -334,5 +334,11 @@ function transformStyle(style: AmpStimuliStyle | undefined) {
   if (result.buttonPaddingLeftRight !== undefined) {
     result.buttonPaddingLeftRight = result.buttonPaddingLeftRight + 'px';
   }
+  if (result.loop !== undefined) {
+    result.loop = JSON.parse(result.loop);
+  }
+  if (result.muted !== undefined) {
+    result.muted = JSON.parse(result.muted);
+  }
   return result;
 }

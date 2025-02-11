@@ -61,6 +61,8 @@ const defaultStyleValue: AmpStimuliStyle = {
   textAlign: 'center',
   buttonPaddingTopBottom: 0,
   buttonPaddingLeftRight: 4,
+  loop: 'true',
+  muted: 'false',
 }
 
 /** Field can be either or AmpStimuliItem or AmpStimuli */
@@ -147,6 +149,36 @@ const ItemStyleEditor: React.FC<{ field: string, isForPool?: boolean }> = ({ fie
               </Item>
               <Item field={`${field}.style.buttonPaddingLeftRight`} label='Button padding (left and right)' layout='inline' disabled={styleValue?.buttonPaddingLeftRight === undefined}>
                 <InputNumber min={0} suffix='px' style={{ width: 120 }} />
+              </Item>
+            </Space>
+          )
+        }
+        {
+          ['video', 'undefined'].includes(itemType) && (
+            <Space style={{ width: '100%' }} size={0}>
+              <Item layout='inline'>
+                <Checkbox checked={styleValue?.loop !== undefined} onChange={value => form.setFieldValue(`${field}.style.loop`, value ? defaultStyleValue.loop : undefined)} />
+              </Item>
+              <Item field={`${field}.style.loop`} label='Loop video/audio' layout='inline' disabled={styleValue?.loop === undefined}>
+                <Select
+                  options={[{ label: 'Loop', value: 'true' }, { label: 'No loop', value: 'false' }]}
+                  style={{ width: 120 }}
+                />
+              </Item>
+            </Space>
+          )
+        }
+        {
+          ['video', 'undefined'].includes(itemType) && (
+            <Space style={{ width: '100%' }} size={0}>
+              <Item layout='inline'>
+                <Checkbox checked={styleValue?.muted !== undefined} onChange={value => form.setFieldValue(`${field}.style.muted`, value ? defaultStyleValue.muted : undefined)} />
+              </Item>
+              <Item field={`${field}.style.muted`} label='Mute video' layout='inline' disabled={styleValue?.muted === undefined}>
+                <Select
+                  options={[{ label: 'Muted', value: 'true' }, { label: 'Unmuted', value: 'false' }]}
+                  style={{ width: 120 }}
+                />
               </Item>
             </Space>
           )
