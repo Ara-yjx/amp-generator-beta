@@ -1,4 +1,4 @@
-import { Button, Checkbox, Divider, Form, Grid, Image, Input, InputNumber, Modal, Select, Space, Switch, Tooltip, Typography } from '@arco-design/web-react';
+import { Button, Checkbox, Divider, Form, FormItemProps, Grid, Image, Input, InputNumber, Modal, Select, Space, Switch, Tooltip, Typography } from '@arco-design/web-react';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import { IconAlignLeft, IconArrowDown, IconArrowUp, IconBgColors, IconDelete, IconFontColors, IconLineHeight, IconPlus, IconQuestionCircle } from '@arco-design/web-react/icon';
 import React, { ReactNode, useContext } from 'react';
@@ -10,6 +10,7 @@ import sumBy from 'lodash/sumBy';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import { emptyAmpParams } from '../data/emptyAmpParams';
 import { TextColorPicker } from './textColorPicker';
+import { jsonFormatterAndNormalize } from '../util/jsonFormatterAndNormalize';
 
 
 const { Item, List } = Form;
@@ -61,23 +62,52 @@ const defaultStyleValue: AmpStimuliStyle = {
   textAlign: 'center',
   buttonPaddingTopBottom: 0,
   buttonPaddingLeftRight: 4,
-  loop: 'true',
-  muted: 'false',
-}
+  loop: true,
+  muted: false,
+};
 
 /** Field can be either or AmpStimuliItem or AmpStimuli */
 const ItemStyleEditor: React.FC<{ field: string, isForPool?: boolean }> = ({ field, isForPool }) => {
   const { form } = useFormContext();
-  const itemType = (useWatch(`${field}.type`, form) as AmpStimuliItem['type'] | undefined) ?? 'undefined';
-  const styleValue = useWatch(`${field}.style`, form) as AmpStimuliStyle | undefined;
+  const itemTypeWatch = (useWatch(`${field}.type`, form) as AmpStimuliItem['type'] | undefined) ?? 'all';
+  const styleWatch = useWatch(`${field}.style`, form) as AmpStimuliStyle | undefined;
   const [visible, setVisible] = React.useState(false);
+
+  const ItemStyleAttributeEditor: React.FC<React.PropsWithChildren<{
+    propertyName: keyof AmpStimuliStyle,
+    applicableTypes: AmpStimuliItem['type'][],
+    label: ReactNode,
+    formatter?: FormItemProps['formatter'],
+    normalize?: FormItemProps['normalize'],
+  }>> = ({ applicableTypes, propertyName, label, formatter, normalize, children }) => (
+    // TODO: separate "enable" checkbox and the value input
+    (itemTypeWatch === 'all' || applicableTypes.includes(itemTypeWatch)) ? (
+      <Space style={{ width: '100%' }} size={0}>
+        <Item layout='inline'>
+          <Checkbox
+            checked={styleWatch?.[propertyName] !== undefined}
+            onChange={value => form.setFieldValue(`${field}.style.${propertyName}`, value ? defaultStyleValue[propertyName] : undefined)}
+          />
+        </Item>
+        <Item 
+          field={`${field}.style.${propertyName}`} label={label} layout='inline' 
+          disabled={styleWatch?.[propertyName] === undefined}
+          formatter={formatter} normalize={normalize}
+        >
+          {children}
+        </Item>
+      </Space>
+    ) : null
+  );
+
+
   return (
     <div>
       <Button
         icon={<IconFontColors />}
-        style={{ color: styleValue?.color }}
+        style={{ color: styleWatch?.color }}
         type='secondary'
-        disabled={itemType === 'image'}
+        disabled={itemTypeWatch === 'image'}
         onClick={() => setVisible(true)}
       />
       <Modal
@@ -90,101 +120,35 @@ const ItemStyleEditor: React.FC<{ field: string, isForPool?: boolean }> = ({ fie
         autoFocus={false}
         focusLock={true}
       >
+        <ItemStyleAttributeEditor propertyName='fontSize' applicableTypes={['text', 'button']} label={<><IconLineHeight />&nbsp;Font size</>}>
+          <InputNumber min={1} suffix='px' style={{ width: 120 }} />
+        </ItemStyleAttributeEditor>
+        <ItemStyleAttributeEditor propertyName='color' applicableTypes={['text', 'button']} label={<><IconBgColors />&nbsp;Font color</>}>
+          <TextColorPicker showLabel={false} showUseDefaultButton={false} />
+        </ItemStyleAttributeEditor>
+        <ItemStyleAttributeEditor propertyName='textAlign' applicableTypes={['text']} label={<><IconAlignLeft />&nbsp;Text align</>}>
+          <Select options={['left', 'center', 'right']} style={{ width: 120 }} />
+        </ItemStyleAttributeEditor>
+        <ItemStyleAttributeEditor propertyName='buttonPaddingTopBottom' applicableTypes={['button']} label='Button padding (top and bottom)'>
+          <InputNumber min={0} suffix='px' style={{ width: 120 }} />
+        </ItemStyleAttributeEditor>
+        <ItemStyleAttributeEditor propertyName='buttonPaddingLeftRight' applicableTypes={['button']} label='Button padding (left and right)'>
+          <InputNumber min={0} suffix='px' style={{ width: 120 }} />
+        </ItemStyleAttributeEditor>
+        <ItemStyleAttributeEditor
+          propertyName='loop' applicableTypes={['video']} label='Loop video/audio'
+          {...jsonFormatterAndNormalize}
+        >
+          <Select options={[{ label: 'Loop', value: 'true' }, { label: 'No loop', value: 'false' }]} style={{ width: 120 }} />
+        </ItemStyleAttributeEditor>
+        <ItemStyleAttributeEditor
+          propertyName='muted' applicableTypes={['video']} label='Mute video'
+          {...jsonFormatterAndNormalize}
+        >
+          <Select options={[{ label: 'Muted', value: 'true' }, { label: 'Unmuted', value: 'false' }]} style={{ width: 120 }} />
+        </ItemStyleAttributeEditor>
         {
-          ['text', 'button', 'undefined'].includes(itemType) && (
-            <Space style={{ width: '100%' }} size={0}>
-              <Item layout='inline'>
-                <Checkbox checked={styleValue?.fontSize !== undefined} onChange={value => form.setFieldValue(`${field}.style.fontSize`, value ? defaultStyleValue.fontSize : undefined)} />
-              </Item>
-              <Item field={`${field}.style.fontSize`} label={<><IconLineHeight />&nbsp;Font size</>} layout='inline' disabled={styleValue?.fontSize === undefined}>
-                <InputNumber min={1} suffix='px' style={{ width: 120 }} />
-              </Item>
-            </Space>
-          )
-        }
-        {
-          ['text', 'button', 'undefined'].includes(itemType) && (
-            <Space style={{ width: '100%' }} size={0}>
-              <Item layout='inline'>
-                <Checkbox checked={styleValue?.color !== undefined} onChange={value => form.setFieldValue(`${field}.style.color`, value ? defaultStyleValue.color : undefined)} />
-              </Item>
-              <Item field={`${field}.style.color`} label={<><IconBgColors />&nbsp;Font color</>} layout='inline' disabled={styleValue?.color === undefined}>
-                <TextColorPicker showLabel={false} showUseDefaultButton={false} />
-              </Item>
-            </Space>
-          )
-        }
-        {
-          ['text', 'undefined'].includes(itemType) && (
-            <Space style={{ width: '100%' }} size={0}>
-              <Item layout='inline'>
-                <Checkbox checked={styleValue?.textAlign !== undefined} onChange={value => form.setFieldValue(`${field}.style.textAlign`, value ? defaultStyleValue.textAlign : undefined)} />
-              </Item>
-              <Item field={`${field}.style.textAlign`} label={<><IconAlignLeft />&nbsp;Text align</>} layout='inline' disabled={styleValue?.textAlign === undefined}>
-                <Select
-                  options={['left', 'center', 'right']}
-                  style={{ width: 120 }}
-                />
-              </Item>
-            </Space>
-          )
-        }
-        {
-          ['button', 'undefined'].includes(itemType) && (
-            <Space style={{ width: '100%' }} size={0}>
-              <Item layout='inline'>
-                <Checkbox checked={styleValue?.buttonPaddingTopBottom !== undefined} onChange={value => form.setFieldValue(`${field}.style.buttonPaddingTopBottom`, value ? defaultStyleValue.buttonPaddingTopBottom : undefined)} />
-              </Item>
-              <Item field={`${field}.style.buttonPaddingTopBottom`} label='Button padding (top and bottom)' layout='inline' disabled={styleValue?.buttonPaddingTopBottom === undefined}>
-                <InputNumber min={0} suffix='px' style={{ width: 120 }} />
-              </Item>
-            </Space>
-          )
-        }
-        {
-          ['button', 'undefined'].includes(itemType) && (
-            <Space style={{ width: '100%' }} size={0}>
-              <Item layout='inline'>
-                <Checkbox checked={styleValue?.buttonPaddingLeftRight !== undefined} onChange={value => form.setFieldValue(`${field}.style.buttonPaddingLeftRight`, value ? defaultStyleValue.buttonPaddingLeftRight : undefined)} />
-              </Item>
-              <Item field={`${field}.style.buttonPaddingLeftRight`} label='Button padding (left and right)' layout='inline' disabled={styleValue?.buttonPaddingLeftRight === undefined}>
-                <InputNumber min={0} suffix='px' style={{ width: 120 }} />
-              </Item>
-            </Space>
-          )
-        }
-        {
-          ['video', 'undefined'].includes(itemType) && (
-            <Space style={{ width: '100%' }} size={0}>
-              <Item layout='inline'>
-                <Checkbox checked={styleValue?.loop !== undefined} onChange={value => form.setFieldValue(`${field}.style.loop`, value ? defaultStyleValue.loop : undefined)} />
-              </Item>
-              <Item field={`${field}.style.loop`} label='Loop video/audio' layout='inline' disabled={styleValue?.loop === undefined}>
-                <Select
-                  options={[{ label: 'Loop', value: 'true' }, { label: 'No loop', value: 'false' }]}
-                  style={{ width: 120 }}
-                />
-              </Item>
-            </Space>
-          )
-        }
-        {
-          ['video', 'undefined'].includes(itemType) && (
-            <Space style={{ width: '100%' }} size={0}>
-              <Item layout='inline'>
-                <Checkbox checked={styleValue?.muted !== undefined} onChange={value => form.setFieldValue(`${field}.style.muted`, value ? defaultStyleValue.muted : undefined)} />
-              </Item>
-              <Item field={`${field}.style.muted`} label='Mute video' layout='inline' disabled={styleValue?.muted === undefined}>
-                <Select
-                  options={[{ label: 'Muted', value: 'true' }, { label: 'Unmuted', value: 'false' }]}
-                  style={{ width: 120 }}
-                />
-              </Item>
-            </Space>
-          )
-        }
-        {
-          itemType === 'image' && (
+          itemTypeWatch === 'image' && (
             <p>Image stimuli does not support customize style yet.</p>
           )
         }

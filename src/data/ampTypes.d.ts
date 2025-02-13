@@ -6,8 +6,8 @@ export interface AmpStimuliStyle {
   textAlign?: string;
   buttonPaddingLeftRight?: number;
   buttonPaddingTopBottom?: number;
-  loop?: 'true' | 'false';
-  muted?: 'true' | 'false';
+  loop?: boolean;
+  muted?: boolean;
 }
 
 export interface AmpStimuliItem {
