@@ -12,7 +12,7 @@ export interface AmpStimuliStyle {
 
 export interface AmpStimuliItem {
   uid: number;
-  type: 'image' | 'text' | 'video' | 'button';
+  type: 'image' | 'text' | 'video' | 'button' | 'camera';
   content: string;
   count: number;
   style?: AmpStimuliStyle;

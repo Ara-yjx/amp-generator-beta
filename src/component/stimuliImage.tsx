@@ -1,7 +1,7 @@
 import { Button, Checkbox, Divider, Form, FormItemProps, Grid, Image, Input, InputNumber, Modal, Select, Space, Switch, Tooltip, Typography } from '@arco-design/web-react';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import { IconAlignLeft, IconArrowDown, IconArrowUp, IconBgColors, IconDelete, IconFontColors, IconLineHeight, IconPlus, IconQuestionCircle } from '@arco-design/web-react/icon';
-import React, { ReactNode, useContext } from 'react';
+import React, { ReactNode, useContext, useEffect } from 'react';
 import { AmpStimuli, AmpStimuliItem, AmpStimuliStyle } from '../data/ampTypes';
 import { uid } from '../data/uid';
 import { PrimeValidationContext } from './PrimeValidationContext';
@@ -183,6 +183,14 @@ const ImageItem: React.FC<{
   const onClickDown = () => { move(index, index + 1); };
   const { form } = useFormContext();
   const value = useWatch(field, form) as AmpStimuliItem | undefined;
+  
+  // When set to camera type, clear content
+  useEffect(() => {
+    if (value?.type === 'camera' && value?.content !== undefined) {
+      form.setFieldValue(`${field}.content`, undefined);
+    }
+  }, [value?.type]);
+
   return (
     <div>
       <Row gutter={GUTTER} align='start' style={{ margin: 10 }}>
@@ -191,13 +199,21 @@ const ImageItem: React.FC<{
         </Col>
         <Col flex={`${WIDTH_TYPE_SELECTOR + GUTTER}px`}>
           <Item field={field + '.type'} noStyle>
-            <Select options={['image', 'text', { label: 'video/audio', value: 'video' }, 'button']} style={{ width: WIDTH_TYPE_SELECTOR }} />
+            <Select options={['image', 'text', { label: 'video/audio', value: 'video' }, 'button', 'camera']} style={{ width: WIDTH_TYPE_SELECTOR }} />
           </Item>
         </Col>
         <Col flex={1}>
-          <Item field={field + '.content'} noStyle shouldUpdate>
+          <Item field={field + '.content'} noStyle>
             {
-              (value, form) => form.getFieldValue(field + '.type') === 'image' ? <Input /> : <Input.TextArea autoSize />
+              () => {
+                if (value?.type === 'text') {
+                  return <Input.TextArea autoSize />;
+                } else if (value?.type === 'camera') {
+                  return <Input disabled/>;
+                } else {
+                  return <Input />;
+                }
+              }
             }
           </Item>
         </Col>
