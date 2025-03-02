@@ -147,7 +147,7 @@ function transformConcurrentDisplays(concurrentDisplays: AmpTimeline['concurrent
 }
 
 
-type ExportPageDisplaySrc = ['pool', number[]] | ['copy', number, string] | null;
+type ExportPageDisplaySrc = ['pool', number[]] | ['copy', number, string] | ['blank'] | null;
 
 function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
   const { pages } = advancedTimeline;
@@ -214,7 +214,7 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
     forEach2d(layoutedDisplays, ({ displaySrc }, row, col) => {
       const displayKey = getDisplayKey(row, col);
       if (displaySrc[0] === 'blank') {
-        result[displayKey] = ['pool', [0]];
+        result[displayKey] = ['blank'];
       } else if (displaySrc[0] === 'pool') {
         result[displayKey] = ['pool', displaySrc[1].map(poolIndex => poolIndex + 1)];
       } else if (displaySrc[0] === 'copy') {
