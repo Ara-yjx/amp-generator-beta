@@ -1,8 +1,9 @@
 import { cloneDeep, range } from 'lodash';
 import qsfTemplate from '../assets/qsfTemplate.json';
-import { type UidDetail, flatMap2d, forEach2d, getDisplayKey, getUidDetail, map2d } from '../util/util';
-import type { AmpParams, AmpStimuliStyle, AmpStimuliPrimeItem, AmpTimeline, AT } from './ampTypes';
+import { type UidDetail, flatMap2d, forEach2d, getDisplayKey, getUidDetail, isNotUndefined, map2d } from '../util/util';
+import type { AmpParams, AmpStimuliStyle, AmpStimuliPrimeItem, AmpTimeline, AT, BranchData, LeafData } from './ampTypes';
 import { renderATTrialHtml, renderTrialHtml } from './renderTrialHtml';
+import { traverseTree } from './tree';
 
 interface EmbeddedDataTemplate {
   Description: string;
@@ -165,48 +166,50 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
   };
 
 
-  function transformATConditionTree(node: AT.ConditionTree): AT.Condition | undefined {
-    if ('children' in node) {
-      const transformedChildren = node.children.map(transformATConditionTree).filter(x => x != undefined) as AT.Condition[];
-      if (transformedChildren.length) {
-        return [node.data, ...transformedChildren];
-      } else {
-        return undefined;
-      }
-    } else if (node.data?.[0] !== undefined) {
-      return node.data;
-    } else return undefined;
-  }
-
-  function transformATCondition(conditionTree: AT.Page['condition']) {
-    function transformATConditionRecursive(condition: AT.Condition) {
-      if (condition[0] === 'response') {
-        condition[1] += 1;
-        condition[3].forEach((conditionValue, conditionValueIndex) => {
-          const [type, row, col] = conditionValue.split('.');
-          if (type === '_MOUSE') { // TODO: use displayKey directly which matches the actual response
-            const mouseClickKey = getDisplayKey(parseInt(row), parseInt(col));
-            condition[3][conditionValueIndex] = mouseClickKey;
-          }
-        })
-      } else if (condition[0] === 'poolSelection') {
-        condition[1] += 1;
-        condition[4] = condition[4].map(poolIndex => poolIndex + 1);
-      } else if (condition[0] === 'and' || condition[0] === 'or') {
-        const [_, ...children] = condition;
-        children.forEach(transformATConditionRecursive);
-      }
-    }
-
+  // Generate new one
+  function transformATCondition(conditionTree: AT.ConditionTree): AT.Condition | undefined {
     if (!conditionTree) return;
-    // console.error(printTree(conditionTree))
-    const conditionTreeClone = cloneDeep(conditionTree);
-    const condition = transformATConditionTree(conditionTreeClone);
-    console.warn('condition', JSON.stringify(condition))
-    if (!condition) return;
-    transformATConditionRecursive(condition);
-    console.log(JSON.stringify(condition))
-    return condition;
+
+    const result = traverseTree<AT.BranchData, AT.LeafData, AT.Condition | undefined>(conditionTree, (data, children) => {
+
+      if (typeof data === 'object') {
+        if (data[0] === 'response') {
+          return [
+            'response',
+            data[1] + 1, // pageIndex
+            data[2], // '==' | '!='
+            data[3].map((response: string) => { // responses: _AP | ${key} | _MOUSE.${row}.${col}
+              const [type, row, col] = response.split('.');
+              if (type === '_MOUSE') {
+                return getDisplayKey(parseInt(row), parseInt(col));
+              } else if (type === '_AP') {
+                return 'TIMEOUT';
+              } else {
+                return response;
+              }
+            }),
+          ];
+
+        } else if (data[0] === 'poolSelection') {
+          return [
+            'poolSelection',
+            data[1] + 1, // pageIndex
+            data[2], // key
+            data[3], // '==' | '!='
+            data[4].map(poolIndex => poolIndex + 1), // pools
+          ];
+
+        }
+
+      } else if (data === 'and' || data === 'or') {
+        const filteredChildren = children?.filter(isNotUndefined);
+        if (filteredChildren?.length) {
+          return [data, ...filteredChildren];
+        }
+      }
+    });
+
+    return result;
   }
 
   function transformATDisplays(layoutedDisplays: AT.Page['layoutedDisplays']) {

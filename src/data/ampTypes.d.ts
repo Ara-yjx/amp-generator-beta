@@ -65,8 +65,6 @@ export interface AmpTimeline {
 
 export type DisplayLayout = number[];
 
-export type BranchData = 'and' | 'or';
-export type LeafData = AT.ResponseCondition | AT.PoolSelectionCondition | [undefined];
 
 export namespace AT {
 
@@ -75,14 +73,17 @@ export namespace AT {
     | ['copy', number, number, number] // page, row, col
     | ['copy'] // undefined copy
     | ['blank'];
-  //                                  pageIndex             responses
+  //                                  pageIndex             responses: _AP|${key}|_MOUSE.${row}.${col}
   type ResponseCondition = ['response', number, '==' | '!=', string[]]
   //                                            pageIndex  key                  pools
   type PoolSelectionCondition = ['poolSelection', number, string, '==' | '!=', number[]]
+
+  // for export
   type Condition =
     | ResponseCondition
     | PoolSelectionCondition
     | ['and' | 'or', ...Condition[]];
+
   type LayoutedDisplayItem = {
     displaySrc: DisplaySrc;
     swap?: boolean;
@@ -95,7 +96,10 @@ export namespace AT {
     containerTopBlank?: number,
   }
 
+  type BranchData = 'and' | 'or';
+  type LeafData = ResponseCondition | PoolSelectionCondition | [undefined];
   type ConditionTree = TreeNode<BranchData, LeafData>;
+
   interface Page {
     // isConditionEnabled: boolean,
     // condition?: Condition,
@@ -118,6 +122,9 @@ export namespace AT {
     pages: AT.Page[],
   };
 }
+
+export type BranchData = AT.BranchData;
+export type LeafData = AT.LeafData;
 
 export interface AmpParams {
   stimuli: AmpStimuli[];

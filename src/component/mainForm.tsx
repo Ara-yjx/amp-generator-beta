@@ -7,8 +7,6 @@ import { generateBlob, generateQsfString } from '../data/generate';
 import { PrimeValidation, getPrimeValidation, initialPrimeValidation } from '../data/primeValidation';
 import { useBlobUrl } from '../hooks/useBlobUrl';
 import { PrimeValidationContext } from './PrimeValidationContext';
-import { AcceptedKeys } from './acceptedKeys';
-import { AutoProceedTimeout } from './autoProceedTimeout';
 import { BubblyButton } from './bubblyButton';
 import { LoadSave } from './loadSave';
 import { MultiRounds } from './multiRounds';
@@ -17,7 +15,6 @@ import { Timeline } from './timeline';
 import { TrialHtml } from './trialHtml';
 import { WarnTotalTrials } from './warnTotalTrials';
 import { IconCloudDownload, IconQuestionCircle } from '@arco-design/web-react/icon';
-import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import { AdvancedTimeline } from './advancedTimeline';
 import { Debugger } from './debugger';
 
@@ -53,12 +50,14 @@ export const MainForm: React.FC<{}> = ({ }) => {
   const formRef = useRef<FormInstance<AmpParams>>(null);
 
   const [primeValidation, setPrimeValidation] = useState<PrimeValidation | null>(null);
+  const [formValues, setFormValues] = useState<Partial<AmpParams>>();
 
   const onValuesChange = (changeValue: Partial<AmpParams>, values: Partial<AmpParams>) => {
     console.log('onValuesChange: ', changeValue, values);
     if (values.stimuli && values.totalRounds) {
       setPrimeValidation(getPrimeValidation(values.stimuli, values.totalRounds));
     }
+    setFormValues(values);
   };
 
   return (
@@ -103,11 +102,11 @@ export const MainForm: React.FC<{}> = ({ }) => {
             <Space>
               Survey Identifier (for Reference Survey)
               <Tooltip content={<p>
-                When using qualtrics "Reference Survey" to include another survey into this survey, you need to distinguish the Embedded Data of two surveys so that they don't mix up.<br/>
-                To do so, you can add different "Survey Identifier" for each survey. The Embedded Data will have Survey Identifier as suffix.<br/>
-                For example, if the Survey Identifier is set to "111", Embedded Data "stimuliItems" will become "stimuliItems:111" instead.<br/>
-                <Divider/>
-                If you need to run additional trial after finishing the referenced survey, 
+                When using qualtrics "Reference Survey" to include another survey into this survey, you need to distinguish the Embedded Data of two surveys so that they don't mix up.<br />
+                To do so, you can add different "Survey Identifier" for each survey. The Embedded Data will have Survey Identifier as suffix.<br />
+                For example, if the Survey Identifier is set to "111", Embedded Data "stimuliItems" will become "stimuliItems:111" instead.<br />
+                <Divider />
+                If you need to run additional trial after finishing the referenced survey,
                 you need to manually add a Embedded Data block in Qualtrics Survey Flow that sets "sptSurveyIdentifier" to <i>the identifier of your main survey</i> before the trial block.
               </p>
               }>
@@ -125,13 +124,14 @@ export const MainForm: React.FC<{}> = ({ }) => {
           </Collapse.Item>
         </Collapse>
 
-        <Item shouldUpdate>
+        {/* <Item shouldUpdate>
           {
             values => (
               <DownloadButton values={values} />
             )
           }
-        </Item>
+        </Item> */}
+        <DownloadButton values={formValues as AmpParams} />
       </Form >
     </PrimeValidationContext.Provider>
   )

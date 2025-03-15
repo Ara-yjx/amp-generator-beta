@@ -93,3 +93,7 @@ export function map2d<T, K>(array2d: T[][], operation: (value: T, row: number, c
 export function flatMap2d<T, K>(array2d: T[][], operation: (value: T, row: number, col: number) => K): K[] {
   return map2d(array2d, operation).flat();
 }
+
+export function isNotUndefined<T>(x: T | undefined): x is T {
+  return x !== undefined;
+}
