@@ -1,4 +1,4 @@
-import { Button, Form, Select, Space, Typography } from '@arco-design/web-react';
+import { Button, Form, InputNumber, Select, Space, Typography } from '@arco-design/web-react';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import { IconArrowLeft, IconBranch, IconDelete, IconMinus, IconPlus } from '@arco-design/web-react/icon';
@@ -13,6 +13,7 @@ import { hasParent } from '../data/tree';
 const { Item, List } = Form;
 
 
+// refresh := onDataInternalChange
 const ResponseCondition: React.FC<{ data: AT.ResponseCondition, refresh: () => void, pageIndex: number }> = ({ data, refresh, pageIndex }) => {
   const { form } = useFormContext();
   const conditionPageOptions = range(pageIndex).map((_, index) => ({
@@ -128,11 +129,25 @@ const PoolSelectionCondition: React.FC<{ data: AT.PoolSelectionCondition, refres
         value={data[3]} onChange={(v) => { data[3] = v; refresh() }}
       />
       <Select
-        options={poolOptions} style={{ width: 100 }} mode='multiple'
+        options={poolOptions} style={{ width: 120 }} mode='multiple'
         value={data[4]} onChange={(v) => { data[4] = v; refresh() }}
       />
     </Space>
   )
+}
+
+
+const ProbabilityCondition: React.FC<{ data: AT.ProbabilityCondition, refresh: () => void }> = ({ data, refresh }) => {
+  return (
+    <Space>
+      <InputNumber 
+        min={0} max={1} step={0.1}
+        value={data[1]} onChange={v => { data[1] = v; refresh() }} 
+        style={{ width: 100 }}
+      />
+      <span>({data[1].toLocaleString(undefined, { style: 'percent' })})</span>
+    </Space>
+  );
 }
 
 export const AdvancedTimelineCondition: React.FC<{ field: string, pageIndex: number }> = ({ field, pageIndex }) => {
@@ -169,18 +184,22 @@ export const AdvancedTimelineCondition: React.FC<{ field: string, pageIndex: num
   );
 
   const RenderLeaf: React.FC<RenderLeafProps<LeafData>> = ({ path, data, setData, operations: { shiftLeafAdd, deleteNonRootLeaf } }) => {
-    const [type] = data;
     return (
       <Space>
         <Select
           style={{ width: 180 }}
-          value={type}
+          value={data[0]}
           onChange={newType => setData(getDefaultCondition(newType))}
-          options={[{ label: 'The response of', value: 'response' }, { label: 'The selected pool of', value: 'poolSelection' }]}
+          options={[
+            { label: 'The response of', value: 'response', disabled: pageIndex === 0 },
+            { label: 'The selected pool of', value: 'poolSelection', disabled: pageIndex === 0 },
+            { label: 'Probabilistically', value: 'probability' },
+          ]}
         />
-
-        {type === 'response' && <ResponseCondition data={(data as AT.ResponseCondition)} refresh={() => setData(data)} pageIndex={pageIndex} />}
-        {type === 'poolSelection' && <PoolSelectionCondition data={(data as AT.PoolSelectionCondition)} refresh={() => setData(data)} pageIndex={pageIndex} />}
+        
+        {data[0] === 'response' && <ResponseCondition data={data} refresh={() => setData(data)} pageIndex={pageIndex} />}
+        {data[0] === 'poolSelection' && <PoolSelectionCondition data={data} refresh={() => setData(data)} pageIndex={pageIndex} />}
+        {data[0] === 'probability' && <ProbabilityCondition data={data} refresh={() => setData(data)} />}
 
         <Button shape='round' size='mini' type='outline' onClick={() => shiftLeafAdd('and', [undefined])} icon={<IconPlus />}>AND</Button>
         <Button shape='round' size='mini' type='outline' onClick={() => shiftLeafAdd('or', [undefined])} icon={<IconPlus />}>OR</Button>
@@ -215,8 +234,9 @@ export const AdvancedTimelineCondition: React.FC<{ field: string, pageIndex: num
   )
 }
 
-function getDefaultCondition(newType: 'response' | 'poolSelection' | undefined): LeafData {
+function getDefaultCondition(newType: 'response' | 'poolSelection' | 'probability' | undefined): LeafData {
   if (newType === 'response') return [newType, 0, '==', []];
   if (newType === 'poolSelection') return [newType, 0, 'A1', '==', []];
+  if (newType === 'probability') return [newType, 1];
   return [newType];
 }

@@ -270,7 +270,7 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
     if (form.getFieldValue(conditionField)) {
       form.setFieldValue(conditionField, undefined);
     } else {
-      form.setFieldValue(conditionField, { data: ['response', 0, '==', []] } as AT.ConditionTree);
+      form.setFieldValue(conditionField, { data: [undefined] } as AT.ConditionTree);
     }
   };
 
@@ -278,16 +278,11 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
       <h4>Page #{pageIndex + 1}</h4>
       <Space size={40}>
-        {
-          pageIndex !== 0 && (
-            <Button
-              type={conditionWatch ? 'primary' : 'default'}
-              iconOnly icon={<IconBranch />} size='small'
-              onClick={onClickConditionButton}
-            />
-          )
-        }
-        {/* TODO: Disable delete button when only 1 page. Add 1 page when start */}
+        <Button
+          type={conditionWatch ? 'primary' : 'default'}
+          iconOnly icon={<IconBranch />} size='small'
+          onClick={onClickConditionButton}
+        />
         <Button shape='circle' icon={<IconDelete />} status='danger' onClick={remove} />
       </Space>
     </div>
@@ -431,6 +426,14 @@ export const ATPageInterval: React.FC<{ field: string }> = ({ field }) => {
 
 
 export const AdvancedTimeline: React.FC = () => {
+  const { form } = useFormContext();
+  const pagesWatch = useWatch('advancedTimeline.pages', form) as AT.Page[];
+  // make sure at lease one page
+  useEffect(() => {
+    if (!pagesWatch?.length) {
+      form.setFieldValue('advancedTimeline.pages', [emptyPage()]);
+    }
+  }, [pagesWatch?.length]);
   return (
     <Card style={{ textAlign: 'left' }}>
       <List field='advancedTimeline.pages' noStyle>{

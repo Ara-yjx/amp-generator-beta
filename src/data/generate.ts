@@ -199,6 +199,8 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
             data[4].map(poolIndex => poolIndex + 1), // pools
           ];
 
+        } else if (data[0] === 'probability') {
+          return [...data];
         }
 
       } else if (data === 'and' || data === 'or') {
@@ -221,7 +223,7 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
       } else if (displaySrc[0] === 'pool') {
         result[displayKey] = ['pool', displaySrc[1].map(poolIndex => poolIndex + 1)];
       } else if (displaySrc[0] === 'copy') {
-        const [_, copyPage, copyRow, copyCol] = displaySrc;
+        const [, copyPage, copyRow, copyCol] = displaySrc;
         if (copyPage !== undefined && copyRow !== undefined && copyCol !== undefined) {
           result[displayKey] = ['copy', copyPage + 1, getDisplayKey(copyRow, copyCol)];
         }

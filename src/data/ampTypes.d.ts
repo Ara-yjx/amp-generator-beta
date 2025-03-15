@@ -77,11 +77,13 @@ export namespace AT {
   type ResponseCondition = ['response', number, '==' | '!=', string[]]
   //                                            pageIndex  key                  pools
   type PoolSelectionCondition = ['poolSelection', number, string, '==' | '!=', number[]]
+  type ProbabilityCondition = ['probability', number];
 
   // for export
   type Condition =
     | ResponseCondition
     | PoolSelectionCondition
+    | ProbabilityCondition
     | ['and' | 'or', ...Condition[]];
 
   type LayoutedDisplayItem = {
@@ -97,7 +99,7 @@ export namespace AT {
   }
 
   type BranchData = 'and' | 'or';
-  type LeafData = ResponseCondition | PoolSelectionCondition | [undefined];
+  type LeafData = ResponseCondition | PoolSelectionCondition | ProbabilityCondition | [undefined];
   type ConditionTree = TreeNode<BranchData, LeafData>;
 
   interface Page {
