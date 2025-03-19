@@ -1,4 +1,4 @@
-import { sum, range, max } from 'lodash';
+import { sum, range } from 'lodash';
 import { getDisplayKey, getLayoutFromLayoutDisplays } from '../util/util';
 import { AmpTimeline, AmpTrialHtml, AT, DisplayLayout } from './ampTypes';
 
@@ -68,16 +68,25 @@ function renderInstruction(props: AmpTrialHtml) {
 
 // Todo: consider merging renderTrialHtml and renderATTrialHtml
 export function renderTrialHtml(props: AmpTrialHtml, concurrentDisplays: AmpTimeline['concurrentDisplays']) {
-  return renderTrialHtmlForLayout(props, getCDUniversalLayout(concurrentDisplays));
+  const layout = getCDUniversalLayout(concurrentDisplays);
+  const containerHeight = (props.height + (props.concurrentVerticalGap ?? 0)) * layout.length;
+  return renderTrialHtmlForLayout(props, layout, containerHeight);
 }
 
 export function renderATTrialHtml(props: AmpTrialHtml, advancedTimeline: AT.AdvancedTimeline) {
-  const additionalContainerHeight = max(advancedTimeline.pages.map(page => page.style?.containerTopBlank ?? 0));
-  return renderTrialHtmlForLayout(props, getATUniversalLayout(advancedTimeline), additionalContainerHeight);
-} 
+  const layout = getATUniversalLayout(advancedTimeline);
+  const containerHeight = Math.max(
+    ...advancedTimeline.pages.map(page => {
+      const layout = getLayoutFromLayoutDisplays(page.layoutedDisplays);
+      const layoutHeight = (props.height + (props.concurrentVerticalGap ?? 0)) * layout.length;
+      const containerTopBlank = page.style?.containerTopBlank ?? 0;
+      return layoutHeight + containerTopBlank;
+    })
+  );
+  return renderTrialHtmlForLayout(props, layout, containerHeight);
+}
 
-export function renderTrialHtmlForLayout(props: AmpTrialHtml, layout: number[], additionalContainerHeight = 0) {
-  const containerHeight = (props.height + (props.concurrentVerticalGap ?? 0)) * layout.length + additionalContainerHeight;
+export function renderTrialHtmlForLayout(props: AmpTrialHtml, layout: number[], containerHeight: number) {
   return trim(`
 <!-- Container. Fixed-height so that the instruction won't move. Flex prevents margin collapse with external. -->
 <div class="spt-trial-container" style="height: ${containerHeight}px; box-sizing: content-box; padding-top: ${props.marginTop ?? 0}px;">
