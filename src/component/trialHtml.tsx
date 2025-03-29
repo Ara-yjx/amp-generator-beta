@@ -7,6 +7,7 @@ import type { AmpParams, AmpTimeline } from '../data/ampTypes';
 import { renderTrialHtml } from '../data/renderTrialHtml';
 import { TextColorPicker } from './textColorPicker';
 import { TrialHtmlPreview } from './trialHtmlPreview';
+import { IconWidth, IconHeight } from './widthHeightIcon';
 
 const { Item } = Form;
 const { Text } = Typography;
@@ -44,18 +45,18 @@ const ConfigModeForm: React.FC = () => {
     <div>
       <Space size='large'>
         <Item field='trialHtml.width' label={
-          <b>Content width <IconToLeft /><IconToRight /></b>
+          <b>Stimuli content width <IconWidth /></b>
         } style={{ width: 200 }}>
           <InputNumber suffix='px' />
         </Item>
         <Item field='trialHtml.height' label={
-          <b>Content height <IconToLeft style={{ transform: 'rotate(90deg)', transformOrigin: 'right' }} /><IconToRight style={{ transform: 'rotate(90deg)', transformOrigin: 'left' }} /></b>
+          <b>Stimuli content height <IconHeight /></b>
         } style={{ width: 200 }}>
           <InputNumber suffix='px' />
         </Item>
       </Space>
 
-      <Item field='trialHtml.marginTop' label={<b style={{whiteSpace: 'nowrap'}}><IconToTop /> Blank space above content</b>} layout='vertical' style={{ width: 200 }}>
+      <Item field='trialHtml.marginTop' label={<b style={{ whiteSpace: 'nowrap' }}><IconToTop /> Blank space above content</b>} layout='vertical' style={{ width: 200 }}>
         <InputNumber suffix='px' />
       </Item>
 

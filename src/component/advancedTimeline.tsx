@@ -11,6 +11,7 @@ import { AcceptedKeys } from './acceptedKeys';
 import { LayoutEditor } from './layoutEditor';
 import { ArcoFormItem } from '../util/arco';
 import { AdvancedTimelineCondition } from './advancedTimelineCondition';
+import { IconHeight, IconWidth } from './widthHeightIcon';
 
 const { Item, List } = Form;
 const { Text, Title } = Typography;
@@ -396,10 +397,18 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
         </li>
         <li>Each swapped display item must have at least one bind-key, and the bind-keys of different display items must be distinct.</li>
 
-
         <Divider />
 
-        <Space style={{ margin: '10px 0', width: '100%' }}>
+        <Space size='large'  >
+          <Item field={`${field}.style.itemWidth`} label={<Space size='mini'><IconWidth />Item width</Space>} layout='inline' style={{ marginBottom: 0 }}>
+            <InputNumber min={0} suffix='px' style={{ width: 100 }} />
+          </Item>
+          <Item field={`${field}.style.itemHeight`} label={<Space size='mini'><IconHeight />Item height</Space>} layout='inline' style={{ marginBottom: 0 }}>
+            <InputNumber min={0} suffix='px' style={{ width: 100 }} />
+          </Item>
+        </Space>
+
+        <Space style={{ margin: '10px 0', width: '100%' }} >
           <Item field={`${field}.style.containerTopBlank`} label={<Space><IconToTop />Extra space at page top</Space>} layout='inline' style={{ marginBottom: 0 }}>
             <InputNumber suffix='px' style={{ width: 100 }} />
           </Item>
@@ -407,6 +416,7 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
             <IconQuestionCircle />
           </Tooltip>
         </Space>
+
       </Card >
     </div>
   )

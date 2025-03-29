@@ -96,6 +96,8 @@ export namespace AT {
 
   type Style = {
     containerTopBlank?: number,
+    itemWidth?: number,
+    itemHeight?: number,
   }
 
   type BranchData = 'and' | 'or';
