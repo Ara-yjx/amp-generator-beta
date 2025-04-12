@@ -200,7 +200,7 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
           ];
 
         } else if (data[0] === 'probability') {
-          return [...data];
+          return typeof data[1] === 'number' ? [...data] : ['probability', 1]; // 100% if undefined
         }
 
       } else if (data === 'and' || data === 'or') {

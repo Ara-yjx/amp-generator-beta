@@ -140,12 +140,12 @@ const PoolSelectionCondition: React.FC<{ data: AT.PoolSelectionCondition, refres
 const ProbabilityCondition: React.FC<{ data: AT.ProbabilityCondition, refresh: () => void }> = ({ data, refresh }) => {
   return (
     <Space>
-      <InputNumber 
+      <InputNumber
         min={0} max={1} step={0.1}
-        value={data[1]} onChange={v => { data[1] = v; refresh() }} 
+        value={data[1]} onChange={v => { data[1] = v; refresh() }}
         style={{ width: 100 }}
       />
-      <span>({data[1].toLocaleString(undefined, { style: 'percent' })})</span>
+      <span>({data[1]?.toLocaleString(undefined, { style: 'percent', maximumFractionDigits: 20 })})</span>
     </Space>
   );
 }
@@ -196,7 +196,7 @@ export const AdvancedTimelineCondition: React.FC<{ field: string, pageIndex: num
             { label: 'Probabilistically', value: 'probability' },
           ]}
         />
-        
+
         {data[0] === 'response' && <ResponseCondition data={data} refresh={() => setData(data)} pageIndex={pageIndex} />}
         {data[0] === 'poolSelection' && <PoolSelectionCondition data={data} refresh={() => setData(data)} pageIndex={pageIndex} />}
         {data[0] === 'probability' && <ProbabilityCondition data={data} refresh={() => setData(data)} />}
