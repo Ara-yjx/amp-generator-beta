@@ -12,28 +12,42 @@ export function useOptionGuards(
   const { form } = useFormContext();
   useEffect(() => {
     const value = form.getFieldValue(field);
-    console.log('useOptionGuards', JSON.stringify(options), value)
     if (value === undefined) return;
-    const optionValues = options?.map(option => typeof option === 'object' ? option.value : option) ?? [];
 
-    // single select
+    const optionValues: (string | number)[] = [];
+    if (options) {
+      for (const option of options) {
+        if (typeof option === 'object') {
+          if (!option.disabled) {
+            optionValues.push(option.value);
+          }
+        } else {
+          optionValues.push(option);
+        }
+      }
+    }
+
     if (!multiple) {
+      // single select
       const formattedValue = formatter ? formatter(value) : value;
       if (!optionValues.includes(formattedValue)) {
         if (defaultValue !== undefined && optionValues.includes(formatter ? formatter(defaultValue) : defaultValue)) {
+          console.log('useOptionGuards takes effect', field, value, defaultValue);
           form.setFieldValue(field, defaultValue);
         } else {
+          console.log('useOptionGuards takes effect', field, value, undefined);
           form.setFieldValue(field, undefined);
         }
       }
 
-      // multi select
     } else {
+      // multi select
       if (Array.isArray(value)) {
         const formattedValue = formatter ? value.map(formatter) : value;
-        const validValues = formattedValue.filter(v => optionValues.includes(v));
-        if (validValues.length != value.length) {
-          form.setFieldValue(field, validValues);
+        const validSubsetValue = formattedValue.filter(v => optionValues.includes(v));
+        if (validSubsetValue.length != value.length) {
+          console.log('useOptionGuards takes effect', field, value, validSubsetValue);
+          form.setFieldValue(field, validSubsetValue);
         }
       }
     }

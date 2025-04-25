@@ -1,7 +1,7 @@
 import { cloneDeep, range } from 'lodash';
 import qsfTemplate from '../assets/qsfTemplate.json';
 import { type UidDetail, flatMap2d, forEach2d, getDisplayKey, getUidDetail, isNotUndefined, map2d } from '../util/util';
-import type { AmpParams, AmpStimuliStyle, AmpStimuliPrimeItem, AmpTimeline, AT, BranchData, LeafData } from './ampTypes';
+import type { AmpParams, AmpStimuliStyle, AmpStimuliPrimeItem, AmpTimeline, AT, BranchData, LeafData, MixedPoolSource } from './ampTypes';
 import { renderATTrialHtml, renderTrialHtml } from './renderTrialHtml';
 import { traverseTree } from './tree';
 
@@ -39,6 +39,7 @@ export function hydrateQsf(params: AmpParams) {
       style: transformStyle(style),
     })),
     totalTrials: params.totalTrials,
+    mixedPools: transformMixedPools(params),
   }];
   setEd('stimuliItems', stimuliItems);
   setEd('totalRounds', params.totalRounds);
@@ -221,7 +222,7 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
       if (displaySrc[0] === 'blank') {
         result[displayKey] = ['blank'];
       } else if (displaySrc[0] === 'pool') {
-        result[displayKey] = ['pool', displaySrc[1].map(poolIndex => poolIndex + 1)];
+        result[displayKey] = ['pool', displaySrc[1].map(poolIndex => typeof poolIndex === 'number' ? poolIndex + 1 : poolIndex)];
       } else if (displaySrc[0] === 'copy') {
         const [, copyPage, copyRow, copyCol] = displaySrc;
         if (copyPage !== undefined && copyRow !== undefined && copyCol !== undefined) {
@@ -346,4 +347,28 @@ function transformStyle(style: AmpStimuliStyle | undefined) {
     result.muted = JSON.parse(result.muted);
   }
   return result;
+}
+
+function transformMixedPools(params: AmpParams) {
+  if (!params.isMixedPoolEnabled || !params.mixedPools) return undefined;
+  return params.mixedPools?.map(mixedPool => ({
+    name: mixedPool.name,
+    totalCount: mixedPool.totalCount,
+    resetForEachTrial: mixedPool.resetForEachTrial,
+    sources: mixedPool.sources.map(source => ({
+      pool: typeof source.pool === 'number' ? source.pool + 1 : source.pool,
+      count: cleanMixedPoolSourceCount(source.count),
+    })),
+  }));
+}
+
+// Though already set unwanted values to undefined in the form, re-clean-up here
+function cleanMixedPoolSourceCount(count: MixedPoolSource['count']) {
+  if (count[0] === 'constant') {
+    return count.slice(0, 2);
+  } else if (count[0] === 'rest') {
+    return count.slice(0, 1);
+  } else {
+    return count;
+  }
 }

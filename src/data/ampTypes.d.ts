@@ -1,5 +1,7 @@
 import type { BranchNode, LeafNode, TreeNode } from '../component/tree';
 
+export type uid = number;
+
 export interface AmpStimuliStyle {
   fontSize?: number;
   color?: string;
@@ -11,7 +13,7 @@ export interface AmpStimuliStyle {
 }
 
 export interface AmpStimuliItem {
-  uid: number;
+  uid: uid;
   type: 'image' | 'text' | 'video' | 'button' | 'camera';
   content: string;
   count: number;
@@ -19,7 +21,7 @@ export interface AmpStimuliItem {
 }
 
 export type AmpStimuliPrimeItem = {
-  uid: number;
+  uid: uid;
   name: string;
   includeUids: number[];
   excludeUids: number[];
@@ -33,6 +35,20 @@ export interface AmpStimuli {
   isEnablePriming: boolean;
   prime: AmpStimuliPrimeItem[];
   style?: AmpStimuliStyle;
+}
+
+
+export interface MixedPoolSource {
+  pool: number | string, // pool index or mixedPool name. TODO: should use pool uid instead
+  count: ['constant', number] | ['uniform', number, number] | ['rest'];
+}
+
+export interface MixedPool {
+  uid: uid;
+  name: string;
+  totalCount?: number;
+  resetForEachTrial?: boolean;
+  sources: MixedPoolSource[];
 }
 
 export interface AmpTrialHtml {
@@ -132,6 +148,8 @@ export type LeafData = AT.LeafData;
 
 export interface AmpParams {
   stimuli: AmpStimuli[];
+  isMixedPoolEnabled?: boolean,
+  mixedPools?: MixedPool[];
   trialType: 'simple' | 'advanced';
   timeline?: AmpTimeline;
   advancedTimeline?: AT.AdvancedTimeline;

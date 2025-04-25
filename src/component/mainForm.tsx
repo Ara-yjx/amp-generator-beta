@@ -17,6 +17,7 @@ import { WarnTotalTrials } from './warnTotalTrials';
 import { IconCloudDownload, IconQuestionCircle } from '@arco-design/web-react/icon';
 import { AdvancedTimeline } from './advancedTimeline';
 import { Debugger } from './debugger';
+import { MixedPools } from './mixedPools';
 
 const { Item } = Form;
 const RadioGroup = Radio.Group;
@@ -70,8 +71,13 @@ export const MainForm: React.FC<{}> = ({ }) => {
       >
         {window.location.hostname === 'localhost' && <Debugger />}
         <LoadSave />
+
         <h3 style={{ textAlign: 'left' }}>Stimuli Pool</h3>
         <StimuliPool />
+        <br />
+
+
+        <MixedPools />
         <br />
 
         <h3 style={{ textAlign: 'left' }}>Trial Flow</h3>

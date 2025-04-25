@@ -129,15 +129,22 @@ export const ATPageCondition: React.FC<{ field: string, pageIndex: number }> = (
 const ATLayoutItemSrcSelector: React.FC<ArcoFormItem<AT.DisplaySrc> & { pageIndex: number }> = ({ pageIndex, value, onChange }) => {
   const { form } = useFormContext();
   const poolsWatch = useWatch('stimuli', form) as AmpParams['stimuli'];
+  const mixedPoolsWatch = useWatch('mixedPools', form) as AmpParams['mixedPools'];
   const pagesWatch = useWatch('advancedTimeline.pages', form) as AT.Page[];
   const onSrcTypeChange = (newType: String) => {
     if (newType === 'pool') onChange?.(['pool', []]);
     else if (newType === 'copy') onChange?.(['copy']);
     else onChange?.(['blank']);
   };
-  const getPoolOptions = () => poolsWatch.map((_, index) => ({
-    label: `Pool ${index + 1}`, value: index
-  }));
+  const poolOptions = [
+    ...poolsWatch.map((_, index) => ({
+      label: `Pool ${index + 1}`, value: index
+    })),
+    ...(mixedPoolsWatch ? mixedPoolsWatch.map(mixedPool => ({
+      label: `MixedPool ${mixedPool.name}`,
+      value: mixedPool.name,
+    })) : []),
+  ];
   // [item, page, row, col] similar to in DisplaySrc as ['copy', page, row, col] 
   const getCopyOptionValues = (): (Readonly<[AT.LayoutedDisplayItem, number, number, number]>)[] =>
     pagesWatch.slice(0, pageIndex).flatMap(({ layoutedDisplays }, copiedPageIndex) => (
@@ -152,14 +159,15 @@ const ATLayoutItemSrcSelector: React.FC<ArcoFormItem<AT.DisplaySrc> & { pageInde
     };
   })
   // Option guards
+  const poolOptionsValues = poolOptions.map(option => option.value);
   useEffect(() => {
     if (value?.[0] === 'pool') {
-      const validPools = value[1].filter(x => x < poolsWatch.length);
+      const validPools = value[1].filter(x => poolOptionsValues.includes(x));
       if (!isEqual(value[1], validPools)) {
         onChange?.(['pool', validPools]);
       }
     }
-  });
+  }, [value?.[0], value?.[1], JSON.stringify(poolOptionsValues)]);
   useEffect(() => {
     if (value?.[0] === 'copy') {
       // If current value is non-null and not in option, reset to null
@@ -190,7 +198,7 @@ const ATLayoutItemSrcSelector: React.FC<ArcoFormItem<AT.DisplaySrc> & { pageInde
             <Select
               mode='multiple'
               style={{ width: 240 }}
-              options={getPoolOptions()}
+              options={poolOptions}
               value={value?.[1] ?? []}
               onChange={(v: number[]) => onChange?.(['pool', sortBy(v)])}
             />
