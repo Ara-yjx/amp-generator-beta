@@ -31,7 +31,7 @@ function App() {
           footer={null}
         >
           <Paragraph>
-            The SP-Builder web application is licensed under
+            The STIMULIZE web application is licensed under
             <Link href="http://creativecommons.org/licenses/by-nc-nd/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style={{ display: 'inline-block' }}>
               <Space size='mini'>
                 CC BY-NC-ND 4.0
