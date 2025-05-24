@@ -5,7 +5,7 @@ import React, { useCallback, useRef } from 'react';
 import { defaultAmpParams } from '../data/defaultAmpParams';
 import { generateBlob } from '../data/generate';
 import { useBlobUrl } from '../hooks/useBlobUrl';
-import { transformOldValues } from '../data/backwardCompatibility';
+import { transformOldValues, transformValuesOnSave } from '../data/backwardCompatibility';
 
 const { Item } = Form;
 
@@ -17,7 +17,7 @@ const SaveSettingsButton: React.FC<{ values?: any }> = (values) => {
   const blobUrl = useBlobUrl();
   return (
     <Button type='outline' icon={<IconDownload />}
-      href={blobUrl(generateBlob(JSON.stringify(values)))}
+      href={blobUrl(generateBlob(JSON.stringify(transformValuesOnSave(values))))}
       download='spt-generator-settings.json'
     >
       Save

@@ -147,6 +147,7 @@ export type BranchData = AT.BranchData;
 export type LeafData = AT.LeafData;
 
 export interface AmpParams {
+  uidCounter?: number;
   stimuli: AmpStimuli[];
   isMixedPoolEnabled?: boolean,
   mixedPools?: MixedPool[];

@@ -1,6 +1,7 @@
 import { forEach2d } from '../util/util';
 import type { AmpParams, AT } from './ampTypes';
 import { emptyAmpParams } from './emptyAmpParams';
+import { getUidCounter, setUidCounter } from './uid';
 
 export function transformOldValues(values: AmpParams) {
   console.log('transformOldValues');
@@ -63,7 +64,24 @@ export function transformOldValues(values: AmpParams) {
     }
   }
 
+  // Old values do not have uidCounter. Set to 1000 to avoid collision.
+  if (typeof values.uidCounter === 'number') {
+    setUidCounter(values.uidCounter);
+  } else {
+    setUidCounter(1000);
+  }
 
   console.log('=>');
   console.log(JSON.stringify(values))
+}
+
+
+export function transformValuesOnSave(values: any) {
+  return {
+    values: {
+      ...values.values,
+      uidCounter: getUidCounter(),
+    }
+  }
+  // Cannot use values.uidCounter = getUid() otherwise error "object is not extensible" for arco form value
 }
