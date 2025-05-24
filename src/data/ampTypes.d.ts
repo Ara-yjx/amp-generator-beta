@@ -50,6 +50,7 @@ export interface AmpTimeline {
 }
 
 export interface AmpParams {
+  uidCounter?: number;
   stimuli: AmpStimuli[];
   timeline: AmpTimeline;
   acceptedKeys: string[];
