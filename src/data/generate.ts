@@ -1,7 +1,7 @@
 import { cloneDeep, range } from 'lodash';
 import qsfTemplate from '../assets/qsfTemplate.json';
 import { type UidDetail, flatMap2d, forEach2d, getDisplayKey, getUidDetail, isNotUndefined, map2d } from '../util/util';
-import type { AmpParams, AmpStimuliStyle, AmpStimuliPrimeItem, AmpTimeline, AT, BranchData, LeafData, MixedPoolSource } from './ampTypes';
+import type { AmpParams, AmpStimuliStyle, AmpStimuliPrimeItem, AmpTimeline, AT, BranchData, LeafData, MixedPoolSource, uid } from './ampTypes';
 import { renderATTrialHtml, renderTrialHtml } from './renderTrialHtml';
 import { traverseTree } from './tree';
 
@@ -34,7 +34,13 @@ export function hydrateQsf(params: AmpParams) {
 
   const stimuliItems = [{
     pools: params.stimuli.map(({ items, shuffle, style }) => ({
-      items: items.map(item => ({ type: item.type, content: item.content, count: item.count, style: transformStyle(item.style) })),
+      items: items.map(item => ({
+        type: item.type,
+        content: item.content,
+        labels: transformLabelUids(item.labels, params),
+        count: item.count,
+        style: transformStyle(item.style)
+      })),
       shuffle: shuffle,
       style: transformStyle(style),
     })),
@@ -355,11 +361,33 @@ function transformMixedPools(params: AmpParams) {
     name: mixedPool.name,
     totalCount: mixedPool.totalCount,
     resetForEachTrial: mixedPool.resetForEachTrial,
-    sources: mixedPool.sources.map(source => ({
-      pool: typeof source.pool === 'number' ? source.pool + 1 : source.pool,
-      count: cleanMixedPoolSourceCount(source.count),
-    })),
+    sources: mixedPool.sources
+      .filter(source => source.pools?.length > 0)
+      .map(source => ({
+        pools: source.pools.map(pool => typeof pool === 'number' ? pool + 1 : pool),
+        label: transformMixedPoolLabels(source.label, params),
+        count: cleanMixedPoolSourceCount(source.count),
+      })),
   }));
+}
+
+function transformMixedPoolLabels(label: MixedPoolSource['label'] | undefined, params: AmpParams) {
+  if (!label) return undefined;
+  if (label.rule === 'NONE') {
+    return undefined;
+  }
+  return {
+    rule: label.rule,
+    labels: transformLabelUids(label.labels, params),
+  }
+}
+
+function transformLabelUids(labels: uid[] | undefined, params: AmpParams) {
+  return (labels ?? []).map(labelUid => findLabelIndexByUid(labelUid, params)).filter(isNotUndefined).map(x => x + 1);
+}
+
+function findLabelIndexByUid(labelUid: uid, params: AmpParams) {
+  return params.labels?.findIndex(l => l.uid === labelUid) ?? undefined;
 }
 
 // Though already set unwanted values to undefined in the form, re-clean-up here

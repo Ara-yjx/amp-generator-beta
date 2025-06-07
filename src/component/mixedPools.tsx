@@ -36,20 +36,49 @@ const MixedPoolSourceInput: React.FC<{
   const { form } = useFormContext();
   const stimuliWatch = useWatch('stimuli', form) as AmpParams['stimuli'];
   const mixedPoolsWatch = useWatch('mixedPools', form) as AmpParams['mixedPools'];
+  const labelsWatch = useWatch(`labels`, form) as AmpParams['labels'] | undefined;
   const value = useWatch(field, form) as MixedPoolSource;
   const countType = useWatch(`${field}.count[0]`, form) as string;
 
-  const sourcePoolOptions = [
-    ...stimuliWatch.map((stimuli: AmpStimuli, index: number) => ({
-      label: `Pool ${index + 1}`,
-      value: index,
-    })),
-    ...(mixedPoolsWatch ? mixedPoolsWatch.slice(0, mixedPoolIndex).map(mixedPool => ({
-      label: mixedPool.name,
-      value: mixedPool.name,
-      disabled: mixedPool.resetForEachTrial,
-    })) : []),
+  const isSimplePoolType = value.poolType === 'pool';
+
+  const sourcePoolOptionsOfPool = stimuliWatch.map((stimuli: AmpStimuli, index: number) => ({
+    label: `${index + 1}`,
+    value: index,
+  }));
+  const sourcePoolOptionsOfMixedPool = (mixedPoolsWatch ? mixedPoolsWatch.slice(0, mixedPoolIndex).map(mixedPool => ({
+    label: mixedPool.name,
+    value: mixedPool.name,
+    disabled: mixedPool.resetForEachTrial,
+  })) : []);
+  const sourcePoolOptions = isSimplePoolType ? sourcePoolOptionsOfPool : sourcePoolOptionsOfMixedPool;
+  
+  useOptionGuards(`${field}.pools`, sourcePoolOptions, { multiple: true });
+  
+
+  const labelRuleOptions = isSimplePoolType ? [
+    { label: 'Contain all of', value: 'ALL' },
+    { label: 'Contain at least one of', value: 'ANY' },
+    { label: 'Are exactly', value: 'EQUAL' },
+    { label: '(Ignore labels)', value: 'NONE' },
+  ] : [
+    { label: '(Ignore labels)', value: 'NONE' },
   ];
+
+  useOptionGuards(`${field}.label.rule`, labelRuleOptions, { defaultValue: 'NONE' });
+
+  const sourceLabelOptions = labelsWatch?.map(label => ({
+    label: (
+      <div style={{ backgroundColor: label.color, margin: -2, padding: '0 4px', minWidth: 4 }}>
+        {label.name}&nbsp;
+        {/* Display an colored block when name is empty */}
+      </div>
+    ),
+    value: label.uid,
+    extra: { color: label.color },
+  })) ?? [];
+
+  useOptionGuards(`${field}.label.labels`, sourceLabelOptions, { multiple: true });
 
   // When countType change, remove redundant fields
   useEffect(() => {
@@ -61,7 +90,6 @@ const MixedPoolSourceInput: React.FC<{
     }
   }, [countType, value.count[1], value.count[2], form]);
 
-  useOptionGuards(`${field}.pool`, sourcePoolOptions);
 
   const countTypeOptions: OptionsType = [
     { label: 'Constant', value: 'constant' },
@@ -72,49 +100,96 @@ const MixedPoolSourceInput: React.FC<{
   useOptionGuards(`${field}.count[0]`, countTypeOptions, { defaultValue: 'constant' });
 
   return (
-    <Row align='center'>
-      <Col flex='2rem'>-</Col>
-      <Col flex='auto'>
-        <Space>
-          From
-          <Item field={`${field}.pool`} noStyle>
-            <Select options={sourcePoolOptions} style={{ width: 100 }} />
-          </Item>
-          Pick
-          <Item field={`${field}.count[0]`} noStyle>
-            <Select
-              options={countTypeOptions}
-              style={{ width: 200 }}
-            />
-          </Item>
-          {
-            countType === 'constant' && (
-              <Item field={`${field}.count[1]`} noStyle>
-                <InputNumber min={0} style={{ width: 100 }} />
-              </Item>
-            )
-          }
-          {
-            countType === 'uniform' && (
-              <>
+    <Space direction='vertical' style={{ width: '100%' }}>
+
+      <Row align='center'>
+        <Col flex='2rem'>-</Col>
+        <Col flex='11rem'>From</Col>
+        <Col flex='auto'>
+          <Space>
+            <Item field={`${field}.poolType`} noStyle>
+              <Select
+                options={[
+                  { label: 'Pool', value: 'pool' },
+                  { label: 'Mixed Pool', value: 'mixedPool' },
+                ]}
+                style={{ width: 200 }}
+              />
+            </Item>
+            <Item field={`${field}.pools`} noStyle>
+              <Select options={sourcePoolOptions} style={{ width: 500 }} mode='multiple' maxTagCount={5} />
+            </Item>
+          </Space>
+        </Col>
+        <Col flex='40px'>
+          <Button onClick={() => remove(sourceIndex)} shape='circle' status='danger' icon={<IconDelete />} />
+        </Col>
+      </Row>
+
+      <Row align='center'>
+        <Col flex='2rem'></Col>
+        <Col flex='11rem'>Find items whose labels</Col>
+
+        <Col flex='auto'>
+          <Space>
+            <Item field={`${field}.label.rule`} noStyle
+              disabled={!isSimplePoolType}
+              extra={isSimplePoolType ? undefined : 'Cannot select by label for Mixed Pools'}
+            >
+              <Select
+                options={labelRuleOptions} style={{ width: 200 }}
+              />
+            </Item>
+
+            {
+              ['ALL', 'ANY', 'EQUAL'].includes(`${value.label?.rule}`) && (
+                <Item field={`${field}.label.labels`} noStyle>
+                  <Select
+                    options={sourceLabelOptions} style={{ width: 500 }} mode='multiple' maxTagCount={5}
+                  />
+                </Item>
+              )
+            }
+          </Space>
+        </Col>
+      </Row>
+
+      <Row align='center'>
+        <Col flex='2rem'></Col>
+        <Col flex='11rem'>Pick</Col>
+        <Col flex='auto'>
+          <Space>
+            <Item field={`${field}.count[0]`} noStyle>
+              <Select
+                options={countTypeOptions}
+                style={{ width: 200 }}
+              />
+            </Item>
+            {
+              countType === 'constant' && (
                 <Item field={`${field}.count[1]`} noStyle>
-                  <InputNumber min={0} style={{ width: 100 }} />
+                  <InputNumber min={0} style={{ width: 80 }} />
                 </Item>
-                -
-                <Item field={`${field}.count[2]`} noStyle>
-                  <InputNumber min={0} style={{ width: 100 }} />
-                </Item>
-                {/* (expectation: ) */}
-              </>
-            )
-          }
-          Stimuli items
-        </Space>
-      </Col>
-      <Col flex='40px'>
-        <Button onClick={() => remove(sourceIndex)} shape='circle' status='danger' icon={<IconDelete />} />
-      </Col>
-    </Row>
+              )
+            }
+            {
+              countType === 'uniform' && (
+                <>
+                  <Item field={`${field}.count[1]`} noStyle>
+                    <InputNumber min={0} style={{ width: 80 }} />
+                  </Item>
+                  -
+                  <Item field={`${field}.count[2]`} noStyle>
+                    <InputNumber min={0} style={{ width: 80 }} />
+                  </Item>
+                </>
+              )
+            }
+            such stimuli items
+          </Space>
+        </Col>
+      </Row>
+    </Space>
   )
 };
 
@@ -171,9 +246,9 @@ const MixedPoolTab: React.FC<{ field: string, index: number }> = ({ field, index
               {fields.map(({ field, key }, sourceIndex) => (
                 <MixedPoolSourceInput field={field} key={key} sourceIndex={sourceIndex} mixedPoolIndex={index} remove={remove} />
               ))}
-              <Row>
+              <Row align='center'>
                 <div style={{ width: '2em' }}>-</div>
-                <Button onClick={() => add({ pool: undefined, count: ['constant', 1] } as Partial<MixedPoolSource>)} icon={<IconPlus />} />
+                <Button onClick={() => add({ poolType: 'pool', pools: [], count: ['constant', 1] } as MixedPoolSource)} icon={<IconPlus />} />
               </Row>
             </Space>
           )}

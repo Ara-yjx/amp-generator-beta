@@ -1,16 +1,15 @@
-import { Button, Checkbox, Divider, Form, FormItemProps, Grid, Image, Input, InputNumber, Modal, Select, Space, Switch, Tooltip, Typography } from '@arco-design/web-react';
+import { Button, Divider, Form, Grid, Image, Input, InputNumber, Select, Space, Switch, Tooltip, Typography } from '@arco-design/web-react';
+import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
-import { IconAlignLeft, IconArrowDown, IconArrowUp, IconBgColors, IconDelete, IconFontColors, IconLineHeight, IconPlus, IconQuestionCircle } from '@arco-design/web-react/icon';
-import React, { ReactNode, useContext, useEffect } from 'react';
-import { AmpStimuli, AmpStimuliItem, AmpStimuliStyle } from '../data/ampTypes';
+import { IconArrowDown, IconArrowUp, IconDelete, IconPlus, IconQuestionCircle } from '@arco-design/web-react/icon';
+import sumBy from 'lodash/sumBy';
+import React, { useContext, useEffect } from 'react';
+import { AmpStimuli, AmpStimuliItem } from '../data/ampTypes';
 import { uid } from '../data/uid';
 import { PrimeValidationContext } from './PrimeValidationContext';
 import { Prime } from './prime';
-import sumBy from 'lodash/sumBy';
-import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
-import { emptyAmpParams } from '../data/emptyAmpParams';
-import { TextColorPicker } from './textColorPicker';
-import { jsonFormatterAndNormalize } from '../util/jsonFormatterAndNormalize';
+import { StimuliItemStyleEditor } from './stimuliItemStyleEditor';
+import { StimuliItemLabelsEditor } from './stimuliItemLabelsEditor';
 
 
 const { Item, List } = Form;
@@ -20,6 +19,8 @@ const { Text } = Typography;
 const WIDTH_INDEX_COL = 40;
 const WIDTH_TYPE_SELECTOR = 130;
 const WIDTH_IMAGE_PREVIEW = 32; // same as Button of size='default' 
+const WIDTH_COUNT = 100;
+const WIDTH_LABELS = 100;
 const GUTTER = 10;
 
 const InputShuffle: React.FC<{ value?: any, onChange?: (v: any) => any }> = ({ value, onChange }) => {
@@ -55,107 +56,6 @@ const InputShuffle: React.FC<{ value?: any, onChange?: (v: any) => any }> = ({ v
     </Space>
   )
 }
-
-const defaultStyleValue: AmpStimuliStyle = {
-  fontSize: emptyAmpParams.trialHtml.textFontSize,
-  color: '#000',
-  textAlign: 'center',
-  buttonPaddingTopBottom: 0,
-  buttonPaddingLeftRight: 4,
-  loop: true,
-  muted: false,
-};
-
-/** Field can be either or AmpStimuliItem or AmpStimuli */
-const ItemStyleEditor: React.FC<{ field: string, isForPool?: boolean }> = ({ field, isForPool }) => {
-  const { form } = useFormContext();
-  const itemTypeWatch = (useWatch(`${field}.type`, form) as AmpStimuliItem['type'] | undefined) ?? 'all';
-  const styleWatch = useWatch(`${field}.style`, form) as AmpStimuliStyle | undefined;
-  const [visible, setVisible] = React.useState(false);
-
-  const ItemStyleAttributeEditor: React.FC<React.PropsWithChildren<{
-    propertyName: keyof AmpStimuliStyle,
-    applicableTypes: AmpStimuliItem['type'][],
-    label: ReactNode,
-    formatter?: FormItemProps['formatter'],
-    normalize?: FormItemProps['normalize'],
-  }>> = ({ applicableTypes, propertyName, label, formatter, normalize, children }) => (
-    // TODO: separate "enable" checkbox and the value input
-    (itemTypeWatch === 'all' || applicableTypes.includes(itemTypeWatch)) ? (
-      <Space style={{ width: '100%' }} size={0}>
-        <Item layout='inline'>
-          <Checkbox
-            checked={styleWatch?.[propertyName] !== undefined}
-            onChange={value => form.setFieldValue(`${field}.style.${propertyName}`, value ? defaultStyleValue[propertyName] : undefined)}
-          />
-        </Item>
-        <Item 
-          field={`${field}.style.${propertyName}`} label={label} layout='inline' 
-          disabled={styleWatch?.[propertyName] === undefined}
-          formatter={formatter} normalize={normalize}
-        >
-          {children}
-        </Item>
-      </Space>
-    ) : null
-  );
-
-
-  return (
-    <div>
-      <Button
-        icon={<IconFontColors />}
-        style={{ color: styleWatch?.color }}
-        type='secondary'
-        disabled={itemTypeWatch === 'image'}
-        onClick={() => setVisible(true)}
-      />
-      <Modal
-        title={isForPool ? 'Customize the style of all stimuli items in this pool' : 'Customize stimuli item style'}
-        visible={visible}
-        onOk={() => setVisible(false)}
-        closable={false}
-        footer={(cancelButtonNode: ReactNode, okButtonNode: ReactNode) => okButtonNode}
-        okText='Save'
-        autoFocus={false}
-        focusLock={true}
-      >
-        <ItemStyleAttributeEditor propertyName='fontSize' applicableTypes={['text', 'button']} label={<><IconLineHeight />&nbsp;Font size</>}>
-          <InputNumber min={1} suffix='px' style={{ width: 120 }} />
-        </ItemStyleAttributeEditor>
-        <ItemStyleAttributeEditor propertyName='color' applicableTypes={['text', 'button']} label={<><IconBgColors />&nbsp;Font color</>}>
-          <TextColorPicker showLabel={false} showUseDefaultButton={false} />
-        </ItemStyleAttributeEditor>
-        <ItemStyleAttributeEditor propertyName='textAlign' applicableTypes={['text']} label={<><IconAlignLeft />&nbsp;Text align</>}>
-          <Select options={['left', 'center', 'right']} style={{ width: 120 }} />
-        </ItemStyleAttributeEditor>
-        <ItemStyleAttributeEditor propertyName='buttonPaddingTopBottom' applicableTypes={['button']} label='Button padding (top and bottom)'>
-          <InputNumber min={0} suffix='px' style={{ width: 120 }} />
-        </ItemStyleAttributeEditor>
-        <ItemStyleAttributeEditor propertyName='buttonPaddingLeftRight' applicableTypes={['button']} label='Button padding (left and right)'>
-          <InputNumber min={0} suffix='px' style={{ width: 120 }} />
-        </ItemStyleAttributeEditor>
-        <ItemStyleAttributeEditor
-          propertyName='loop' applicableTypes={['video']} label='Loop video/audio'
-          {...jsonFormatterAndNormalize}
-        >
-          <Select options={[{ label: 'Loop', value: 'true' }, { label: 'No loop', value: 'false' }]} style={{ width: 120 }} />
-        </ItemStyleAttributeEditor>
-        <ItemStyleAttributeEditor
-          propertyName='muted' applicableTypes={['video']} label='Mute video'
-          {...jsonFormatterAndNormalize}
-        >
-          <Select options={[{ label: 'Muted', value: 'true' }, { label: 'Unmuted', value: 'false' }]} style={{ width: 120 }} />
-        </ItemStyleAttributeEditor>
-        {
-          itemTypeWatch === 'image' && (
-            <p>Image stimuli does not support customize style yet.</p>
-          )
-        }
-      </Modal>
-    </div>
-  );
-};
 
 const ImagePreview: React.FC<{ value?: AmpStimuliItem }> = ({ value }) => (
   <Image src={value?.content} width={`${WIDTH_IMAGE_PREVIEW}px`} height={`${WIDTH_IMAGE_PREVIEW}px`} />
@@ -222,11 +122,16 @@ const ImageItem: React.FC<{
           {value?.type === 'video' && <VideoPreview value={value} />}
         </Col>
         <Col flex={`${WIDTH_IMAGE_PREVIEW + GUTTER}px`}>
-          <ItemStyleEditor field={field} />
+          <StimuliItemStyleEditor field={field} />
         </Col>
-        <Col flex='100px'>
+        <Col flex={`${WIDTH_COUNT}px`}>
           <Item field={field + '.count'} noStyle>
             <InputNumber min={0} />
+          </Item>
+        </Col>
+        <Col flex={`${WIDTH_LABELS}px`}>
+          <Item field={field + '.labels[0]'} noStyle>
+            <StimuliItemLabelsEditor field={field} />
           </Item>
         </Col>
         <Col flex='none'>
@@ -286,7 +191,7 @@ const ItemsCountWithPrime: React.FC<{ field: string, index: number }> = ({ field
 };
 
 
-export const StimuliImage: React.FC<{ field: string, index: number }> = ({ field, index }) => {
+export const StimuliItem: React.FC<{ field: string, index: number }> = ({ field, index }) => {
   const { form } = Form.useFormContext();
   const totalItems = useWatch(field + '.items', form) as AmpStimuliItem[];
 
@@ -301,10 +206,13 @@ export const StimuliImage: React.FC<{ field: string, index: number }> = ({ field
           Image URL or Text Content
         </Col>
         <Col flex={`${WIDTH_IMAGE_PREVIEW + GUTTER}px`}>
-          <ItemStyleEditor field={field} isForPool />
+          <StimuliItemStyleEditor field={field} isForPool />
         </Col>
-        <Col flex='100px'>
+        <Col flex={`${WIDTH_COUNT}px`}>
           Count
+        </Col>
+        <Col flex={`${WIDTH_LABELS + GUTTER}px`}>
+          Labels
         </Col>
         <Col flex='122px' />
       </Row>

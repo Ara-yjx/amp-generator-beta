@@ -18,6 +18,7 @@ export interface AmpStimuliItem {
   content: string;
   count: number;
   style?: AmpStimuliStyle;
+  labels?: uid[];
 }
 
 export type AmpStimuliPrimeItem = {
@@ -39,7 +40,12 @@ export interface AmpStimuli {
 
 
 export interface MixedPoolSource {
-  pool: number | string, // pool index or mixedPool name. TODO: should use pool uid instead
+  poolType: 'pool' | 'mixedPool',
+  pools: (number | string)[], // pool index or mixedPool name. TODO: should use pool uid instead
+  label?: {
+    rule: 'ALL' | 'ANY' | 'EQUAL' | 'NONE';
+    labels?: uid[];
+  }
   count: ['constant', number] | ['uniform', number, number] | ['rest'];
 }
 
@@ -146,6 +152,12 @@ export namespace AT {
 export type BranchData = AT.BranchData;
 export type LeafData = AT.LeafData;
 
+export interface Label {
+  uid: uid;
+  name: string;
+  color: string;
+}
+
 export interface AmpParams {
   uidCounter?: number;
   stimuli: AmpStimuli[];
@@ -159,4 +171,5 @@ export interface AmpParams {
   totalRounds: number;
   trialHtml: AmpTrialHtml;
   surveyIdentifier?: string;
+  labels?: Label[];
 }
