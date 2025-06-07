@@ -52,7 +52,15 @@ export function useOptionGuards(
       }
     }
 
-  }, [JSON.stringify(options)]);
+  }, [serializeOptions(options)]);
 };
+
+function serializeOptions(options: OptionsType) {
+  return JSON.stringify(
+    options?.map(option =>
+      typeof option === 'object' ? [option?.value, option?.disabled] : option
+    )
+  );
+}
 
 export default useOptionGuards;
