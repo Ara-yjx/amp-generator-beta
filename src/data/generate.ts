@@ -62,6 +62,7 @@ export function hydrateQsf(params: AmpParams) {
   setEd('primes', exportPrime(params));
   setEd('acceptedKeys', params.acceptedKeys.join(','));
   setEd('darkMode', params.trialHtml.darkMode);
+  setEd('fullscreen', params.fullscreen);
 
   addOutputEdForMouseTracking(params, template);
   addSurveyIdentifier(params, template);

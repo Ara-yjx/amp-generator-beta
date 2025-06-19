@@ -172,4 +172,5 @@ export interface AmpParams {
   trialHtml: AmpTrialHtml;
   surveyIdentifier?: string;
   labels?: Label[];
+  fullscreen?: boolean;
 }

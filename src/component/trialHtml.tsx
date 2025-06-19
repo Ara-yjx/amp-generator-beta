@@ -64,6 +64,10 @@ const ConfigModeForm: React.FC = () => {
         <Switch />
       </Item>
 
+      <Item field='fullscreen' label={<b>Fullscreen</b>} layout='vertical' triggerPropName='checked'>
+        <Switch />
+      </Item>
+
       {
         (isConcurrentDisplaysEnabled || isAdvancedTimelineEnabled) && (
           <div>
