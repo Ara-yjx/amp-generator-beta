@@ -78,7 +78,7 @@ export function renderATTrialHtml(props: AmpTrialHtml, advancedTimeline: AT.Adva
   const containerHeight = Math.max(
     ...advancedTimeline.pages.map(page => {
       const layout = getLayoutFromLayoutDisplays(page.layoutedDisplays);
-      const layoutHeight = (props.height + (props.concurrentVerticalGap ?? 0)) * layout.length;
+      const layoutHeight = ((page.style?.itemHeight ?? props.height) + (props.concurrentVerticalGap ?? 0)) * layout.length;
       const containerTopBlank = page.style?.containerTopBlank ?? 0;
       return layoutHeight + containerTopBlank;
     })
