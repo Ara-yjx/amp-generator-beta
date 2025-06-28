@@ -67,6 +67,7 @@ export interface AmpTrialHtml {
   textColor?: string;
   textWrap: boolean;
   darkMode: boolean;
+  backgroundColor?: string;
   concurrentVerticalGap?: number; // effective only when concurrentDisplays enabled
   concurrentHorizontalGap?: number; // effective only when concurrentDisplays enabled
   customHtml?: string; // this is like an "override"; under params mode it's undefined; when switching to custom mode, it gets rendered from params

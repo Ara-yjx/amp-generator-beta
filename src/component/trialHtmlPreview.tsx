@@ -287,7 +287,7 @@ export const TrialHtmlPreview: React.FC = () => {
         return null;
       }
     });
-    renderTrialPreview(previewRef, previewInnerHtml, previewStimuliItems, previewContainerStyle, trialHtmlWatch.darkMode);
+    renderTrialPreview(previewRef, previewInnerHtml, previewStimuliItems, previewContainerStyle, trialHtmlWatch.darkMode, trialHtmlWatch.backgroundColor);
   };
   useEffect(renderPreview);
 
@@ -368,6 +368,7 @@ function renderTrialPreview(
   previewStimuliItems: StimuliItemToDisplay[][],
   previewContainerStyle: AT.Style | undefined,
   darkMode: boolean,
+  backgroundColor?: string,
 ) {
   const iframeDocument = previewRef.current?.contentDocument;
   if (iframeDocument) {
@@ -381,7 +382,7 @@ function renderTrialPreview(
     // Set body html
     iframeDocument.body.innerHTML = previewInnerHtml;
     // Simulate mode page background
-    iframeDocument.body.style.backgroundColor = darkMode ? 'black' : 'initial';
+    iframeDocument.body.style.backgroundColor = backgroundColor ?? (darkMode ? 'black' : 'initial');
     // Simulate stimuli preview
     simulateDisplay(previewStimuliItems, iframeDocument);
     simulateContainerStyle(previewContainerStyle, iframeDocument);

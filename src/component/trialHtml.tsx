@@ -1,7 +1,7 @@
-import { Checkbox, Form, Input, InputNumber, Radio, Space, Switch, Typography } from '@arco-design/web-react';
+import { Checkbox, Form, Input, InputNumber, Radio, Space, Switch, Tooltip, Typography } from '@arco-design/web-react';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
-import { IconToLeft, IconToRight, IconToTop } from '@arco-design/web-react/icon';
+import { IconQuestionCircle, IconToTop } from '@arco-design/web-react/icon';
 import React, { useEffect } from 'react';
 import type { AmpParams, AmpTimeline } from '../data/ampTypes';
 import { renderTrialHtml } from '../data/renderTrialHtml';
@@ -60,12 +60,39 @@ const ConfigModeForm: React.FC = () => {
         <InputNumber suffix='px' />
       </Item>
 
-      <Item field='trialHtml.darkMode' label={<b>Dark mode</b>} layout='vertical' triggerPropName='checked'>
-        <Switch />
-      </Item>
-
-      <Item field='fullscreen' label={<b>Fullscreen</b>} layout='vertical' triggerPropName='checked'>
-        <Switch />
+      <Item label={<b>Screen</b>} layout='vertical'>
+        <Space size={60} style={{ width: '100%' }}>
+          <Space size='small'>
+            <Text type='secondary'>Dark Mode</Text>
+            <Item field='trialHtml.darkMode' triggerPropName='checked' noStyle>
+              <Switch />
+            </Item>
+          </Space>
+          <Space size='small'>
+            <Text type='secondary'>Fullscreen</Text>
+            <Item field='fullscreen' triggerPropName='checked' noStyle>
+              <Switch />
+            </Item>
+          </Space>
+          <Space size='small'>
+            <Text type='secondary'>Background color</Text>
+            <Tooltip content={
+              <p>
+                Default background color:
+                <li>Dark mode : Black</li>
+                <li>Light mode + fullscreen : White</li>
+                <li>Light mode + non-fullscreen : Default color of your Qualtrics skin, usually white</li>
+              </p>
+            } position='top'>
+              <IconQuestionCircle />
+            </Tooltip>
+            <Item field='trialHtml.backgroundColor' noStyle>
+              <TextColorPicker
+                colors={['#000', '#202020', '#404040', '#606060', '#808080', '#A0A0A0', '#C0C0C0', '#E0E0E0', '#FFFFFF']}
+              />
+            </Item>
+          </Space>
+        </Space>
       </Item>
 
       {
@@ -86,7 +113,7 @@ const ConfigModeForm: React.FC = () => {
       }
 
       <Item label={<b>Text stimuli style</b>} layout='vertical'>
-        <Space size={50} style={{ width: '100%' }} >
+        <Space size={60} style={{ width: '100%' }} >
           <Space size='mini'>
             <Text type='secondary'>Font size</Text>
             <Item field='trialHtml.textFontSize' noStyle layout='inline'>
@@ -97,7 +124,19 @@ const ConfigModeForm: React.FC = () => {
             <Checkbox><Text type='secondary'>Bold</Text></Checkbox>
           </Item>
           <Item field='trialHtml.textColor' noStyle>
-            <TextColorPicker />
+            <Space size='mini'>
+              <Text type='secondary'>Font color</Text>
+              <Tooltip content={
+                <p>
+                  Default font color:
+                  <li>Dark mode : White</li>
+                  <li>Light mode : Default color of your Qualtrics skin, usually black</li>
+                </p>
+              } position='top'>
+                <IconQuestionCircle />
+              </Tooltip>
+              <TextColorPicker />
+            </Space>
           </Item>
           <Item field='trialHtml.textWrap' noStyle triggerPropName='checked'>
             <Checkbox><Text type='secondary'>Wrap text</Text></Checkbox>

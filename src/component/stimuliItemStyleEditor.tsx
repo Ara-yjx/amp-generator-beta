@@ -78,7 +78,7 @@ export const StimuliItemStyleEditor: React.FC<{ field: string, isForPool?: boole
           <InputNumber min={1} suffix='px' style={{ width: 120 }} />
         </ItemStyleAttributeEditor>
         <ItemStyleAttributeEditor propertyName='color' applicableTypes={['text', 'button']} label={<><IconBgColors />&nbsp;Font color</>}>
-          <TextColorPicker showLabel={false} showUseDefaultButton={false} />
+          <TextColorPicker showUseDefaultButton={false} />
         </ItemStyleAttributeEditor>
         <ItemStyleAttributeEditor propertyName='textAlign' applicableTypes={['text']} label={<><IconAlignLeft />&nbsp;Text align</>}>
           <Select options={['left', 'center', 'right']} style={{ width: 120 }} />
