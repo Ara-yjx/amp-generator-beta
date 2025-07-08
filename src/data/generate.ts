@@ -26,8 +26,10 @@ export function hydrateQsf(params: AmpParams) {
         ed.Value = undefined; // Value field will be removed when stringify. That's how Qualtrics represents empty value.
       } else if (typeof value === 'object') {
         ed.Value = JSON.stringify(value);
+      } else if (value === undefined) {
+        ed.Value = 'null'; // when reading, 'undefined' cannot be parsed
       } else {
-        ed.Value = `${value}`; // (undefined, true, false...) are parsed to strings
+        ed.Value = `${value}`; // (true, false...) are serialized
       }
     }
   }
@@ -61,8 +63,8 @@ export function hydrateQsf(params: AmpParams) {
   }
   setEd('primes', exportPrime(params));
   setEd('acceptedKeys', params.acceptedKeys.join(','));
-  setEd('darkMode', params.trialHtml.darkMode);
-  setEd('fullscreen', params.fullscreen);
+  setEd('darkMode', Boolean(params.trialHtml.darkMode));
+  setEd('fullscreen', Boolean(params.fullscreen));
   setEd('backgroundColor', params.trialHtml.backgroundColor);
 
   addOutputEdForMouseTracking(params, template);
