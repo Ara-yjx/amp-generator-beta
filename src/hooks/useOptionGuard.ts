@@ -45,7 +45,7 @@ export function useOptionGuards(
       if (Array.isArray(value)) {
         const formattedValue = formatter ? value.map(formatter) : value;
         const validSubsetValue = formattedValue.filter(v => optionValues.includes(v));
-        if (validSubsetValue.length != value.length) {
+        if (validSubsetValue.length !== value.length) {
           console.log('useOptionGuards takes effect', field, value, validSubsetValue);
           form.setFieldValue(field, validSubsetValue);
         }
