@@ -64,7 +64,7 @@ export function shiftLeafAdd<TLeaf, TBranch>(node: LeafNode<TLeaf>, parent: Pare
  * move its children to its parent (if any children), 
  * -B*-[L1,L2] -> -[L1，L2]
  */
-export function deleteNonRootBranch<TLeaf>(node: TreeNode, parent: Parent) {
+export function deleteNonRootBranch(node: TreeNode, parent: Parent) {
   if (!parent) return;
   const indexInParent = parent.children.indexOf(node);
   if ('children' in node) {

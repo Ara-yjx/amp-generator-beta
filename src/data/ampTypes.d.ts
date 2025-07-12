@@ -1,4 +1,4 @@
-import type { BranchNode, LeafNode, TreeNode } from '../component/tree';
+import type { BranchNode, LeafNode, TreeNode } from '../data/tree';
 
 export type uid = number;
 

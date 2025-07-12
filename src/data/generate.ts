@@ -178,7 +178,7 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
 
 
   // Generate new one
-  function transformATCondition(conditionTree: AT.ConditionTree): AT.Condition | undefined {
+  function transformATCondition(conditionTree?: AT.ConditionTree): AT.Condition | undefined {
     if (!conditionTree) return;
 
     const result = traverseTree<AT.BranchData, AT.LeafData, AT.Condition | undefined>(conditionTree, (data, children) => {
