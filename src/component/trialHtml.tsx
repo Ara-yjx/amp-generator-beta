@@ -32,13 +32,14 @@ const ConfigModeForm: React.FC = () => {
 
   // Set default value when enabling concurrent; reset to undefined when disabling
   useEffect(() => {
-    if (isConcurrentDisplaysEnabled) {
+    if (isConcurrentDisplaysEnabled || isAdvancedTimelineEnabled) {
+      // TODO: Revisit these two lines. Shall we just accept empty value?
       if (form.getFieldValue('trialHtml.concurrentVerticalGap') === undefined) form.setFieldValue('trialHtml.concurrentVerticalGap', 0);
       if (form.getFieldValue('trialHtml.concurrentHorizontalGap') === undefined) form.setFieldValue('trialHtml.concurrentHorizontalGap', 0);
     } else {
       form.clearFields(['trialHtml.concurrentVerticalGap', 'trialHtml.concurrentHorizontalGap']);
     }
-  }, [isConcurrentDisplaysEnabled]);
+  }, [isConcurrentDisplaysEnabled, isAdvancedTimelineEnabled]);
 
 
   return (
