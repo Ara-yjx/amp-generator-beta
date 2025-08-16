@@ -395,15 +395,27 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
             <Switch />
           </Item>
           <Text bold>Swap (shuffle) displays</Text>
+          <Tooltip position='right' content={
+            <div >
+              <li>You can randomly swap display items, switching their position in the screen.</li>
+              <Divider />
+              <li>
+                But in some scenerio when you enable "Swap" + "Keyboard response", 
+                you want each key to be bound to the stimuli at specific position. 
+                (E.g. you tell the participant to press "d" to select the left stimuli which comes from Pool 1, and "k" to select the right stimuli which comes from Pool 2.)
+                <br />
+                Then you may want to reverse the swap to get the participant's actual selection.
+                You can do this by binding key(s) to stimuli item.
+                (E.g. although stimuli from Pool 1 is displayed at the right position after swapping, 
+                and user pressed "k" to select it, 
+                the result will be reversed to "d" in the response.)
+              </li>
+              <li>Each swapped display item must have at least one bind-key, and the bind-keys of different display items must be distinct.</li>
+            </div>
+          }>
+            <IconQuestionCircle />
+          </Tooltip>
         </Space>
-        <li>You can randomly swap display items.</li>
-        <li>
-          When you enable both "swap" and "keyboard response",
-          in some settings where a key is used to repesent a stimuli item,
-          you may want to reverse the swap to get the participant's actual selection.
-          You can do this by binding key(s) to stimuli item.
-        </li>
-        <li>Each swapped display item must have at least one bind-key, and the bind-keys of different display items must be distinct.</li>
 
         <Divider />
 
