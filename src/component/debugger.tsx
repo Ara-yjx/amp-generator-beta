@@ -8,7 +8,8 @@ export const Debugger: React.FC = () => {
     <Form.Item noStyle shouldUpdate>
       {
         values => createPortal((
-          <div style={{ position: 'fixed', top: '10%', left: 0 }}>
+          <div style={{ position: 'fixed', top: '10%', left: 0, zIndex: 2000 }}>
+            {/* Arco Model's z-index is 1001 */}
             <JsonView value={values} collapsed={1} enableClipboard={false} displayDataTypes={false} />
           </div>
         ), document.body)

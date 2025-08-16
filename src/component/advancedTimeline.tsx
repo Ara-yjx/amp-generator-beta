@@ -1,4 +1,4 @@
-import { Button, Card, Checkbox, Divider, Form, InputNumber, Select, Space, Switch, Tag, Tooltip, Typography } from '@arco-design/web-react';
+import { Button, Card, Checkbox, Divider, Form, InputNumber, Radio, Select, Space, Switch, Tag, Tooltip, Typography } from '@arco-design/web-react';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import { IconApps, IconArrowFall, IconBranch, IconDelete, IconEdit, IconPlus, IconQuestionCircle, IconSkipNext, IconToTop } from '@arco-design/web-react/icon';
@@ -12,6 +12,7 @@ import { LayoutEditor } from './layoutEditor';
 import { ArcoFormItem } from '../util/arco';
 import { AdvancedTimelineCondition } from './advancedTimelineCondition';
 import { IconHeight, IconWidth } from './widthHeightIcon';
+import FreeformEditor from './freeformEditor';
 
 const { Item, List } = Form;
 const { Text, Title } = Typography;
@@ -126,7 +127,7 @@ export const ATPageCondition: React.FC<{ field: string, pageIndex: number }> = (
 }
 
 /** field: advancedTimeline.pages[*].layoutedDisplays[row][col] */
-const ATLayoutItemSrcSelector: React.FC<ArcoFormItem<AT.DisplaySrc> & { pageIndex: number }> = ({ pageIndex, value, onChange }) => {
+export const ATLayoutItemSrcSelector: React.FC<ArcoFormItem<AT.DisplaySrc> & { pageIndex: number }> = ({ pageIndex, value, onChange }) => {
   const { form } = useFormContext();
   const poolsWatch = useWatch('stimuli', form) as AmpParams['stimuli'];
   const mixedPoolsWatch = useWatch('mixedPools', form) as AmpParams['mixedPools'];
@@ -187,7 +188,11 @@ const ATLayoutItemSrcSelector: React.FC<ArcoFormItem<AT.DisplaySrc> & { pageInde
       <Item style={{ marginBottom: 4 }}>
         <Select
           style={{ width: 240 }}
-          options={[{ label: '(blank)', value: 'blank' }, { label: 'Pick from pool', value: 'pool' }, { label: 'Copy item', value: 'copy', disabled: pageIndex === 0 }]}
+          options={[
+            { label: '(blank)', value: 'blank' },
+            { label: 'Pick from pool', value: 'pool' },
+            { label: 'Copy item', value: 'copy', disabled: pageIndex === 0 || pagesWatch[pageIndex].layoutType === 'freeform' },
+          ]}
           value={value?.[0]}
           onChange={onSrcTypeChange}
         />
@@ -271,6 +276,7 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
   const { form } = useFormContext();
   const layoutedDisplaysWatch = useWatch(`${field}.layoutedDisplays`, form);
   const conditionWatch = useWatch(`${field}.condition`, form);
+  const layoutTypeWatch = useWatch(`${field}.layoutType`, form);
   const layoutStringify = '[' + getLayoutFromLayoutDisplays(layoutedDisplaysWatch).join('+') + ']';
   const keyboardResponseEnabledWatch = useWatch(`${field}.response.keyboard.enabled`, form);
 
@@ -325,17 +331,29 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
       >
         {/* <Button onClick={() => { try { form.validate([field]) } catch (e) { console.warn(e) } }}>validate</Button> */}
 
-        <Space style={{ margin: '10px 0', width: '100%' }}>
+        <Space style={{ margin: '10px 0', width: '100%' }} align='center'>
           <IconApps />
-          <Text bold>Page layout: {layoutStringify}</Text>
+          <Text bold>Page layout: {/*layoutStringify*/}</Text>
+          <Item field={`${field}.layoutType`} noStyle>
+            <Radio.Group type='button' defaultValue='grid' size='small'>
+              <Radio value='grid'>Grid</Radio>
+              <Radio value='freeform'>Freeform</Radio>
+            </Radio.Group>
+          </Item>
         </Space>
 
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 10 }}>
-          <LayoutEditor
-            field={`${field}.layoutedDisplays`}
-            renderItem={(layoutItemField, row, col) => <ATLayoutItem field={layoutItemField} page={pageIndex} row={row} col={col} />}
-            newItem={emptyLayoutedDisplayItem}
-          />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}> {/* center either editor */}
+          {
+            layoutTypeWatch !== 'freeform' ? (
+              <LayoutEditor
+                field={`${field}.layoutedDisplays`}
+                renderItem={(layoutItemField, row, col) => <ATLayoutItem field={layoutItemField} page={pageIndex} row={row} col={col} />}
+                newItem={emptyLayoutedDisplayItem}
+              />
+            ) : (
+              <FreeformEditor field={`${field}.freeformLayout`} page={pageIndex} />
+            )
+          }
         </div>
 
         <Divider />
@@ -400,14 +418,14 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
               <li>You can randomly swap display items, switching their position in the screen.</li>
               <Divider />
               <li>
-                But in some scenerio when you enable "Swap" + "Keyboard response", 
-                you want each key to be bound to the stimuli at specific position. 
+                But in some scenerio when you enable "Swap" + "Keyboard response",
+                you want each key to be bound to the stimuli at specific position.
                 (E.g. you tell the participant to press "d" to select the left stimuli which comes from Pool 1, and "k" to select the right stimuli which comes from Pool 2.)
                 <br />
                 Then you may want to reverse the swap to get the participant's actual selection.
                 You can do this by binding key(s) to stimuli item.
-                (E.g. although stimuli from Pool 1 is displayed at the right position after swapping, 
-                and user pressed "k" to select it, 
+                (E.g. although stimuli from Pool 1 is displayed at the right position after swapping,
+                and user pressed "k" to select it,
                 the result will be reversed to "d" in the response.)
               </li>
               <li>Each swapped display item must have at least one bind-key, and the bind-keys of different display items must be distinct.</li>
@@ -417,25 +435,31 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
           </Tooltip>
         </Space>
 
-        <Divider />
+        {
+          layoutTypeWatch !== 'freeform' && (
+            <>
+              <Divider />
 
-        <Space size='large'  >
-          <Item field={`${field}.style.itemWidth`} label={<Space size='mini'><IconWidth />Item width</Space>} layout='inline' style={{ marginBottom: 0 }}>
-            <InputNumber min={0} suffix='px' style={{ width: 100 }} />
-          </Item>
-          <Item field={`${field}.style.itemHeight`} label={<Space size='mini'><IconHeight />Item height</Space>} layout='inline' style={{ marginBottom: 0 }}>
-            <InputNumber min={0} suffix='px' style={{ width: 100 }} />
-          </Item>
-        </Space>
+              <Space size='large'>
+                <Item field={`${field}.style.itemWidth`} label={<Space size='mini'><IconWidth />Item width</Space>} layout='inline' style={{ marginBottom: 0 }}>
+                  <InputNumber min={0} suffix='px' style={{ width: 100 }} />
+                </Item>
+                <Item field={`${field}.style.itemHeight`} label={<Space size='mini'><IconHeight />Item height</Space>} layout='inline' style={{ marginBottom: 0 }}>
+                  <InputNumber min={0} suffix='px' style={{ width: 100 }} />
+                </Item>
+              </Space>
 
-        <Space style={{ margin: '10px 0', width: '100%' }} >
-          <Item field={`${field}.style.containerTopBlank`} label={<Space><IconToTop />Extra space at page top</Space>} layout='inline' style={{ marginBottom: 0 }}>
-            <InputNumber suffix='px' style={{ width: 100 }} />
-          </Item>
-          <Tooltip content='Page-wise blank space, which acts atop of the "Blank space above content" configuration in Trial Block HTML.'>
-            <IconQuestionCircle />
-          </Tooltip>
-        </Space>
+              <Space style={{ margin: '10px 0', width: '100%' }} >
+                <Item field={`${field}.style.containerTopBlank`} label={<Space><IconToTop />Extra space at page top</Space>} layout='inline' style={{ marginBottom: 0 }}>
+                  <InputNumber suffix='px' style={{ width: 100 }} />
+                </Item>
+                <Tooltip content='Page-wise blank space, which acts atop of the "Blank space above content" configuration in Trial Block HTML.'>
+                  <IconQuestionCircle />
+                </Tooltip>
+              </Space>
+            </>
+          )
+        }
 
       </Card >
     </div>

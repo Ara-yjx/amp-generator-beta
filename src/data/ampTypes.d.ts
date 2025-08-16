@@ -94,6 +94,7 @@ export namespace AT {
   type DisplaySrc =
     | ['pool', number[]] // poolIndexes
     | ['copy', number, number, number] // page, row, col
+    // | ['copy', string] // TODO: copy element name for freeform layout
     | ['copy'] // undefined copy
     | ['blank'];
   //                                  pageIndex             responses: _AP|${key}|_MOUSE.${row}.${col}
@@ -127,13 +128,47 @@ export namespace AT {
   type LeafData = ResponseCondition | PoolSelectionCondition | ProbabilityCondition | [undefined];
   type ConditionTree = TreeNode<BranchData, LeafData>;
 
+  export namespace FreeformLayout {
+    interface Canvas {
+      width: number;
+      height: number;
+      grid?: number; // snap to grid
+      children: ElementNode[]; // tree of height >= 1
+    }
+  
+    interface ElementNode {
+      uid: uid;
+      name: string;
+      condition?: ConditionTree;
+      children: ElementNode[] | null;
+    }
+  
+    interface ElementDisplayItem extends ElementNode {
+      children: null; // explicit null indicates that this is a leaf node
+      boxStyle: ElementCanonicalStyle;
+      displayItem: LayoutedDisplayItem;
+    }
+
+    /** Canonical style in our app */
+    interface ElementCanonicalStyle {
+      width: number,
+      height: number,
+      x: number, // offsetX = element origin - canvas center
+      y: number,
+      // z?: number, // z-index
+      rotate: number, // in degrees
+    }
+  }
+
   interface Page {
     // isConditionEnabled: boolean,
     // condition?: Condition,
     condition?: ConditionTree,
     // layout: Layout,
     // displays: { row: int, col: int, src: DisplaySrc }[],
-    layoutedDisplays: LayoutedDisplayItem[][],
+    layoutType?: 'grid' | 'freeform', // undefined means 'grid'
+    layoutedDisplays: LayoutedDisplayItem[][], // grid layout; keep it required for backward compatibility
+    freeformLayout?: FreeformLayout.Canvas,
     response: {
       keyboard: { enabled: boolean, keys: string[], delayBefore?: number, delayAfter?: number },
       timeout: { enabled: boolean, duration: number },
