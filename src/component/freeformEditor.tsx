@@ -8,8 +8,8 @@ import { AT, uid as Uid } from '../data/ampTypes';
 import { uid } from '../data/uid';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
-import { IconDelete, IconPlus, IconSave } from '@arco-design/web-react/icon';
-import { reverse } from 'lodash';
+import { IconCopy, IconDelete, IconPlus, IconSave } from '@arco-design/web-react/icon';
+import { reverse, set } from 'lodash';
 import { ATLayoutItemSrcSelector } from './advancedTimeline';
 import { AcceptedKeys } from './acceptedKeys';
 import { createPortal } from 'react-dom';
@@ -118,16 +118,21 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
     form.setFieldValue(`${field}.children`, newElements);
   };
   const addElement = (element: AT.FreeformLayout.ElementDisplayItem) => {
-    const newElements = [...elements, element];
+    const newElements = [element, ...elements]; // add at top
     setElements(newElements);
   };
   const removeElements = (uids: number[]) => {
     const newElements = elements.filter(e => !uids.includes(e.uid));
     setElements(newElements);
   };
-  const cloneElement = (element: AT.FreeformLayout.ElementDisplayItem) => {
-    const newElements = [...elements, { ...element, uid: elements.length + 1 }];
+  const cloneElement = (element: AT.FreeformLayout.ElementDisplayItem): AT.FreeformLayout.ElementDisplayItem => {
+    const newElement = { ...element, uid: uid(), name: `${element.name} copy` };
+    // add to above the original element
+    const indexOfCloned = elements.findIndex(e => e.uid === element.uid);
+    const newElements = [...elements];
+    newElements.splice(indexOfCloned, 0, newElement);
     setElements(newElements);
+    return newElement;
   };
   const updateElement = (element: AT.FreeformLayout.ElementDisplayItem, updates: DeepPartial<AT.FreeformLayout.ElementDisplayItem>) => {
     const updatedElement = mergeOverrideArray(element, updates) as AT.FreeformLayout.ElementDisplayItem;
@@ -173,16 +178,35 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
         mouseClickAccuratePoint: false,
       },
     });
+    // focus on the new element
+    setSelectedElementUids([newElementUid]);
   };
 
   const onClickDeleteElement = () => {
-    removeElements(selectedElementUids);
+    if (selectedElementUids.length) {
+      removeElements(selectedElementUids);
+      // Select next element, so that user can click delete repeatedly
+      const firstUid = selectedElementUids[0];
+      const firstIndex = elements.findIndex(e => e.uid === firstUid);
+      const nextElement = elements.slice(firstIndex + 1).find(e => e.uid !== firstUid)
+        ?? elements.slice(0, firstIndex).reverse().find(e => e.uid !== firstUid);
+      setSelectedElementUids(nextElement ? [nextElement.uid] : []);
+    }
   };
+
+  const onClickCloneElement = () => {
+    if (selectedElement) {
+      const newElement = cloneElement(selectedElement);
+      // focus on the new element
+      setSelectedElementUids([newElement.uid]);
+    }
+  }
 
   const controlPanel = (
     <div>
       <Space>
         <Button icon={<IconPlus />} type='primary' onClick={onClickAddElement} />
+        <Button icon={<IconCopy />} onClick={onClickCloneElement} />
         <Button icon={<IconDelete />} status='danger' onClick={onClickDeleteElement} />
         {/* <Button onClick={() => setSelectedElementUids([])}>Clear</Button> */}
       </Space>
@@ -249,7 +273,7 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
           <Item label='Height' field={`${field}.height`} layout='inline'>
             <InputNumber suffix='px' />
           </Item>
-          <Item label='Zoom:' layout='inline'>
+          <Item label='Editor zoom:' layout='inline'>
             <span>{(scale * 100).toFixed(0)}%</span>
           </Item>
         </Space>
@@ -258,7 +282,7 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
       <Divider />
 
       <Layout style={{ width: '100%', height: 'calc(100vh - 200px)' }}>
-        <Sider>
+        <Sider style={{ width: 280 }}>
           {/* {elementDisplayItems.map(el => <div>{el.name}</div>)} */}
           <FreeformLayersEditor elements={elements} setElements={setElements} selectedElementUids={selectedElementUids} setSelectedElementUids={setSelectedElementUids} />
         </Sider>
