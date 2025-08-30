@@ -15,6 +15,7 @@ import { AcceptedKeys } from './acceptedKeys';
 import { createPortal } from 'react-dom';
 import FreeformElementControl from './freeformElementControl';
 import FreeformLayersEditor from './freeformLayersEditor';
+import FreeformElementInternal from './freeformElementInternal';
 
 
 // Using "transform" will cause rendering issues
@@ -255,6 +256,7 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
                 onChange={updates => updateElement(element, updates)}
                 isFocused={selectedElementUids.includes(element.uid)}
                 onClick={e => onClickElement(e, element)}
+                children={<FreeformElementInternal value={element} />}
               />
             ))
         }

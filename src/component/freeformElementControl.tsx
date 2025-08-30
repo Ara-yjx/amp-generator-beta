@@ -65,11 +65,12 @@ export interface FreeformElementControlProps {
   isFocused: boolean,
   onClick: React.MouseEventHandler,
   scale: number,
+
+  children: React.ReactNode,
 }
 
 export const FreeformElementControl = forwardRef<FreeformElementControlRef, FreeformElementControlProps>(
-  ({ container, containerWidth, containerHeight, field, page, value, onChange, isFocused, onClick, scale }, ref) => {
-
+  ({ container, containerWidth, containerHeight, field, page, value, onChange, isFocused, onClick, scale, children }, ref) => {
     const targetRef = useRef<HTMLDivElement>(null);
     const moveableRef = useRef<Moveable>(null);
 
@@ -117,14 +118,8 @@ export const FreeformElementControl = forwardRef<FreeformElementControlRef, Free
         }}
           onClick={onClick}
         >
-          {/* <Item label='Name' layout='inline'>
-            <Input value={value.name} onChange={newName => onChange({ name: newName })} style={{ width: 100 }} />
-          </Item> */}
           <div style={{ padding: '0 10px' }}>
-            <Title heading={6}>{value.name}</Title>
-            <Text>{value.boxStyle.width} x {value.boxStyle.height}</Text>
-            <br/>
-            <Text>{printDisplaySrc(value.displayItem.displaySrc)}</Text>
+            {children}
           </div>
         </div>
         {
@@ -267,15 +262,3 @@ function parseTransform(transform: string): { translateX: number, translateY: nu
   return result;
 }
 
-function printDisplaySrc(displaySrc: AT.DisplaySrc): string {
-  switch (displaySrc[0]) {
-    case 'pool':
-      return `Pool ${displaySrc[1].map(i => i + 1)}`;
-    case 'copy':
-      return `Copy ${displaySrc[1]} ${displaySrc[2]} ${displaySrc[3]}`;
-    case 'blank':
-      return '(blank)';
-    default:
-      return '';
-  }
-}
