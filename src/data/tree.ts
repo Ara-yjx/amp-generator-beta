@@ -121,6 +121,23 @@ export function traverseTree<TBranch, TLeaf, TCallbackReturnType>(
 }
 
 
+export function traverseTreeStrict<TBranch, TLeaf, TReturn>(
+  node: TreeNode<TBranch, TLeaf>,
+  callbacks: {
+    onVisitBranch: (data: TBranch, children: TReturn[]) => TReturn,
+    onVisitLeaf: (data: TLeaf) => TReturn,
+  }
+): TReturn {
+  const { onVisitBranch, onVisitLeaf } = callbacks;
+  if ('children' in node) {
+    const children = node.children.map(x => traverseTreeStrict(x, callbacks));
+    return onVisitBranch(node.data, children);
+  } else {
+    return onVisitLeaf(node.data);
+  }
+}
+
+
 /** @deprecated */
 export function withoutParent<TBranch, TLeaf,>(node: TreeNode<TBranch, TLeaf>): Omit<TreeNode<TBranch, TLeaf>, 'parent'> {
   const result = { data: node.data };
