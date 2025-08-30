@@ -133,18 +133,21 @@ export namespace AT {
       width: number;
       height: number;
       grid?: number; // snap to grid
-      children: ElementNode[]; // tree of height >= 1
+      elements: CanvasElementTree;
     }
+
+    type CanvasElementTree = { children: LeafNode<ElementDisplayItem>[] }; 
+    // currently tree of height=1
+    // Equivalent to TreeNode<ElementNodeData, ElementDisplayItemData>
+    // type CanvasElementTree = TreeNode<ElementNodeData, ElementDisplayItemData>;
   
     interface ElementNode {
       uid: uid;
       name: string;
       condition?: ConditionTree;
-      children: ElementNode[] | null;
     }
   
     interface ElementDisplayItem extends ElementNode {
-      children: null; // explicit null indicates that this is a leaf node
       boxStyle: ElementCanonicalStyle;
       displayItem: LayoutedDisplayItem;
     }
@@ -160,13 +163,15 @@ export namespace AT {
     }
   }
 
+  type LayoutType = 'grid' | 'freeform'; // undefined means 'grid'
+
   interface Page {
     // isConditionEnabled: boolean,
     // condition?: Condition,
     condition?: ConditionTree,
     // layout: Layout,
     // displays: { row: int, col: int, src: DisplaySrc }[],
-    layoutType?: 'grid' | 'freeform', // undefined means 'grid'
+    layoutType?: LayoutType, // undefined means 'grid'
     layoutedDisplays: LayoutedDisplayItem[][], // grid layout; keep it required for backward compatibility
     freeformLayout?: FreeformLayout.Canvas,
     response: {

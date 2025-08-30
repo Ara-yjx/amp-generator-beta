@@ -8,12 +8,13 @@ import { AT, uid as Uid } from '../data/ampTypes';
 import { uid } from '../data/uid';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
-import { IconPlus, IconSave } from '@arco-design/web-react/icon';
-import { merge } from 'lodash';
+import { IconDelete, IconPlus, IconSave } from '@arco-design/web-react/icon';
+import { reverse } from 'lodash';
 import { ATLayoutItemSrcSelector } from './advancedTimeline';
 import { AcceptedKeys } from './acceptedKeys';
 import { createPortal } from 'react-dom';
 import FreeformElementControl from './freeformElementControl';
+import FreeformLayersEditor from './freeformLayersEditor';
 
 
 // Using "transform" will cause rendering issues
@@ -45,7 +46,7 @@ export default function FreeformEditor({ field, page }: FreeformEditorProps) {
         createPortal(
           <Modal
             alignCenter
-            style={{ width: '100%', height: '100%' }}
+            style={{ width: '100%', height: '100vh', overflowY: 'hidden' }}
             title={`Page #${page + 1}`}
             footer={null}
             visible={isFullEditorOpen}
@@ -53,7 +54,7 @@ export default function FreeformEditor({ field, page }: FreeformEditorProps) {
             onCancel={() => setIsFullEditorOpen(false)}
             autoFocus={false}
             focusLock={true}
-            // closeIcon={<Button type='primary' size='mini' icon={<IconSave />} />}
+          // closeIcon={<Button type='primary' size='mini' icon={<IconSave />} />}
           >
             <FreeformFullEditor field={field} page={page} />
           </Modal>,
@@ -109,8 +110,8 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
 
   // Elements
   // add a layer component-state, so that we can control whether to save the changes
-  const [elements, _setElements] = useState<AT.FreeformLayout.ElementNode[]>([]);
-  const setElements = (newElements: AT.FreeformLayout.ElementNode[]) => {
+  const [elements, _setElements] = useState<AT.FreeformLayout.ElementDisplayItem[]>([]);
+  const setElements = (newElements: AT.FreeformLayout.ElementDisplayItem[]) => {
     console.log('setElements', JSON.stringify(newElements));
     _setElements(newElements);
     // if auto-save
@@ -120,18 +121,16 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
     const newElements = [...elements, element];
     setElements(newElements);
   };
-  const removeElement = (element: AT.FreeformLayout.ElementNode) => {
-    const newElements = elements.filter(e => e.uid !== element.uid);
+  const removeElements = (uids: number[]) => {
+    const newElements = elements.filter(e => !uids.includes(e.uid));
     setElements(newElements);
   };
-  const cloneElement = (element: AT.FreeformLayout.ElementNode) => {
+  const cloneElement = (element: AT.FreeformLayout.ElementDisplayItem) => {
     const newElements = [...elements, { ...element, uid: elements.length + 1 }];
     setElements(newElements);
   };
   const updateElement = (element: AT.FreeformLayout.ElementDisplayItem, updates: DeepPartial<AT.FreeformLayout.ElementDisplayItem>) => {
-    console.log('merge', JSON.stringify(element), JSON.stringify(updates));
-    const updatedElement = merge(element, updates);
-    console.log('updatedElement', JSON.stringify(updatedElement));
+    const updatedElement = mergeOverrideArray(element, updates) as AT.FreeformLayout.ElementDisplayItem;
     const newElements = elements.map(e => e.uid === element.uid ? updatedElement : e);
     setElements(newElements);
   };
@@ -139,7 +138,7 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
 
 
   // Focus
-  const onClickElement = (e: React.MouseEvent<Element, MouseEvent>, element: AT.FreeformLayout.ElementNode) => {
+  const onClickElement = (e: React.MouseEvent<Element, MouseEvent>, element: AT.FreeformLayout.ElementDisplayItem) => {
     setSelectedElementUids([element.uid]);
     e.stopPropagation();
   };
@@ -173,20 +172,25 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
         mouseClick: false,
         mouseClickAccuratePoint: false,
       },
-      children: null,
     });
   };
+
+  const onClickDeleteElement = () => {
+    removeElements(selectedElementUids);
+  };
+
   const controlPanel = (
     <div>
       <Space>
-        <Button icon={<IconPlus />} onClick={onClickAddElement} />
+        <Button icon={<IconPlus />} type='primary' onClick={onClickAddElement} />
+        <Button icon={<IconDelete />} status='danger' onClick={onClickDeleteElement} />
         {/* <Button onClick={() => setSelectedElementUids([])}>Clear</Button> */}
       </Space>
     </div>
   );
 
 
-  const elementDisplayItems: AT.FreeformLayout.ElementDisplayItem[] = flattenElementDisplayItems({ children: elements });
+  const elementDisplayItems: AT.FreeformLayout.ElementDisplayItem[] = elements as AT.FreeformLayout.ElementDisplayItem[];
 
   // Moveable container
   const moveableContainer = useRef<HTMLDivElement>(null);
@@ -211,23 +215,24 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
         onClick={() => setSelectedElementUids([])}
       >
         {
-          elementDisplayItems.map((element, elementIndex) => (
-            <FreeformElementControl
-              ref={element.uid === selectedElement?.uid ? selectedElementControlRef : null}
-              setOriginString={setOriginString}
-              key={element.uid}
-              field={`${field}.children[${elementIndex}]`}
-              container={moveableContainer.current}
-              containerWidth={canvasWidth}
-              containerHeight={canvasHeight}
-              scale={scale}
-              page={0}
-              value={element}
-              onChange={updates => updateElement(element, updates)}
-              isFocused={selectedElementUids.includes(element.uid)}
-              onClick={e => onClickElement(e, element)}
-            />
-          ))
+          reverse([...elementDisplayItems]) // TODO: upgrade and use native .toReversed()
+            .map((element, elementIndex) => (
+              <FreeformElementControl
+                ref={element.uid === selectedElement?.uid ? selectedElementControlRef : null}
+                setOriginString={setOriginString}
+                key={element.uid}
+                field={`${field}.children[${elementIndex}]`}
+                container={moveableContainer.current}
+                containerWidth={canvasWidth}
+                containerHeight={canvasHeight}
+                scale={scale}
+                page={0}
+                value={element}
+                onChange={updates => updateElement(element, updates)}
+                isFocused={selectedElementUids.includes(element.uid)}
+                onClick={e => onClickElement(e, element)}
+              />
+            ))
         }
       </div>
     </div>
@@ -254,7 +259,8 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
 
       <Layout style={{ width: '100%', height: 'calc(100vh - 200px)' }}>
         <Sider>
-          {elementDisplayItems.map(el => <div>{el.name}</div>)}
+          {/* {elementDisplayItems.map(el => <div>{el.name}</div>)} */}
+          <FreeformLayersEditor elements={elements} setElements={setElements} selectedElementUids={selectedElementUids} setSelectedElementUids={setSelectedElementUids} />
         </Sider>
         <Content>{layoutCanvas}</Content>
         <Sider style={{ width: 280, overflowY: 'auto' }}>
@@ -281,13 +287,19 @@ function PropertyPanel({ page, field, selectedElement, updateElement }: Property
   if (selectedElement === null || field === null) {
     return null;
   }
-  
+
   const displayItemField = `${field}.displayItem`;
 
 
   return (
 
     <Space direction='vertical' style={{ width: '100%', padding: 20, boxSizing: 'border-box' }}>
+
+      <Title heading={6}>Name</Title>
+      <Input value={selectedElement.name} onChange={v => selectedElement && updateElement(selectedElement, { name: v })} />
+
+      <Divider />
+
       <Title heading={6}>Layout</Title>
       <Form layout='horizontal' labelCol={{ span: 8 }} wrapperCol={{ span: 16 }} >
         <Item label='Width'>
@@ -310,10 +322,9 @@ function PropertyPanel({ page, field, selectedElement, updateElement }: Property
       <Divider />
 
       <Title heading={6}>Stimuli Item</Title>
-      {field}
 
       <Item field={`${displayItemField}.displaySrc`} noStyle>
-        <ATLayoutItemSrcSelector pageIndex={page} />
+        <ATLayoutItemSrcSelector pageIndex={page} value={selectedElement.displayItem.displaySrc} onChange={v => { console.log('ATLayoutItemSrcSelector', v); updateElement(selectedElement, { displayItem: { displaySrc: v } }) }} />
       </Item>
       {
         thisPageWatch.swap && (
@@ -352,8 +363,36 @@ function PropertyPanel({ page, field, selectedElement, updateElement }: Property
 }
 
 
-
-/** Get leaves recursively */
-export function flattenElementDisplayItems(node: { children: AT.FreeformLayout.ElementNode[] | null }): AT.FreeformLayout.ElementDisplayItem[] {
-  return node.children === null ? [node as AT.FreeformLayout.ElementDisplayItem] : node.children.flatMap(flattenElementDisplayItems);
+type Plain = Record<string, any>;
+const isObj = (x: unknown): x is Plain =>
+  x !== null && typeof x === "object" && !Array.isArray(x);
+/**
+ * Deep-merge `b` into `a` (lodash.merge-like),
+ * but arrays are **replaced** (not merged).
+ * Returns a new object; `a` and `b` are not mutated.
+ */
+export function mergeOverrideArray<A extends Plain, B extends Plain>(a: A, b: B): A & B {
+  const out: Plain = { ...a };
+  for (const key of Object.keys(b)) {
+    const aVal = (a as Plain)[key];
+    const bVal = b[key];
+    if (Array.isArray(bVal)) {
+      out[key] = bVal.slice(); // replace arrays
+    } else if (isObj(bVal)) {
+      out[key] = mergeOverrideArray(isObj(aVal) ? aVal : {}, bVal);
+    } else {
+      out[key] = bVal; // primitives (incl. undefined) just override
+    }
+  }
+  return out as A & B;
 }
+
+// export function flattenElementDisplayItems(tree: AT.FreeformLayout.CanvasElementTree): AT.FreeformLayout.ElementDisplayItem[] {
+//   return traverseTreeStrict<never, AT.FreeformLayout.ElementDisplayItem, AT.FreeformLayout.ElementDisplayItem[]>(
+//     tree as TreeNode<never, AT.FreeformLayout.ElementDisplayItem>,
+//     {
+//       onVisitLeaf: data => [data],
+//       onVisitBranch: (data, children) => children.flat(),
+//     }
+//   );
+// }

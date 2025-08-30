@@ -1,8 +1,10 @@
-import { Button, Form, Input } from '@arco-design/web-react';
+import { Button, Form, Input, Typography } from '@arco-design/web-react';
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import Moveable from 'react-moveable';
 import { AT } from '../data/ampTypes';
 
+
+const { Title, Text } = Typography;
 const { Item } = Form;
 
 type DeepPartial<T> = T extends object ? {
@@ -110,12 +112,20 @@ export const FreeformElementControl = forwardRef<FreeformElementControlRef, Free
           border: '1px solid black',
           boxSizing: 'border-box',
           backgroundColor: 'lightyellow',
+
+          overflow: 'hidden'
         }}
           onClick={onClick}
         >
-          <Item label='Name' layout='inline'>
+          {/* <Item label='Name' layout='inline'>
             <Input value={value.name} onChange={newName => onChange({ name: newName })} style={{ width: 100 }} />
-          </Item>
+          </Item> */}
+          <div style={{ padding: '0 10px' }}>
+            <Title heading={6}>{value.name}</Title>
+            <Text>{value.boxStyle.width} x {value.boxStyle.height}</Text>
+            <br/>
+            <Text>{printDisplaySrc(value.displayItem.displaySrc)}</Text>
+          </div>
         </div>
         {
           isFocused && (
@@ -234,7 +244,7 @@ function toCssStyle(canonicalStyle: AT.FreeformLayout.ElementCanonicalStyle, can
 // };
 
 
-
+/** Parse CSS transform string to object */
 function parseTransform(transform: string): { translateX: number, translateY: number, rotate: number } {
   const result = {
     translateX: 0,
@@ -255,4 +265,17 @@ function parseTransform(transform: string): { translateX: number, translateY: nu
     result.rotate = unit === 'deg' ? value : value * (180 / Math.PI); // convert radians to degrees
   }
   return result;
+}
+
+function printDisplaySrc(displaySrc: AT.DisplaySrc): string {
+  switch (displaySrc[0]) {
+    case 'pool':
+      return `Pool ${displaySrc[1].map(i => i + 1)}`;
+    case 'copy':
+      return `Copy ${displaySrc[1]} ${displaySrc[2]} ${displaySrc[3]}`;
+    case 'blank':
+      return '(blank)';
+    default:
+      return '';
+  }
 }
