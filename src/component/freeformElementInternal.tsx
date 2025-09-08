@@ -15,7 +15,7 @@ export const FreeformElementInternal: React.FC<{ value: AT.FreeformLayout.Elemen
 );
 
 
-function printDisplaySrc(displaySrc: AT.DisplaySrc): string {
+export function printDisplaySrc(displaySrc: AT.DisplaySrc): string {
   switch (displaySrc[0]) {
     case 'pool':
       return `Pool ${displaySrc[1].map(i => i + 1)}`;

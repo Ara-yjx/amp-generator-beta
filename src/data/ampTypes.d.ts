@@ -132,7 +132,7 @@ export namespace AT {
     interface Canvas {
       width: number;
       height: number;
-      grid?: number; // snap to grid
+      snap?: number; // snap to grid
       elements: CanvasElementTree;
     }
 
@@ -173,7 +173,7 @@ export namespace AT {
     // displays: { row: int, col: int, src: DisplaySrc }[],
     layoutType?: LayoutType, // undefined means 'grid'
     layoutedDisplays: LayoutedDisplayItem[][], // grid layout; keep it required for backward compatibility
-    freeformLayout?: FreeformLayout.Canvas,
+    freeformDisplays?: FreeformLayout.Canvas, // freeform layout
     response: {
       keyboard: { enabled: boolean, keys: string[], delayBefore?: number, delayAfter?: number },
       timeout: { enabled: boolean, duration: number },

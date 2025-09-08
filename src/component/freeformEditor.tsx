@@ -3,19 +3,19 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { Button, Checkbox, Divider, Form, Input, InputNumber, Layout, Modal, Space, Tag, Typography } from '@arco-design/web-react';
+import { Button, Checkbox, Divider, Form, Input, InputNumber, Layout, Modal, Space, Table, Tag, Typography } from '@arco-design/web-react';
 import { AT, uid as Uid } from '../data/ampTypes';
 import { uid } from '../data/uid';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
-import { IconCopy, IconDelete, IconPlus, IconSave } from '@arco-design/web-react/icon';
+import { IconCopy, IconDelete, IconEdit, IconPlus, IconSave } from '@arco-design/web-react/icon';
 import { reverse, set } from 'lodash';
 import { ATLayoutItemSrcSelector } from './advancedTimeline';
 import { AcceptedKeys } from './acceptedKeys';
 import { createPortal } from 'react-dom';
 import FreeformElementControl from './freeformElementControl';
 import FreeformLayersEditor from './freeformLayersEditor';
-import FreeformElementInternal from './freeformElementInternal';
+import FreeformElementInternal, { printDisplaySrc } from './freeformElementInternal';
 
 
 // Using "transform" will cause rendering issues
@@ -34,15 +34,33 @@ type DeepPartial<T> = T extends object ? {
 
 
 export interface FreeformEditorProps {
-  field: string;
+  field: string; // advancedTimeline.pages[${page}].freeformDisplays
   page: number;
 }
 
 export default function FreeformEditor({ field, page }: FreeformEditorProps) {
   const [isFullEditorOpen, setIsFullEditorOpen] = useState(false);
+  const { form } = useFormContext();
+  const elementsWatch = useWatch(`${field}.elements`, form) as AT.FreeformLayout.CanvasElementTree | undefined;
+  const elementsTableData = elementsWatch?.children?.map(node => ({
+    key: node.data?.uid,
+    name: node.data?.name,
+    displaySrcString: printDisplaySrc(node.data?.displayItem.displaySrc),
+  }));
+
   return (
-    <div>
-      <Button onClick={() => setIsFullEditorOpen(true)}>Open Editor</Button>
+    <Space align='start'>
+      <Button icon={<IconEdit/>} type='primary' onClick={() => setIsFullEditorOpen(true)}>Open Editor</Button>
+      <div>
+        <Table
+          data={elementsTableData}
+          size='small'
+          showHeader={false}
+          columns={[{ title: 'Name', dataIndex: 'name' }, { title: 'Display Item', dataIndex: 'displaySrcString' }]}
+          scroll={{ y: 200 }}
+          pagination={false}
+        />
+      </div>
       {
         createPortal(
           <Modal
@@ -62,7 +80,7 @@ export default function FreeformEditor({ field, page }: FreeformEditorProps) {
           document.body
         )
       }
-    </div>
+    </Space>
   )
 }
 
@@ -76,10 +94,11 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
   const canvasWidthWatch = (useWatch(`${field}.width`, form) as number | undefined);
   const canvasHeightWatch = (useWatch(`${field}.height`, form) as number | undefined);
   useEffect(() => {
-    if (canvasWidthWatch === undefined && canvasHeightWatch === undefined) {
+    if (canvasWidthWatch === undefined || canvasHeightWatch === undefined) {
       form.setFieldsValue({
         [`${field}.width`]: DEFAULT_CANVAS_WIDTH,
         [`${field}.height`]: DEFAULT_CANVAS_HEIGHT,
+        [`${field}.elements`]: { children: [] } as AT.FreeformLayout.CanvasElementTree,
       });
     }
   }, [canvasWidthWatch, canvasHeightWatch]);
@@ -110,13 +129,16 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
 
 
   // Elements
-  // add a layer component-state, so that we can control whether to save the changes
-  const [elements, _setElements] = useState<AT.FreeformLayout.ElementDisplayItem[]>([]);
+  // Add a layer component-state, so that we can control whether to save the changes
+  // Load init values from form
+  const elementsWatch = useWatch(`${field}.elements`, form) as AT.FreeformLayout.CanvasElementTree | undefined;
+  const [elements, _setElements] = useState<AT.FreeformLayout.ElementDisplayItem[]>(() => 
+    elementsWatch?.children?.map(node => node.data).filter((e): e is AT.FreeformLayout.ElementDisplayItem => !!e) ?? []  
+  );
   const setElements = (newElements: AT.FreeformLayout.ElementDisplayItem[]) => {
-    console.log('setElements', JSON.stringify(newElements));
     _setElements(newElements);
     // if auto-save
-    form.setFieldValue(`${field}.children`, newElements);
+    form.setFieldValue(`${field}.elements.children`, newElements.map(e => ({ data: e })));
   };
   const addElement = (element: AT.FreeformLayout.ElementDisplayItem) => {
     const newElements = [element, ...elements]; // add at top
@@ -155,7 +177,7 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
       :
       null;
   // TODO: update when we have tree-shape elements
-  const selectedElementField = selectedElement ? `${field}.children[${elements.findIndex(e => e.uid === selectedElement.uid)}]` : null;
+  const selectedElementField = selectedElement ? `${field}.elements.children[${elements.findIndex(e => e.uid === selectedElement.uid)}].data` : null;
   const selectedElementControlRef = useRef<{ updateRect: () => void }>(null);
 
   // Control panel
@@ -246,7 +268,7 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
                 ref={element.uid === selectedElement?.uid ? selectedElementControlRef : null}
                 setOriginString={setOriginString}
                 key={element.uid}
-                field={`${field}.children[${elementIndex}]`}
+                field={`${field}.elements.children[${elementIndex}].data`}
                 container={moveableContainer.current}
                 containerWidth={canvasWidth}
                 containerHeight={canvasHeight}

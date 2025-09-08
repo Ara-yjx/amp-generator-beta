@@ -1,4 +1,4 @@
-import { cloneDeep, range } from 'lodash';
+import { cloneDeep, omit, range } from 'lodash';
 import qsfTemplate from '../assets/qsfTemplate.json';
 import { type UidDetail, flatMap2d, forEach2d, getDisplayKey, getUidDetail, isNotUndefined, map2d } from '../util/util';
 import type { AmpParams, AmpStimuliStyle, AmpStimuliPrimeItem, AmpTimeline, AT, BranchData, LeafData, MixedPoolSource, uid } from './ampTypes';
@@ -31,6 +31,7 @@ export function hydrateQsf(params: AmpParams) {
       } else {
         ed.Value = `${value}`; // (true, false...) are serialized
       }
+      console.debug('setEd', name, ed.Value);
     }
   }
 
@@ -167,7 +168,13 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
     advanced: true,
     pages: pages.map((page, pageIndex) => ({
       condition: transformATCondition(page.condition),
-      displays: transformATDisplays(page.layoutedDisplays),
+      layoutType: isFreeform(page) ? 'freeform' : 'grid',
+      ...(
+        isFreeform(page) ?
+          { freeformDisplays: transformATFreeformDisplays(page.freeformDisplays) }
+          :
+          { displays: transformATGridDisplays(page.layoutedDisplays) }
+      ),
       response: transfromATResponse(page),
       interval: pageIndex === pages.length - 1 ? undefined : (page.interval ?? 0),
       swap: transformATSwap(page),
@@ -225,7 +232,7 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
     return result;
   }
 
-  function transformATDisplays(layoutedDisplays: AT.Page['layoutedDisplays']) {
+  function transformATGridDisplays(layoutedDisplays: AT.Page['layoutedDisplays']) {
     const result: { [key: string]: ExportPageDisplaySrc } = {};
     forEach2d(layoutedDisplays, ({ displaySrc }, row, col) => {
       const displayKey = getDisplayKey(row, col);
@@ -243,6 +250,20 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
     return result;
   }
 
+  function transformATFreeformDisplays(freeformDisplays: AT.FreeformLayout.Canvas) {
+    const result = omit(freeformDisplays, 'snap');
+    for (const { data } of result.elements?.children ?? []) {
+      const { displayItem } = data;
+      if (displayItem.displaySrc[0] === 'blank') {
+        displayItem.displaySrc = ['blank'];
+      } else if (displayItem.displaySrc[0] === 'pool') {
+        displayItem.displaySrc = ['pool', displayItem.displaySrc[1].map(poolIndex => typeof poolIndex === 'number' ? poolIndex + 1 : poolIndex)];
+      }
+      // TODO: copy not supported yet
+    }
+    return result;
+  }
+
   function transfromATResponse(page: AT.Page) {
     const result: any = {};
     const { response, layoutedDisplays } = page;
@@ -253,11 +274,20 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
       result.timeout = { duration: response.timeout.duration };
     }
     if (response.mouseClick.enabled) {
-      result.mouseClick = Object.fromEntries(
-        flatMap2d(layoutedDisplays, (displayItem, row, col) => ({ key: getDisplayKey(row, col), displayItem }))
-          .filter(({ displayItem }) => displayItem.mouseClick)
-          .map(({ key, displayItem }) => [key, displayItem.mouseClickAccuratePoint ? { accuratePoint: true } : {}])
-      );
+      if (isFreeform(page)) {
+        result.mouseClick = Object.fromEntries(
+          page.freeformDisplays.elements.children
+            .map(({ data }) => data)
+            .filter(({ displayItem }) => displayItem.mouseClick)
+            .map(({ uid, displayItem }) => [uid, displayItem.mouseClickAccuratePoint ? { accuratePoint: true } : {}])
+        );
+      } else {
+        result.mouseClick = Object.fromEntries(
+          flatMap2d(layoutedDisplays, (displayItem, row, col) => ({ key: getDisplayKey(row, col), displayItem }))
+            .filter(({ displayItem }) => displayItem.mouseClick)
+            .map(({ key, displayItem }) => [key, displayItem.mouseClickAccuratePoint ? { accuratePoint: true } : {}])
+        );
+      }
     }
     return result;
   }
@@ -265,11 +295,20 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
   function transformATSwap(page: AT.Page) {
     if (page.swap) {
       const result: { [displayKey: string]: { bindKeyboard: string[] } } = {};
-      forEach2d(page.layoutedDisplays, ({ swap, bindKeyboard }, row, col) => {
-        if (swap) {
-          result[getDisplayKey(row, col)] = { bindKeyboard: bindKeyboard ?? [] };
-        }
-      });
+      if (isFreeform(page)) {
+        page.freeformDisplays.elements.children
+          .map(({ data }) => data)
+          .filter(({ displayItem }) => displayItem.swap)
+          .forEach(({ uid, displayItem }) =>
+            result[uid] = { bindKeyboard: displayItem.bindKeyboard ?? [] }
+          );
+      } else {
+        forEach2d(page.layoutedDisplays, ({ swap, bindKeyboard }, row, col) => {
+          if (swap) {
+            result[getDisplayKey(row, col)] = { bindKeyboard: bindKeyboard ?? [] };
+          }
+        });
+      }
       return result;
     }
   }
@@ -403,4 +442,8 @@ function cleanMixedPoolSourceCount(count: MixedPoolSource['count']) {
   } else {
     return count;
   }
+}
+
+function isFreeform(page: AT.Page): page is AT.Page & { layoutType: 'freeform', freeformDisplays: AT.FreeformLayout.Canvas } {
+  return page.layoutType === 'freeform' && page.freeformDisplays !== undefined;
 }

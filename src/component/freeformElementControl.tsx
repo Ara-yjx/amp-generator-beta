@@ -75,8 +75,6 @@ export const FreeformElementControl = forwardRef<FreeformElementControlRef, Free
     const moveableRef = useRef<Moveable>(null);
 
     const cssStyle = toCssStyle(value.boxStyle, { width: containerWidth, height: containerHeight });
-    console.log('ElementInlineEditor Render cssStyle', cssStyle);
-
 
     // Expose updateRect
     useImperativeHandle(ref, () => {

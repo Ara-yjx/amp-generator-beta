@@ -351,7 +351,7 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
                 newItem={emptyLayoutedDisplayItem}
               />
             ) : (
-              <FreeformEditor field={`${field}.freeformLayout`} page={pageIndex} />
+              <FreeformEditor field={`${field}.freeformDisplays`} page={pageIndex} />
             )
           }
         </div>
