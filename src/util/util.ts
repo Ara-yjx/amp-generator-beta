@@ -1,5 +1,11 @@
-import { sum } from 'lodash';
-import { AmpStimuli, AmpStimuliItem, AmpStimuliPrimeItem, AT, DisplayLayout } from '../data/ampTypes';
+import { sortBy, sum } from 'lodash';
+import { AmpParams, AmpStimuli, AmpStimuliItem, AmpStimuliPrimeItem, AmpTrialHtml, AT, DisplayLayout, MixedPool } from '../data/ampTypes';
+
+
+export type DeepPartial<T> = T extends object ? {
+  [P in keyof T]?: DeepPartial<T[P]>;
+} : T;
+
 
 export type UidDetail = {
   type: 'stimuli',
@@ -96,4 +102,24 @@ export function flatMap2d<T, K>(array2d: T[][], operation: (value: T, row: numbe
 
 export function isNotUndefined<T>(x: T | undefined): x is T {
   return x !== undefined;
+}
+
+export function getTrialBackgroundColor(trialHtml?: AmpTrialHtml) {
+  if (!trialHtml) return 'white';
+  return (
+    (trialHtml.customHtml ? null : trialHtml.backgroundColor) ||
+    (trialHtml.darkMode ? 'black' : 'white')
+  );
+}
+
+/** Get source simple-pool recursively. Return pool indexes. */
+export function traceMixedPoolSourcePools(params: AmpParams, mixedPoolName: string): number[] {
+  // cross-reference of mixedPool is not allowed, so no need to worry about loops
+  const mixedPool = params.mixedPools?.find(m => m.name === mixedPoolName);
+  const sourcePools = mixedPool?.sources.flatMap(source =>
+    source.pools.flatMap(sourcePool =>
+      typeof sourcePool === 'string' ? traceMixedPoolSourcePools(params, sourcePool) : [sourcePool]
+    )
+  );
+  return sourcePools ? sortBy([...new Set(sourcePools)]) : [];
 }

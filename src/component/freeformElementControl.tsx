@@ -1,15 +1,7 @@
-import { Button, Form, Input, Typography } from '@arco-design/web-react';
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import Moveable from 'react-moveable';
 import { AT } from '../data/ampTypes';
-
-
-const { Title, Text } = Typography;
-const { Item } = Form;
-
-type DeepPartial<T> = T extends object ? {
-  [P in keyof T]?: DeepPartial<T[P]>;
-} : T;
+import { DeepPartial } from '../util/util';
 
 
 /**
@@ -85,7 +77,6 @@ export const FreeformElementControl = forwardRef<FreeformElementControlRef, Free
       };
     }, []);
 
-
     // Need to updateRect once get focused
     useEffect(() => {
       isFocused && targetRef.current && moveableRef.current?.updateRect();
@@ -94,11 +85,6 @@ export const FreeformElementControl = forwardRef<FreeformElementControlRef, Free
     return (
       <>
         <div style={{ position: 'absolute', left: -80, opacity: 0.85 }}>
-          <Button onClick={() => {
-            if (targetRef.current) {
-              moveableRef.current?.updateRect();
-            }
-          }}>Debug</Button>
         </div>
         <div ref={targetRef} style={{
           position: 'absolute',
@@ -151,7 +137,7 @@ export const FreeformElementControl = forwardRef<FreeformElementControlRef, Free
               // snapGridHeight={20}
               snapRotationDegrees={[0]}
               snapRotationThreshold={5}
-            // snapDirections={{ "top": true, "left": true, "bottom": true, "right": true, "center": true, "middle": true }}
+              snapDirections={{ "top": true, "left": true, "bottom": true, "right": true, "center": true, "middle": true }}
             // elementSnapDirections={{ "top": true, "left": true, "bottom": true, "right": true, "center": true, "middle": true }}
             // throttle={100}
             />
@@ -192,49 +178,6 @@ function toCssStyle(canonicalStyle: AT.FreeformLayout.ElementCanonicalStyle, can
     transform: `translate(${translateX}px, ${translateY}px) rotate(${canonicalStyle.rotate}degree)`,
   };
 }
-
-
-// const FreeformLayoutItem: React.FC<{ field: string, page: number, row: number, col: number, options?: { label: string, value: number }[] }> = ({ field, page, row, col }) => {
-//   const { form } = useFormContext();
-//   const thisPageWatch = useWatch(`advancedTimeline.pages[${page}]`, form) as AT.Page;
-
-//   return (
-//     <Space direction='vertical' style={{ border: '1px dashed grey', padding: 5 }}>
-//       <Item field={`${field}.displaySrc`} noStyle>
-//         <ATLayoutItemSrcSelector pageIndex={page} />
-//       </Item>
-//       {
-//         thisPageWatch.swap && (
-//           <Item field={`${field}.swap`} triggerPropName='checked' noStyle>
-//             <Checkbox>Swappable</Checkbox>
-//           </Item>
-//         )
-//       }
-//       {
-//         thisPageWatch.swap && thisPageWatch.response.keyboard.enabled && (
-//           <Space>
-//             <Text>Bind keys</Text>
-//             <Item field={`${field}.bindKeyboard`} noStyle>
-//               <AcceptedKeys />
-//             </Item>
-//           </Space>
-//         )
-//       }
-//       {
-//         thisPageWatch.response.mouseClick.enabled && (
-//           <Space>
-//             <Item field={`${field}.mouseClick`} triggerPropName='checked' noStyle>
-//               <Checkbox>Clickable</Checkbox>
-//             </Item>
-//             <Item field={`${field}.mouseClickAccuratePoint`} triggerPropName='checked' noStyle>
-//               <Checkbox>Add accurate point</Checkbox>
-//             </Item>
-//           </Space>
-//         )
-//       }
-//     </Space>
-//   );
-// };
 
 
 /** Parse CSS transform string to object */

@@ -1,4 +1,4 @@
-import { InputTag } from '@arco-design/web-react';
+import { InputTag, InputTagProps } from '@arco-design/web-react';
 import React from 'react';
 import { AmpParams } from '../data/ampTypes';
 import type { ArcoFormItem } from '../util/arco';
@@ -16,7 +16,9 @@ function allowedKeys(key: string) {
   return false;
 }
 
-export const AcceptedKeys: React.FC<ArcoFormItem<AmpParams['acceptedKeys']>> = ({ value, onChange }) => {
+export const AcceptedKeys: React.FC<ArcoFormItem<AmpParams['acceptedKeys']> & InputTagProps> = (
+  { value, onChange, ...props }
+) => {
 
   const onKeyDown = (e: KeyboardEvent) => {
     e.stopPropagation();
@@ -36,6 +38,7 @@ export const AcceptedKeys: React.FC<ArcoFormItem<AmpParams['acceptedKeys']>> = (
       allowClear
       onKeyDown={onKeyDown}
       style={{ minWidth: 100 }}
+      {...props}
     />
   )
 };

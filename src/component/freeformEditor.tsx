@@ -1,35 +1,28 @@
-/**
- * A simple canvas that allows user to drag and drop elements to create a layout.
- */
-
-import { useEffect, useRef, useState } from 'react';
-import { Button, Checkbox, Divider, Form, Input, InputNumber, Layout, Modal, Space, Table, Tag, Typography } from '@arco-design/web-react';
-import { AT, uid as Uid } from '../data/ampTypes';
-import { uid } from '../data/uid';
+import { Button, Divider, Form, InputNumber, Layout, Modal, Space, Table } from '@arco-design/web-react';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
-import { IconCopy, IconDelete, IconEdit, IconPlus, IconSave } from '@arco-design/web-react/icon';
-import { reverse, set } from 'lodash';
-import { ATLayoutItemSrcSelector } from './advancedTimeline';
-import { AcceptedKeys } from './acceptedKeys';
+import { IconCopy, IconDelete, IconEdit, IconPlus } from '@arco-design/web-react/icon';
+import { reverse } from 'lodash';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { AmpTrialHtml, AT, uid as Uid } from '../data/ampTypes';
+import { uid } from '../data/uid';
+import { DeepPartial, getTrialBackgroundColor } from '../util/util';
 import FreeformElementControl from './freeformElementControl';
-import FreeformLayersEditor from './freeformLayersEditor';
 import FreeformElementInternal, { printDisplaySrc } from './freeformElementInternal';
+import FreeformLayersEditor from './freeformLayersEditor';
+import FreeformPropertyPanel from './freeformPropertyPanel';
+import ATPageResponseConfig from './ATPageResponseConfig';
+import { SwapSwitch } from './swapSwitch';
 
 
 // Using "transform" will cause rendering issues
 
 const { Item } = Form;
-const { Text, Title } = Typography;
-const { Content, Header, Sider } = Layout;
+const { Content, Sider, Footer, Header } = Layout;
 
 const DEFAULT_CANVAS_WIDTH = 1000;
 const DEFAULT_CANVAS_HEIGHT = 750;
-
-type DeepPartial<T> = T extends object ? {
-  [P in keyof T]?: DeepPartial<T[P]>;
-} : T;
 
 
 
@@ -50,7 +43,7 @@ export default function FreeformEditor({ field, page }: FreeformEditorProps) {
 
   return (
     <Space align='start'>
-      <Button icon={<IconEdit/>} type='primary' onClick={() => setIsFullEditorOpen(true)}>Open Editor</Button>
+      <Button icon={<IconEdit />} type='primary' onClick={() => setIsFullEditorOpen(true)}>Open Editor</Button>
       <div>
         <Table
           data={elementsTableData}
@@ -132,8 +125,8 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
   // Add a layer component-state, so that we can control whether to save the changes
   // Load init values from form
   const elementsWatch = useWatch(`${field}.elements`, form) as AT.FreeformLayout.CanvasElementTree | undefined;
-  const [elements, _setElements] = useState<AT.FreeformLayout.ElementDisplayItem[]>(() => 
-    elementsWatch?.children?.map(node => node.data).filter((e): e is AT.FreeformLayout.ElementDisplayItem => !!e) ?? []  
+  const [elements, _setElements] = useState<AT.FreeformLayout.ElementDisplayItem[]>(() =>
+    elementsWatch?.children?.map(node => node.data).filter((e): e is AT.FreeformLayout.ElementDisplayItem => !!e) ?? []
   );
   const setElements = (newElements: AT.FreeformLayout.ElementDisplayItem[]) => {
     _setElements(newElements);
@@ -238,6 +231,7 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
 
 
   const elementDisplayItems: AT.FreeformLayout.ElementDisplayItem[] = elements as AT.FreeformLayout.ElementDisplayItem[];
+  const trialHtmlWatch = useWatch('params.trialHtml', form) as AmpTrialHtml | undefined;
 
   // Moveable container
   const moveableContainer = useRef<HTMLDivElement>(null);
@@ -248,6 +242,7 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
       width: canvasWidth * scale,
       height: canvasHeight * scale,
       margin: '0px auto',
+      backgroundColor: getTrialBackgroundColor(trialHtmlWatch)
     }}>
       <div style={{
         width: `${canvasWidth * scale}px`,
@@ -255,6 +250,8 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
         // transform: `scale(${scale})`,
         transformOrigin: 'top left',
         border: '1px solid black',
+        // marginTop: 20,
+        // boxShadow: '0 0 20x 0px rgba(0,0,0,0.6)',
         boxSizing: 'border-box',
         position: 'relative',
       }}
@@ -289,126 +286,43 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
 
   return (
     <div ref={ref} style={{ width: '100%' }}>
-      <div>
-        <Space>
-          <Item label='Width' field={`${field}.width`} layout='inline'>
-            <InputNumber suffix='px' />
-          </Item>
-          <Item label='Height' field={`${field}.height`} layout='inline'>
-            <InputNumber suffix='px' />
-          </Item>
-          <Item label='Editor zoom:' layout='inline'>
-            <span>{(scale * 100).toFixed(0)}%</span>
-          </Item>
-        </Space>
-      </div>
-      {controlPanel}
-      <Divider />
-
       <Layout style={{ width: '100%', height: 'calc(100vh - 200px)' }}>
-        <Sider style={{ width: 280 }}>
-          {/* {elementDisplayItems.map(el => <div>{el.name}</div>)} */}
-          <FreeformLayersEditor elements={elements} setElements={setElements} selectedElementUids={selectedElementUids} setSelectedElementUids={setSelectedElementUids} />
-        </Sider>
-        <Content>{layoutCanvas}</Content>
-        <Sider style={{ width: 280, overflowY: 'auto' }}>
-          <PropertyPanel page={page} field={selectedElementField} selectedElement={selectedElement} updateElement={updateElement} />
-        </Sider>
+        <Header style={{ padding: 10 }}>
+          <Space>
+            <Item label='Width' field={`${field}.width`} layout='inline'>
+              <InputNumber suffix='px' />
+            </Item>
+            <Item label='Height' field={`${field}.height`} layout='inline'>
+              <InputNumber suffix='px' />
+            </Item>
+            <Item label='Editor zoom:' layout='inline'>
+              <span>{(scale * 100).toFixed(0)}%</span>
+            </Item>
+          </Space>
+          {controlPanel}
+        </Header >
+
+        <Layout>
+          <Sider style={{ width: 280 }}>
+            <FreeformLayersEditor elements={elements} setElements={setElements} selectedElementUids={selectedElementUids} setSelectedElementUids={setSelectedElementUids} />
+          </Sider>
+          <Content style={{ backgroundColor: '#AAA', paddingTop: 20 }}>{layoutCanvas}</Content>
+          <Sider style={{ width: 280, overflowY: 'auto' }}>
+            <FreeformPropertyPanel page={page} field={selectedElementField} selectedElement={selectedElement} updateElement={updateElement} />
+          </Sider>
+        </Layout>
+
+        <Footer style={{ maxHeight: 64 }}>
+          <ATPageResponseConfig field={`advancedTimeline.pages[${page}]`} />
+          <SwapSwitch field={`advancedTimeline.pages[${page}].swap`} />
+
+        </Footer>
       </Layout>
 
     </div>
   );
 }
 
-
-interface PropertyPanelProps {
-  page: number;
-  field: string | null;
-  selectedElement: AT.FreeformLayout.ElementDisplayItem | null;
-  updateElement: (element: AT.FreeformLayout.ElementDisplayItem, updates: DeepPartial<AT.FreeformLayout.ElementDisplayItem>) => void;
-}
-
-function PropertyPanel({ page, field, selectedElement, updateElement }: PropertyPanelProps) {
-  const { form } = useFormContext();
-  const thisPageWatch = useWatch(`advancedTimeline.pages[${page}]`, form) as AT.Page;
-
-  if (selectedElement === null || field === null) {
-    return null;
-  }
-
-  const displayItemField = `${field}.displayItem`;
-
-
-  return (
-
-    <Space direction='vertical' style={{ width: '100%', padding: 20, boxSizing: 'border-box' }}>
-
-      <Title heading={6}>Name</Title>
-      <Input value={selectedElement.name} onChange={v => selectedElement && updateElement(selectedElement, { name: v })} />
-
-      <Divider />
-
-      <Title heading={6}>Layout</Title>
-      <Form layout='horizontal' labelCol={{ span: 8 }} wrapperCol={{ span: 16 }} >
-        <Item label='Width'>
-          <InputNumber value={selectedElement?.boxStyle.width} onChange={v => selectedElement && updateElement(selectedElement, { boxStyle: { width: v } })} />
-        </Item>
-        <Item label='Height' >
-          <InputNumber value={selectedElement?.boxStyle.height} onChange={v => selectedElement && updateElement(selectedElement, { boxStyle: { height: v } })} />
-        </Item>
-        <Item label='x'>
-          <InputNumber value={selectedElement?.boxStyle.x} onChange={v => selectedElement && updateElement(selectedElement, { boxStyle: { x: v } })} />
-        </Item>
-        <Item label='y'>
-          <InputNumber value={selectedElement?.boxStyle.y} onChange={v => selectedElement && updateElement(selectedElement, { boxStyle: { y: v } })} />
-        </Item>
-        <Item label='Rotate'>
-          <InputNumber value={selectedElement?.boxStyle.rotate} onChange={v => selectedElement && updateElement(selectedElement, { boxStyle: { rotate: v } })} suffix='°' />
-        </Item>
-      </Form>
-
-      <Divider />
-
-      <Title heading={6}>Stimuli Item</Title>
-
-      <Item field={`${displayItemField}.displaySrc`} noStyle>
-        <ATLayoutItemSrcSelector pageIndex={page} value={selectedElement.displayItem.displaySrc} onChange={v => { console.log('ATLayoutItemSrcSelector', v); updateElement(selectedElement, { displayItem: { displaySrc: v } }) }} />
-      </Item>
-      {
-        thisPageWatch.swap && (
-          <Item field={`${displayItemField}.swap`} triggerPropName='checked' noStyle>
-            <Checkbox>Swappable</Checkbox>
-          </Item>
-        )
-      }
-      {
-        thisPageWatch.swap && thisPageWatch.response.keyboard.enabled && (
-          <Space>
-            <Text>Bind keys</Text>
-            <Item field={`${displayItemField}.bindKeyboard`} noStyle>
-              <AcceptedKeys />
-            </Item>
-          </Space>
-        )
-      }
-      {
-        thisPageWatch.response.mouseClick.enabled && (
-          <Space>
-            <Item field={`${displayItemField}.mouseClick`} triggerPropName='checked' noStyle>
-              <Checkbox>Clickable</Checkbox>
-            </Item>
-            <Item field={`${displayItemField}.mouseClickAccuratePoint`} triggerPropName='checked' noStyle>
-              <Checkbox>Add accurate point</Checkbox>
-            </Item>
-          </Space>
-        )
-      }
-
-    </Space>
-
-  );
-
-}
 
 
 type Plain = Record<string, any>;

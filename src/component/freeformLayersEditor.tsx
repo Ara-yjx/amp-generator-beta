@@ -15,8 +15,6 @@ export default function FreeformLayersEditor({
   selectedElementUids: number[];
   setSelectedElementUids: (uids: number[]) => void;
 }) {
-  // const [data, setData] = useState(() => range(50).map(i => ({ key: `${i}`, name: `Layer ${i + 1}` })));
-
   const onSortEnd = ({ oldIndex, newIndex }: { oldIndex: number; newIndex: number }) => {
     if (oldIndex !== newIndex) {
       const newData = arrayMove([...elements], oldIndex, newIndex).filter((el) => !!el);
@@ -25,15 +23,12 @@ export default function FreeformLayersEditor({
   }
   return (
     <DragAndDropTree
-      value={elements.map((el, index) => ({ key: `${el.uid}`, name: `${el.name}` }))}
+      value={elements.map(el => ({ key: `${el.uid}`, name: `${el.name}` }))}
       onSortEnd={onSortEnd}
       renderCell={String}
       selectedRowKeys={selectedElementUids.map(String)}
       onSelectedRowKeysChange={keys => setSelectedElementUids(keys.map(k => typeof k === 'string' ? parseInt(k) : k))}
-      onClickRow={(row, rowIndex) => {
-        console.log('onClickRow', row, rowIndex);
-        setSelectedElementUids([typeof row.key === 'string' ? parseInt(row.key) : row.key]);
-      }}
+      onClickRow={(row, rowIndex) => setSelectedElementUids([typeof row.key === 'string' ? parseInt(row.key) : row.key])}
     />
   );
 }
@@ -88,6 +83,7 @@ function DragAndDropTree<T>({ value, onSortEnd, renderCell, selectedRowKeys, onS
           td.style.width = td.clientWidth + 'px';
         });
       }}
+      lockAxis="y"
       {...props}
     />
   );

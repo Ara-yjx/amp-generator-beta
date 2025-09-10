@@ -13,6 +13,9 @@ import { ArcoFormItem } from '../util/arco';
 import { AdvancedTimelineCondition } from './advancedTimelineCondition';
 import { IconHeight, IconWidth } from './widthHeightIcon';
 import FreeformEditor from './freeformEditor';
+import ATElementResponseConfig from './ATElementResponseConfig';
+import ATPageResponseConfig from './ATPageResponseConfig';
+import { SwapSwitch } from './swapSwitch';
 
 const { Item, List } = Form;
 const { Text, Title } = Typography;
@@ -227,45 +230,16 @@ export const ATLayoutItemSrcSelector: React.FC<ArcoFormItem<AT.DisplaySrc> & { p
 }
 
 /** field: advancedTimeline.pages[*].layoutedDisplays[row][col] */
-const ATLayoutItem: React.FC<{ field: string, page: number, row: number, col: number, options?: { label: string, value: number }[] }> = ({ field, page, row, col }) => {
-  const { form } = useFormContext();
-  const thisPageWatch = useWatch(`advancedTimeline.pages[${page}]`, form) as AT.Page;
-
+const ATLayoutItem: React.FC<{ field: string, pageIndex: number, row: number, col: number, options?: { label: string, value: number }[] }> = (
+  { field, pageIndex, row, col }
+) => {
   return (
     <Space direction='vertical' style={{ border: '1px dashed grey', padding: 5 }}>
       <Tag color='orange' bordered>{getDisplayKey(row, col)}</Tag>
       <Item field={`${field}.displaySrc`} noStyle>
-        <ATLayoutItemSrcSelector pageIndex={page} />
+        <ATLayoutItemSrcSelector pageIndex={pageIndex} />
       </Item>
-      {
-        thisPageWatch.swap && (
-          <Item field={`${field}.swap`} triggerPropName='checked' noStyle>
-            <Checkbox>Swappable</Checkbox>
-          </Item>
-        )
-      }
-      {
-        thisPageWatch.swap && thisPageWatch.response.keyboard.enabled && (
-          <Space>
-            <Text>Bind keys</Text>
-            <Item field={`${field}.bindKeyboard`} noStyle>
-              <AcceptedKeys />
-            </Item>
-          </Space>
-        )
-      }
-      {
-        thisPageWatch.response.mouseClick.enabled && (
-          <Space>
-            <Item field={`${field}.mouseClick`} triggerPropName='checked' noStyle>
-              <Checkbox>Clickable</Checkbox>
-            </Item>
-            <Item field={`${field}.mouseClickAccuratePoint`} triggerPropName='checked' noStyle>
-              <Checkbox>Add accurate point</Checkbox>
-            </Item>
-          </Space>
-        )
-      }
+      <ATElementResponseConfig pageIndex={pageIndex} field={field} />
     </Space>
   );
 };
@@ -274,11 +248,8 @@ const ATLayoutItem: React.FC<{ field: string, page: number, row: number, col: nu
 /** field: advancedTimeline.pages[*] */
 export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => void }> = ({ field, pageIndex, remove }) => {
   const { form } = useFormContext();
-  const layoutedDisplaysWatch = useWatch(`${field}.layoutedDisplays`, form);
   const conditionWatch = useWatch(`${field}.condition`, form);
   const layoutTypeWatch = useWatch(`${field}.layoutType`, form);
-  const layoutStringify = '[' + getLayoutFromLayoutDisplays(layoutedDisplaysWatch).join('+') + ']';
-  const keyboardResponseEnabledWatch = useWatch(`${field}.response.keyboard.enabled`, form);
 
   const onClickConditionButton = () => {
     const conditionField = `${field}.condition`;
@@ -302,15 +273,6 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
       </Space>
     </div>
   );
-
-  // When mouseClick disabled, disable mouseTracking too
-  const mouseClickEnabledWatch = useWatch(`${field}.response.mouseClick.enabled`, form) as AT.Page['response']['mouseClick'];
-  const mouseTrackingWatch = useWatch(`${field}.mouseTracking`, form) as AT.Page['mouseTracking'];
-  useEffect(() => {
-    if (!mouseClickEnabledWatch && mouseTrackingWatch) {
-      form.setFieldValue(`${field}.mouseTracking`, undefined);
-    }
-  }, [mouseClickEnabledWatch]);
 
   return (
     <div>
@@ -347,7 +309,7 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
             layoutTypeWatch !== 'freeform' ? (
               <LayoutEditor
                 field={`${field}.layoutedDisplays`}
-                renderItem={(layoutItemField, row, col) => <ATLayoutItem field={layoutItemField} page={pageIndex} row={row} col={col} />}
+                renderItem={(layoutItemField, row, col) => <ATLayoutItem field={layoutItemField} pageIndex={pageIndex} row={row} col={col} />}
                 newItem={emptyLayoutedDisplayItem}
               />
             ) : (
@@ -358,82 +320,11 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
 
         <Divider />
 
-        <Space style={{ margin: '10px 0', width: '100%' }}>
-          <IconSkipNext />
-          <Text bold>Go to next page when</Text>
-        </Space>
-
-        <Space wrap size={[0, -18]} style={{ paddingLeft: 10, width: '100%' }}>
-          <Item field={`${field}.response.timeout.enabled`} triggerPropName='checked' layout='inline'>
-            <Checkbox>
-              <div style={{ display: 'inline-block', width: '10em' }}>After fixed duration</div>
-            </Checkbox>
-          </Item>
-          <Item field={`${field}.response.timeout.duration`} layout='inline' >
-            <InputNumber suffix='ms' min={0} style={{ width: 100, minWidth: 60 }} />
-          </Item>
-        </Space>
-
-        {/* TODO: Space should only wrap 'keys' and 'delayBefore' input, fix all item paddings  */}
-        <Space wrap size={[0, -18]} style={{ paddingLeft: 10, width: '100%' }}>
-          <Item field={`${field}.response.keyboard.enabled`} triggerPropName='checked' layout='inline'>
-            <Checkbox>
-              <div style={{ display: 'inline-block', width: '10em' }}>Keyboard response</div>
-            </Checkbox>
-          </Item>
-          {
-            keyboardResponseEnabledWatch && <>
-              <Item field={`${field}.response.keyboard.keys`} label='Accepted keys' layout='inline' >
-                <AcceptedKeys />
-              </Item>
-              <Item field={`${field}.response.keyboard.delayBefore`} label='Delay before accepting keyboard' layout='inline' >
-                <InputNumber suffix='ms' min={0} style={{ width: 100, minWidth: 60 }} />
-              </Item>
-            </>
-          }
-        </Space>
-
-        <Space wrap size={[0, -18]} style={{ paddingLeft: 10, width: '100%' }}>
-          <Item field={`${field}.response.mouseClick.enabled`} triggerPropName='checked' layout='inline'>
-            <Checkbox>
-              <div style={{ display: 'inline-block' }}>Mouse click response</div>
-            </Checkbox>
-          </Item>
-          <Item field={`${field}.mouseTracking`} triggerPropName='checked' layout='inline'>
-            <Checkbox disabled={!mouseClickEnabledWatch}>
-              <div style={{ display: 'inline-block' }}>Record mouse tracking</div>
-            </Checkbox>
-          </Item>
-        </Space>
+        <ATPageResponseConfig field={field} />
 
         <Divider />
 
-        <Space style={{ margin: '10px 0', width: '100%' }}>
-          <Item field={`${field}.swap`} noStyle>
-            <Switch />
-          </Item>
-          <Text bold>Swap (shuffle) displays</Text>
-          <Tooltip position='right' content={
-            <div >
-              <li>You can randomly swap display items, switching their position in the screen.</li>
-              <Divider />
-              <li>
-                But in some scenerio when you enable "Swap" + "Keyboard response",
-                you want each key to be bound to the stimuli at specific position.
-                (E.g. you tell the participant to press "d" to select the left stimuli which comes from Pool 1, and "k" to select the right stimuli which comes from Pool 2.)
-                <br />
-                Then you may want to reverse the swap to get the participant's actual selection.
-                You can do this by binding key(s) to stimuli item.
-                (E.g. although stimuli from Pool 1 is displayed at the right position after swapping,
-                and user pressed "k" to select it,
-                the result will be reversed to "d" in the response.)
-              </li>
-              <li>Each swapped display item must have at least one bind-key, and the bind-keys of different display items must be distinct.</li>
-            </div>
-          }>
-            <IconQuestionCircle />
-          </Tooltip>
-        </Space>
+        <SwapSwitch  field={`${field}.swap`} />
 
         {
           layoutTypeWatch !== 'freeform' && (
