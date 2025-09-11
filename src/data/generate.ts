@@ -180,6 +180,7 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
       swap: transformATSwap(page),
       mouseTracking: transformATMouseTracking(page),
       style: page.style,
+      fitScreen: page.fitScreen,
     }))
   };
 

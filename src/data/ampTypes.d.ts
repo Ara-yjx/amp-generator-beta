@@ -183,6 +183,7 @@ export namespace AT {
     interval?: number,
     mouseTracking?: boolean,
     style?: Style,
+    fitScreen?: boolean,
   }
 
   type AdvancedTimeline = {

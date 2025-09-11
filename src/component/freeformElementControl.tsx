@@ -138,7 +138,7 @@ export const FreeformElementControl = forwardRef<FreeformElementControlRef, Free
               snapRotationDegrees={[0]}
               snapRotationThreshold={5}
               snapDirections={{ "top": true, "left": true, "bottom": true, "right": true, "center": true, "middle": true }}
-            // elementSnapDirections={{ "top": true, "left": true, "bottom": true, "right": true, "center": true, "middle": true }}
+              elementSnapDirections={{ "top": true, "left": true, "bottom": true, "right": true, "center": true, "middle": true }}
             // throttle={100}
             />
           )

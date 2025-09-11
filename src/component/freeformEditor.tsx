@@ -1,4 +1,4 @@
-import { Button, Divider, Form, InputNumber, Layout, Modal, Space, Table } from '@arco-design/web-react';
+import { Button, Divider, Form, Grid, InputNumber, Layout, Modal, Space, Switch, Table, Typography } from '@arco-design/web-react';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import { IconCopy, IconDelete, IconEdit, IconPlus } from '@arco-design/web-react/icon';
@@ -20,6 +20,8 @@ import { SwapSwitch } from './swapSwitch';
 
 const { Item } = Form;
 const { Content, Sider, Footer, Header } = Layout;
+const { Row, Col } = Grid;
+const { Text } = Typography;
 
 const DEFAULT_CANVAS_WIDTH = 1000;
 const DEFAULT_CANVAS_HEIGHT = 750;
@@ -312,10 +314,21 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
           </Sider>
         </Layout>
 
-        <Footer style={{ maxHeight: 64 }}>
-          <ATPageResponseConfig field={`advancedTimeline.pages[${page}]`} />
-          <SwapSwitch field={`advancedTimeline.pages[${page}].swap`} />
-
+        <Footer style={{ maxHeight: 48 }}>
+          <Row>
+            <Col span={12}>
+              <ATPageResponseConfig field={`advancedTimeline.pages[${page}]`} />
+            </Col>
+            <Col span={12}>
+              <SwapSwitch field={`advancedTimeline.pages[${page}].swap`} />
+              <Space>
+                <Item field={`advancedTimeline.pages[${page}].fitScreen`} triggerPropName='checked' noStyle>
+                  <Switch />
+                </Item>
+                <Text bold>Fit to screen (only in fullscreen mode)</Text>
+              </Space>
+            </Col>
+          </Row>
         </Footer>
       </Layout>
 

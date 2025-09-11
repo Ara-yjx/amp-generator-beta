@@ -10,12 +10,13 @@ const { Text } = Typography;
 export const SwapSwitch: React.FC<{ field: string }> = ({ field }) => {
   return (
     <Space style={{ margin: '10px 0', width: '100%' }}>
-      <Item field={field} noStyle>
+      <Item field={field} triggerPropName='checked' noStyle>
         <Switch />
       </Item>
       <Text bold>Swap (shuffle) displays</Text>
       <Tooltip position='right' content={
         <div >
+          {field}
           <li>You can randomly swap display items, switching their position in the screen.</li>
           <Divider />
           <li>
