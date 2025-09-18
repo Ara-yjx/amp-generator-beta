@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
 import Moveable from 'react-moveable';
 import { AT } from '../data/ampTypes';
 import { DeepPartial } from '../util/util';
@@ -36,20 +36,16 @@ type CanvasSize = {
   height: number,
 }
 
+const ELEMENT_CLASSNAME = 'freeform-moveable-element';
 
 export interface FreeformElementControlRef {
   updateRect: () => void;
 }
 
 export interface FreeformElementControlProps {
-  setOriginString?: (originString: any) => void,
-
   container: HTMLDivElement | null,
   containerWidth: number,
   containerHeight: number,
-
-  field: string,
-  page: number,
 
   value: AT.FreeformLayout.ElementDisplayItem,
   onChange: (updates: DeepPartial<AT.FreeformLayout.ElementDisplayItem>) => void,
@@ -62,11 +58,19 @@ export interface FreeformElementControlProps {
 }
 
 export const FreeformElementControl = forwardRef<FreeformElementControlRef, FreeformElementControlProps>(
-  ({ container, containerWidth, containerHeight, field, page, value, onChange, isFocused, onClick, scale, children }, ref) => {
+  ({ container, containerWidth, containerHeight, value, onChange, isFocused, onClick, scale, children }, ref) => {
+
+    // Basically, React will only render to create the element
+    //   and the position will be updated by Moveable callback (on update) and useEffect (first render + after rounding)
+    // This is because 
+    //   1) Moveable is designed to be a passive/uncontrolled component
+    //   2) avoiding re-rendering can improve performance
+
     const targetRef = useRef<HTMLDivElement>(null);
     const moveableRef = useRef<Moveable>(null);
 
-    const cssStyle = toCssStyle(value.boxStyle, { width: containerWidth, height: containerHeight });
+    const canvasSize = { width: containerWidth, height: containerHeight };
+    const cssStyle = toCssStyle(value.boxStyle, canvasSize);
 
     // Expose updateRect
     useImperativeHandle(ref, () => {
@@ -77,6 +81,16 @@ export const FreeformElementControl = forwardRef<FreeformElementControlRef, Free
       };
     }, []);
 
+    // Apply style after the first render and after rounding for each update
+    useLayoutEffect(() => {
+      if (targetRef.current) {
+        targetRef.current.style.width = `${cssStyle.width}px`;
+        targetRef.current.style.height = `${cssStyle.height}px`;
+        targetRef.current.style.transform = cssStyle.transform;
+        console.log('useEffect', value.boxStyle.height / 2 + value.boxStyle.y)
+      }
+    }, [targetRef.current, JSON.stringify(cssStyle)]);
+
     // Need to updateRect once get focused
     useEffect(() => {
       isFocused && targetRef.current && moveableRef.current?.updateRect();
@@ -84,27 +98,13 @@ export const FreeformElementControl = forwardRef<FreeformElementControlRef, Free
 
     return (
       <>
-        <div style={{ position: 'absolute', left: -80, opacity: 0.85 }}>
-        </div>
-        <div ref={targetRef} style={{
+        <div ref={targetRef} className={ELEMENT_CLASSNAME} style={{
           position: 'absolute',
-
-          width: cssStyle.width,
-          height: cssStyle.height,
-          transform: cssStyle.transform,
-          // zIndex: value.boxStyle.z,
-
-          border: '1px solid black',
-          boxSizing: 'border-box',
-          backgroundColor: 'lightyellow',
-
           overflow: 'hidden'
         }}
           onClick={onClick}
         >
-          <div style={{ padding: '0 10px' }}>
-            {children}
-          </div>
+          {children}
         </div>
         {
           isFocused && (
@@ -112,34 +112,35 @@ export const FreeformElementControl = forwardRef<FreeformElementControlRef, Free
               ref={moveableRef}
               target={targetRef}
               container={container}
+              draggable
+              resizable
+              rotatable
               origin={true}
-              draggable={true}
-              resizable={true}
-              rotatable={true}
 
               onRender={e => {
-                // Need to do this first so that we can then read w/h/transform from target style object
+                // Moveable is designed to be a passive/uncontrolled component
+                // We must first apply the updated style (w/h/transform) from e.cssText
+                // And then read the style from target and convert to canonical style
+                // Finally, we need to re-update the style after rounding -> will do this in useEffect
                 e.target.style.cssText += e.cssText;
-
                 const canonicalStyle = toCanonicalStyle({
                   width: Number(e.target.style.width.replace('px', '')),
                   height: Number(e.target.style.height.replace('px', '')),
                   transform: e.target.style.transform ?? '',
-                }, { width: containerWidth, height: containerHeight });
-
-
+                }, canvasSize);
                 onChange({ boxStyle: canonicalStyle });
               }}
 
-
               snappable={true}
-              // snapGridWidth={20}
-              // snapGridHeight={20}
-              snapRotationDegrees={[0]}
+              snapRotationDegrees={[0, 90, 180, 270]}
               snapRotationThreshold={5}
               snapDirections={{ "top": true, "left": true, "bottom": true, "right": true, "center": true, "middle": true }}
+              verticalGuidelines={[0, containerWidth / 2, containerWidth]}
+              horizontalGuidelines={[0, containerHeight / 2, containerHeight]}
               elementSnapDirections={{ "top": true, "left": true, "bottom": true, "right": true, "center": true, "middle": true }}
-            // throttle={100}
+              elementGuidelines={[`.${ELEMENT_CLASSNAME}`]}
+              isDisplaySnapDigit={false} // for simplicity
+              isDisplayInnerSnapDigit={false}
             />
           )
         }
@@ -175,7 +176,7 @@ function toCssStyle(canonicalStyle: AT.FreeformLayout.ElementCanonicalStyle, can
   return {
     width: canonicalStyle.width,
     height: canonicalStyle.height,
-    transform: `translate(${translateX}px, ${translateY}px) rotate(${canonicalStyle.rotate}degree)`,
+    transform: `translate(${translateX}px, ${translateY}px) rotate(${canonicalStyle.rotate}deg)`,
   };
 }
 

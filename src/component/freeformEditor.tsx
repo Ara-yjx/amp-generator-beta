@@ -1,27 +1,27 @@
-import { Button, Divider, Form, Grid, InputNumber, Layout, Modal, Space, Switch, Table, Typography } from '@arco-design/web-react';
+import { Button, Form, Grid, InputNumber, Layout, Modal, Space, Switch, Table, Typography } from '@arco-design/web-react';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
-import { IconCopy, IconDelete, IconEdit, IconPlus } from '@arco-design/web-react/icon';
+import { IconCopy, IconDelete, IconEdit, IconPlus, IconSave } from '@arco-design/web-react/icon';
 import { reverse } from 'lodash';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AmpTrialHtml, AT, uid as Uid } from '../data/ampTypes';
 import { uid } from '../data/uid';
 import { DeepPartial, getTrialBackgroundColor } from '../util/util';
+import ATPageResponseConfig from './ATPageResponseConfig';
 import FreeformElementControl from './freeformElementControl';
 import FreeformElementInternal, { printDisplaySrc } from './freeformElementInternal';
 import FreeformLayersEditor from './freeformLayersEditor';
 import FreeformPropertyPanel from './freeformPropertyPanel';
-import ATPageResponseConfig from './ATPageResponseConfig';
 import { SwapSwitch } from './swapSwitch';
 
 
-// Using "transform" will cause rendering issues
+// Using "transform" to the whole editor will cause rendering issues
 
 const { Item } = Form;
 const { Content, Sider, Footer, Header } = Layout;
 const { Row, Col } = Grid;
-const { Text } = Typography;
+const { Text, Title } = Typography;
 
 const DEFAULT_CANVAS_WIDTH = 1000;
 const DEFAULT_CANVAS_HEIGHT = 750;
@@ -43,6 +43,25 @@ export default function FreeformEditor({ field, page }: FreeformEditorProps) {
     displaySrcString: printDisplaySrc(node.data?.displayItem.displaySrc),
   }));
 
+  // a text in the middle and 2 buttons on the right
+  const title = (
+    <Row style={{ alignItems: 'center', margin: '0 20px' }}>
+      <Col offset={6} span={12}>
+        <Title heading={6}>Page #{page + 1}</Title>
+      </Col>
+      <Col span={6} style={{ textAlign: 'right' }}>
+        <Space>
+          {/* <Button onClick={() => window.confirm('Your edits will be discarded. Continue?') && setIsFullEditorOpen(false)}>
+            Discard changes
+          </Button> */}
+          <Button icon={<IconSave />} type='primary' onClick={() => setIsFullEditorOpen(false)}>
+            Save & Close
+          </Button>
+        </Space>
+      </Col>
+    </Row>
+  );
+
   return (
     <Space align='start'>
       <Button icon={<IconEdit />} type='primary' onClick={() => setIsFullEditorOpen(true)}>Open Editor</Button>
@@ -59,16 +78,16 @@ export default function FreeformEditor({ field, page }: FreeformEditorProps) {
       {
         createPortal(
           <Modal
+            simple
             alignCenter
-            style={{ width: '100%', height: '100vh', overflowY: 'hidden' }}
-            title={`Page #${page + 1}`}
+            style={{ width: '100%', height: '100vh', overflowY: 'hidden', padding: 0 }}
+            title={title}
             footer={null}
             visible={isFullEditorOpen}
             onOk={() => setIsFullEditorOpen(false)}
             onCancel={() => setIsFullEditorOpen(false)}
             autoFocus={false}
             focusLock={true}
-          // closeIcon={<Button type='primary' size='mini' icon={<IconSave />} />}
           >
             <FreeformFullEditor field={field} page={page} />
           </Modal>,
@@ -99,8 +118,6 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
   }, [canvasWidthWatch, canvasHeightWatch]);
   const canvasWidth = canvasWidthWatch ?? DEFAULT_CANVAS_WIDTH;
   const canvasHeight = canvasHeightWatch ?? DEFAULT_CANVAS_HEIGHT;
-
-  const [originString, setOriginString] = useState<any>();
 
   const [selectedElementUids, setSelectedElementUids] = useState<Uid[]>([]);
 
@@ -226,7 +243,6 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
         <Button icon={<IconPlus />} type='primary' onClick={onClickAddElement} />
         <Button icon={<IconCopy />} onClick={onClickCloneElement} />
         <Button icon={<IconDelete />} status='danger' onClick={onClickDeleteElement} />
-        {/* <Button onClick={() => setSelectedElementUids([])}>Clear</Button> */}
       </Space>
     </div>
   );
@@ -252,8 +268,6 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
         // transform: `scale(${scale})`,
         transformOrigin: 'top left',
         border: '1px solid black',
-        // marginTop: 20,
-        // boxShadow: '0 0 20x 0px rgba(0,0,0,0.6)',
         boxSizing: 'border-box',
         position: 'relative',
       }}
@@ -262,17 +276,14 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
       >
         {
           reverse([...elementDisplayItems]) // TODO: upgrade and use native .toReversed()
-            .map((element, elementIndex) => (
+            .map(element => (
               <FreeformElementControl
                 ref={element.uid === selectedElement?.uid ? selectedElementControlRef : null}
-                setOriginString={setOriginString}
                 key={element.uid}
-                field={`${field}.elements.children[${elementIndex}].data`}
                 container={moveableContainer.current}
                 containerWidth={canvasWidth}
                 containerHeight={canvasHeight}
                 scale={scale}
-                page={0}
                 value={element}
                 onChange={updates => updateElement(element, updates)}
                 isFocused={selectedElementUids.includes(element.uid)}
@@ -289,8 +300,11 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
   return (
     <div ref={ref} style={{ width: '100%' }}>
       <Layout style={{ width: '100%', height: 'calc(100vh - 200px)' }}>
-        <Header style={{ padding: 10 }}>
+        <Header style={{ padding: '0 20px' }}>
           <Space>
+            <Item layout='inline'>
+              {controlPanel}
+            </Item>
             <Item label='Width' field={`${field}.width`} layout='inline'>
               <InputNumber suffix='px' />
             </Item>
@@ -301,7 +315,6 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
               <span>{(scale * 100).toFixed(0)}%</span>
             </Item>
           </Space>
-          {controlPanel}
         </Header >
 
         <Layout>
@@ -315,7 +328,7 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
         </Layout>
 
         <Footer style={{ maxHeight: 48 }}>
-          <Row>
+          <Row style={{ margin: '0 20px' }}>
             <Col span={12}>
               <ATPageResponseConfig field={`advancedTimeline.pages[${page}]`} />
             </Col>
@@ -325,7 +338,7 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
                 <Item field={`advancedTimeline.pages[${page}].fitScreen`} triggerPropName='checked' noStyle>
                   <Switch />
                 </Item>
-                <Text bold>Fit to screen (only in fullscreen mode)</Text>
+                <Text bold>Fit to screen <Text type='secondary'>(effective only in Trial HTML Fullscreen mode)</Text></Text>
               </Space>
             </Col>
           </Row>
