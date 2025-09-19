@@ -2,7 +2,7 @@ import { Space, Typography } from '@arco-design/web-react';
 import React, { useMemo } from 'react';
 import { AT } from '../data/ampTypes';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 export const FreeformElementInternal: React.FC<{ value: AT.FreeformLayout.ElementDisplayItem }> = ({
   value,
@@ -14,13 +14,13 @@ export const FreeformElementInternal: React.FC<{ value: AT.FreeformLayout.Elemen
     <div style={{
       width: '100%',
       height: '100%',
-      padding: '0 20px',
+      padding: 20,
       border: '1px solid #A38408',
       backgroundColor: '#FEFFE8', // Arco yellow-1
       boxSizing: 'border-box',
     }}>
       <Space direction='vertical'>
-        <Title heading={6}>{value.name ?? ' '}</Title>
+        <Text underline>{value.name ?? ' '}</Text>
         <Text>{printDisplaySrc(value.displayItem.displaySrc)}</Text>
         <Text>{value.boxStyle.width} x {value.boxStyle.height}</Text>
       </Space>

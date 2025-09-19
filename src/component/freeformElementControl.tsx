@@ -36,7 +36,7 @@ type CanvasSize = {
   height: number,
 }
 
-const ELEMENT_CLASSNAME = 'freeform-moveable-element';
+const SNAPPED_ELEMENT_CLASSNAME = 'freeform-moveable-element-snapped';
 
 export interface FreeformElementControlRef {
   updateRect: () => void;
@@ -87,21 +87,20 @@ export const FreeformElementControl = forwardRef<FreeformElementControlRef, Free
         targetRef.current.style.width = `${cssStyle.width}px`;
         targetRef.current.style.height = `${cssStyle.height}px`;
         targetRef.current.style.transform = cssStyle.transform;
-        console.log('useEffect', value.boxStyle.height / 2 + value.boxStyle.y)
       }
-    }, [targetRef.current, JSON.stringify(cssStyle)]);
+    }, [targetRef.current]);
 
     // Need to updateRect once get focused
     useEffect(() => {
       isFocused && targetRef.current && moveableRef.current?.updateRect();
-    }, [isFocused, targetRef.current, moveableRef.current, JSON.stringify(cssStyle)]);
+    }, [isFocused, targetRef.current, moveableRef.current]);
 
     return (
       <>
-        <div ref={targetRef} className={ELEMENT_CLASSNAME} style={{
-          position: 'absolute',
-          overflow: 'hidden'
-        }}
+        <div
+          ref={targetRef} 
+          className={isFocused ? undefined : SNAPPED_ELEMENT_CLASSNAME} // Moveable bug: self will snap to self
+          style={{ position: 'absolute', overflow: 'hidden', cursor: isFocused ? 'move' : undefined }}
           onClick={onClick}
         >
           {children}
@@ -121,15 +120,21 @@ export const FreeformElementControl = forwardRef<FreeformElementControlRef, Free
                 // Moveable is designed to be a passive/uncontrolled component
                 // We must first apply the updated style (w/h/transform) from e.cssText
                 // And then read the style from target and convert to canonical style
-                // Finally, we need to re-update the style after rounding -> will do this in useEffect
+                // Finally, we need to re-update the target style after rounding
                 e.target.style.cssText += e.cssText;
                 const canonicalStyle = toCanonicalStyle({
                   width: Number(e.target.style.width.replace('px', '')),
                   height: Number(e.target.style.height.replace('px', '')),
                   transform: e.target.style.transform ?? '',
                 }, canvasSize);
+                const roundedCssStyle = toCssStyle(canonicalStyle, canvasSize);
+                if (e.target.style.width !== `${roundedCssStyle.width}px`) e.target.style.width = `${roundedCssStyle.width}px`;
+                if (e.target.style.height !== `${roundedCssStyle.height}px`) e.target.style.height = `${roundedCssStyle.height}px`;
+                if (e.target.style.transform !== roundedCssStyle.transform) e.target.style.transform = roundedCssStyle.transform;
                 onChange({ boxStyle: canonicalStyle });
               }}
+
+              onRenderEnd={e => e.moveable.updateRect()} // make sure the rect has no gap due to rounding
 
               snappable={true}
               snapRotationDegrees={[0, 90, 180, 270]}
@@ -138,7 +143,7 @@ export const FreeformElementControl = forwardRef<FreeformElementControlRef, Free
               verticalGuidelines={[0, containerWidth / 2, containerWidth]}
               horizontalGuidelines={[0, containerHeight / 2, containerHeight]}
               elementSnapDirections={{ "top": true, "left": true, "bottom": true, "right": true, "center": true, "middle": true }}
-              elementGuidelines={[`.${ELEMENT_CLASSNAME}`]}
+              elementGuidelines={[`.${SNAPPED_ELEMENT_CLASSNAME}`]}
               isDisplaySnapDigit={false} // for simplicity
               isDisplayInnerSnapDigit={false}
             />
@@ -203,4 +208,3 @@ function parseTransform(transform: string): { translateX: number, translateY: nu
   }
   return result;
 }
-

@@ -113,13 +113,22 @@ export function getTrialBackgroundColor(trialHtml?: AmpTrialHtml) {
 }
 
 /** Get source simple-pool recursively. Return pool indexes. */
-export function traceMixedPoolSourcePools(params: AmpParams, mixedPoolName: string): number[] {
+export function traceMixedPoolSourcePools(mixedPoolName: string, mixedPools: AmpParams['mixedPools']): number[] {
   // cross-reference of mixedPool is not allowed, so no need to worry about loops
-  const mixedPool = params.mixedPools?.find(m => m.name === mixedPoolName);
-  const sourcePools = mixedPool?.sources.flatMap(source =>
+  const sourcePools = mixedPools?.find(m => m.name === mixedPoolName)?.sources.flatMap(source =>
     source.pools.flatMap(sourcePool =>
-      typeof sourcePool === 'string' ? traceMixedPoolSourcePools(params, sourcePool) : [sourcePool]
+      typeof sourcePool === 'string' ? traceMixedPoolSourcePools(sourcePool, mixedPools) : [sourcePool]
     )
   );
   return sourcePools ? sortBy([...new Set(sourcePools)]) : [];
+}
+
+export function traceSourcePools(displaySrc: AT.DisplaySrc, mixedPools: AmpParams['mixedPools']): number[] {
+  switch (displaySrc[0]) {
+    case 'pool':
+      return displaySrc[1].flatMap(pool => typeof pool === 'string' ? traceMixedPoolSourcePools(pool, mixedPools) : [pool]);
+    // TODO: copy
+    default:
+      return [];
+  }
 }

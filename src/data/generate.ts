@@ -261,6 +261,7 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
         displayItem.displaySrc = ['pool', displayItem.displaySrc[1].map(poolIndex => typeof poolIndex === 'number' ? poolIndex + 1 : poolIndex)];
       }
       // TODO: copy not supported yet
+      delete data.previewStimuliItemRef;
     }
     return result;
   }

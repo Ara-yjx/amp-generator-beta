@@ -144,12 +144,13 @@ export namespace AT {
     interface ElementNode {
       uid: uid;
       name: string;
-      condition?: ConditionTree;
+      // condition?: ConditionTree;
     }
   
     interface ElementDisplayItem extends ElementNode {
       boxStyle: ElementCanonicalStyle;
       displayItem: LayoutedDisplayItem;
+      previewStimuliItemRef?: { poolIndex: number, itemIndex: number };
     }
 
     /** Canonical style in our app */

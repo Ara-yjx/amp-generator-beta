@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { memo, ReactNode } from 'react';
 import { AmpStimuliItem } from '../data/ampTypes';
 import { Typography } from '@arco-design/web-react';
 const { Text } = Typography;
@@ -9,8 +9,7 @@ export interface StimuliThumbnailProps {
   content: string,
 }
 
-export const StimuliThumbnail: React.FC<StimuliThumbnailProps> = ({ indexDisplay, type, content }) => (
-
+export const StimuliThumbnail: React.FC<StimuliThumbnailProps> = memo(({ indexDisplay, type, content }) => (
   <div style={{ display: 'flex', alignItems: 'center' }}>
     <div style={{ minWidth: 32 }}>
       {indexDisplay}
@@ -22,4 +21,4 @@ export const StimuliThumbnail: React.FC<StimuliThumbnailProps> = ({ indexDisplay
         <Text ellipsis style={{ marginBottom: 0, marginLeft: 4 }}>{content}</Text>
     }
   </div>
-);
+));

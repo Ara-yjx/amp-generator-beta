@@ -14,6 +14,7 @@ import FreeformElementInternal, { printDisplaySrc } from './freeformElementInter
 import FreeformLayersEditor from './freeformLayersEditor';
 import FreeformPropertyPanel from './freeformPropertyPanel';
 import { SwapSwitch } from './swapSwitch';
+import { FreeformElementPreviewInternal } from './freeformElementPreviewInternal';
 
 
 // Using "transform" to the whole editor will cause rendering issues
@@ -26,7 +27,7 @@ const { Text, Title } = Typography;
 const DEFAULT_CANVAS_WIDTH = 1000;
 const DEFAULT_CANVAS_HEIGHT = 750;
 
-
+let GLOBAL_IS_PREVIEW_ENABLED = false;
 
 export interface FreeformEditorProps {
   field: string; // advancedTimeline.pages[${page}].freeformDisplays
@@ -103,6 +104,13 @@ export interface FreeformFullEditorProps {
   page: number;
 }
 export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
+
+  const [isPreviewEnabled, _setIsPreviewEnabled] = useState(() => GLOBAL_IS_PREVIEW_ENABLED);
+  const setIsPreviewEnabled = (v: boolean) => {
+    GLOBAL_IS_PREVIEW_ENABLED = v;
+    _setIsPreviewEnabled(v);
+  };
+
   // Canvas size
   const { form } = useFormContext();
   const canvasWidthWatch = (useWatch(`${field}.width`, form) as number | undefined);
@@ -288,7 +296,7 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
                 onChange={updates => updateElement(element, updates)}
                 isFocused={selectedElementUids.includes(element.uid)}
                 onClick={e => onClickElement(e, element)}
-                children={<FreeformElementInternal value={element} />}
+                children={isPreviewEnabled ? <FreeformElementPreviewInternal value={element} /> : <FreeformElementInternal value={element} />}
               />
             ))
         }
@@ -300,7 +308,7 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
   return (
     <div ref={ref} style={{ width: '100%' }}>
       <Layout style={{ width: '100%', height: 'calc(100vh - 200px)' }}>
-        <Header style={{ padding: '0 20px' }}>
+        <Header style={{ padding: '0 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Space>
             <Item layout='inline'>
               {controlPanel}
@@ -310,6 +318,11 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
             </Item>
             <Item label='Height' field={`${field}.height`} layout='inline'>
               <InputNumber suffix='px' />
+            </Item>
+          </Space>
+          <Space>
+            <Item label='Preview' layout='inline'>
+              <Switch checked={isPreviewEnabled} onChange={setIsPreviewEnabled} />
             </Item>
             <Item label='Editor zoom:' layout='inline'>
               <span>{(scale * 100).toFixed(0)}%</span>
@@ -323,7 +336,11 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
           </Sider>
           <Content style={{ backgroundColor: '#AAA', paddingTop: 20 }}>{layoutCanvas}</Content>
           <Sider style={{ width: 280, overflowY: 'auto' }}>
-            <FreeformPropertyPanel page={page} field={selectedElementField} selectedElement={selectedElement} updateElement={updateElement} />
+            {
+              selectedElement && selectedElementField ? (
+                <FreeformPropertyPanel page={page} field={selectedElementField} selectedElement={selectedElement} updateElement={updateElement} />
+              ) : null
+            }
           </Sider>
         </Layout>
 
