@@ -2,7 +2,7 @@ import { Button, Divider, Form, Grid, InputNumber, Layout, Modal, Space, Switch,
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import { IconCopy, IconDelete, IconEdit, IconPlus, IconSave } from '@arco-design/web-react/icon';
 import { cloneDeep, reverse } from 'lodash';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AmpTrialHtml, AT, uid as Uid } from '../data/ampTypes';
 import { uid } from '../data/uid';
@@ -137,11 +137,11 @@ export function FreeformFullEditor({ field, page, closeEditor }: FreeformFullEdi
   const [elements, _setElements] = useState<AT.FreeformLayout.ElementDisplayItem[]>(() =>
     elementsWatch?.children?.map(node => node.data).filter((e): e is AT.FreeformLayout.ElementDisplayItem => !!e) ?? []
   );
-  const setElements = (newElements: AT.FreeformLayout.ElementDisplayItem[]) => {
+  const setElements = useCallback((newElements: AT.FreeformLayout.ElementDisplayItem[]) => {
     _setElements(newElements);
     // if auto-save
     form.setFieldValue(`${field}.elements.children`, newElements.map(e => ({ data: e })));
-  };
+  }, [form, field]);
   const addElement = (element: AT.FreeformLayout.ElementDisplayItem) => {
     const newElements = [element, ...elements]; // add at top
     setElements(newElements);
@@ -151,7 +151,7 @@ export function FreeformFullEditor({ field, page, closeEditor }: FreeformFullEdi
     setElements(newElements);
   };
   const cloneElement = (element: AT.FreeformLayout.ElementDisplayItem): AT.FreeformLayout.ElementDisplayItem => {
-    const newElement = { ...element, uid: uid(), name: `${element.name} copy` };
+    const newElement = { ...cloneDeep(element), uid: uid(), name: `${element.name} copy` };
     // add to above the original element
     const indexOfCloned = elements.findIndex(e => e.uid === element.uid);
     const newElements = [...elements];
@@ -342,7 +342,7 @@ export function FreeformFullEditor({ field, page, closeEditor }: FreeformFullEdi
         <div style={{ flex: 1, backgroundColor: '#AAA', padding: 20, overflow: 'scroll' }}>
           {layoutCanvas}
         </div>
-        <div style={{ width: '15em', minHeight: 0 /* let flex container not fit to this's height */, overflowY: 'scroll' }}>
+        <div style={{ width: '15em', minHeight: 0 /* let flex container not fit to this's height */, overflowY: 'scroll', overflowX: 'hidden' }}>
           {
             selectedElement && selectedElementField ? (
               <FreeformPropertyPanel elements={elements} page={page} field={selectedElementField} selectedElement={selectedElement} updateElement={updateElement} />

@@ -1,7 +1,8 @@
-import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef } from 'react';
-import Moveable from 'react-moveable';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
+import Moveable, { OnRender } from 'react-moveable';
 import { AT } from '../data/ampTypes';
 import { DeepPartial } from '../util/util';
+import { useDebounceValue } from 'usehooks-ts';
 
 
 /**
@@ -70,7 +71,22 @@ export const FreeformElementControl = forwardRef<FreeformElementControlRef, Free
     const moveableRef = useRef<Moveable>(null);
 
     const canvasSize = useMemo(() => ({ width: containerWidth, height: containerHeight }), [containerWidth, containerHeight]);
-    const cssStyle = useMemo(() => toCssStyle(value.boxStyle, canvasSize), [value.boxStyle, canvasSize]);
+    const cssStyle = toCssStyle(value.boxStyle, canvasSize);
+    const cssStyleMemo = useMemo(() => cssStyle, [cssStyle.width, cssStyle.height, cssStyle.transform]);
+
+    // Keep updated with state style, but not too frequently - onRender callback would handle it during moving, we only update it in useEffect when
+    // - first render
+    // - canvas resize
+    // - scale change (not implemented yet)
+    // - input from property panel
+    // - after rounding (similar to input from property panel)
+    const [cssStyleDebounce] = useDebounceValue(cssStyleMemo, 100, { leading: true, trailing: true });
+    useEffect(() => {
+      if (targetRef.current) {
+        setElementStyle(targetRef.current, cssStyleDebounce);
+        isFocused && moveableRef.current?.updateRect();
+      }
+    }, [moveableRef.current, targetRef.current, canvasSize, isFocused, cssStyleDebounce]);
 
     // Expose updateRect
     useImperativeHandle(ref, () => {
@@ -81,27 +97,20 @@ export const FreeformElementControl = forwardRef<FreeformElementControlRef, Free
       };
     }, []);
 
-    // Apply style after the first render and after rounding for each update
-    useLayoutEffect(() => {
-      if (targetRef.current) {
-        targetRef.current.style.width = `${cssStyle.width}px`;
-        targetRef.current.style.height = `${cssStyle.height}px`;
-        targetRef.current.style.transform = cssStyle.transform;
-      }
-    }, [targetRef.current]);
-
-    // Need to updateRect once get focused
-    useEffect(() => {
-      isFocused && targetRef.current && moveableRef.current?.updateRect();
-    }, [isFocused, targetRef.current, moveableRef.current]);
-
-    // Update position and updateRect when canvas size changes (but not when cssStyle changes, for performance)
-    useEffect(() => {
-      if (targetRef.current) {
-        setElementStyle(targetRef.current, cssStyle);
-        moveableRef.current?.updateRect();
-      }
-    }, [canvasSize, moveableRef.current, targetRef.current]);
+    const onRender = useCallback((e: OnRender) => {
+      // Moveable is designed to be a passive/uncontrolled component
+      // We must first apply the updated style (w/h/transform) from e.cssText
+      // And then read the style from target and convert to canonical style
+      // Finally, in useEffect, we re-update the target style after rounding
+      e.target.style.cssText += e.cssText;
+      e.moveable.updateRect();
+      const canonicalStyle = toCanonicalStyle({
+        width: Number(e.target.style.width.replace('px', '')),
+        height: Number(e.target.style.height.replace('px', '')),
+        transform: e.target.style.transform ?? '',
+      }, canvasSize);
+      onChange({ boxStyle: canonicalStyle }); // todo: debounce this, but the parent callback also needs immutability
+    }, [canvasSize, onChange]);
 
     return (
       <>
@@ -124,23 +133,7 @@ export const FreeformElementControl = forwardRef<FreeformElementControlRef, Free
               rotatable
               origin={true}
 
-              onRender={e => {
-                // Moveable is designed to be a passive/uncontrolled component
-                // We must first apply the updated style (w/h/transform) from e.cssText
-                // And then read the style from target and convert to canonical style
-                // Finally, we need to re-update the target style after rounding
-                e.target.style.cssText += e.cssText;
-                const canonicalStyle = toCanonicalStyle({
-                  width: Number(e.target.style.width.replace('px', '')),
-                  height: Number(e.target.style.height.replace('px', '')),
-                  transform: e.target.style.transform ?? '',
-                }, canvasSize);
-                const roundedCssStyle = toCssStyle(canonicalStyle, canvasSize);
-                setElementStyle(e.target, roundedCssStyle);
-                onChange({ boxStyle: canonicalStyle });
-              }}
-
-              onRenderEnd={e => e.moveable.updateRect()} // make sure the rect has no gap due to rounding
+              onRender={onRender}
 
               snappable={true}
               snapRotationDegrees={[0, 90, 180, 270]}
@@ -150,6 +143,7 @@ export const FreeformElementControl = forwardRef<FreeformElementControlRef, Free
               horizontalGuidelines={[0, containerHeight / 2, containerHeight]}
               elementSnapDirections={{ "top": true, "left": true, "bottom": true, "right": true, "center": true, "middle": true }}
               // Moveable bug: self would snap to self; would also try to snap to other page's invisible element and fail (no snap at all)
+              // Actually, only one element can be used as guideline...
               elementGuidelines={[`.freeform-page-${page}-not-focused`]}
               isDisplaySnapDigit={false} // for simplicity
               isDisplayInnerSnapDigit={false}
@@ -217,7 +211,7 @@ function parseTransform(transform: string): { translateX: number, translateY: nu
 }
 
 /** A high-performance helper to set CSS styles on a target element */
-function setElementStyle(element: HTMLElement | SVGElement, cssStyle: ElementCssStyle) {
+function setElementStyle(element: HTMLElement, cssStyle: ElementCssStyle) {
   if (element.style.width !== `${cssStyle.width}px`) element.style.width = `${cssStyle.width}px`;
   if (element.style.height !== `${cssStyle.height}px`) element.style.height = `${cssStyle.height}px`;
   if (element.style.transform !== cssStyle.transform) element.style.transform = cssStyle.transform;
