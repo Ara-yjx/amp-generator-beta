@@ -14,13 +14,14 @@ const { Title } = Typography;
 
 
 interface FreeformPropertyPanelProps {
+  elements: AT.FreeformLayout.ElementDisplayItem[];
   page: number;
   field: string;
   selectedElement: AT.FreeformLayout.ElementDisplayItem;
   updateElement: (element: AT.FreeformLayout.ElementDisplayItem, updates: DeepPartial<AT.FreeformLayout.ElementDisplayItem>) => void;
 }
 
-export function FreeformPropertyPanel({ page, field, selectedElement, updateElement }: FreeformPropertyPanelProps) {
+export function FreeformPropertyPanel({ elements, page, field, selectedElement, updateElement }: FreeformPropertyPanelProps) {
 
   const { form } = useFormContext();
   const stimuliWatch = useWatch('stimuli', form) as AmpParams['stimuli'];
@@ -45,11 +46,15 @@ export function FreeformPropertyPanel({ page, field, selectedElement, updateElem
     }
   });
 
+  const isNameValid = elements.filter(e => e.name === selectedElement.name).length <= 1;
+
   return (
     <Space direction='vertical' style={{ width: '100%', padding: 20, boxSizing: 'border-box' }}>
 
       <Title heading={6}>Name</Title>
-      <Input value={selectedElement.name} onChange={v => selectedElement && updateElement(selectedElement, { name: v })} />
+      <Item validateStatus={isNameValid ? undefined : 'error'} help={isNameValid ? undefined : 'Name must be unique'}>
+        <Input value={selectedElement.name} onChange={v => selectedElement && updateElement(selectedElement, { name: v })} />
+      </Item>
 
       <Divider />
 
@@ -75,24 +80,20 @@ export function FreeformPropertyPanel({ page, field, selectedElement, updateElem
       <Divider />
 
       <Title heading={6}>Stimuli Item</Title>
-      <Item noStyle>
-        <ATLayoutItemSrcSelector pageIndex={page} value={selectedElement.displayItem.displaySrc} onChange={v => updateElement(selectedElement, { displayItem: { displaySrc: v } })} />
-      </Item>
+      <ATLayoutItemSrcSelector pageIndex={page} value={selectedElement.displayItem.displaySrc} onChange={v => updateElement(selectedElement, { displayItem: { displaySrc: v } })} />
 
       <Divider />
 
       <Title heading={6}>Response Config</Title>
-      <ATElementResponseConfig pageIndex={page} field={`${field}.displayItem`} />
+      <ATElementResponseConfig value={selectedElement.displayItem} onChange={v => updateElement(selectedElement, { displayItem: v })} pageIndex={page} />
 
       <Divider />
 
       <Title heading={6}>Preview</Title>
-      <Item noStyle>
-        <Select options={previewOptions} style={{ width: '100%' }}
-          value={JSON.stringify(selectedElement.previewStimuliItemRef)}
-          onChange={v => updateElement(selectedElement, { previewStimuliItemRef: typeof v === 'string' ? JSON.parse(v) : undefined })}
-        />
-      </Item>
+      <Select options={previewOptions} style={{ width: '100%' }}
+        value={JSON.stringify(selectedElement.previewStimuliItemRef)}
+        onChange={v => updateElement(selectedElement, { previewStimuliItemRef: typeof v === 'string' ? JSON.parse(v) : undefined })}
+      />
 
     </Space>
   );

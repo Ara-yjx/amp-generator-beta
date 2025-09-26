@@ -239,7 +239,9 @@ const ATLayoutItem: React.FC<{ field: string, pageIndex: number, row: number, co
       <Item field={`${field}.displaySrc`} noStyle>
         <ATLayoutItemSrcSelector pageIndex={pageIndex} />
       </Item>
-      <ATElementResponseConfig pageIndex={pageIndex} field={field} />
+      <Item field={field} noStyle>
+        <ATElementResponseConfig pageIndex={pageIndex} />
+      </Item>
     </Space>
   );
 };
@@ -324,7 +326,7 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
 
         <Divider />
 
-        <SwapSwitch  field={`${field}.swap`} />
+        <SwapSwitch field={`${field}.swap`} />
 
         {
           layoutTypeWatch !== 'freeform' && (

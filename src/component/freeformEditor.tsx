@@ -1,9 +1,8 @@
-import { Button, Form, Grid, InputNumber, Layout, Modal, Space, Switch, Table, Typography } from '@arco-design/web-react';
-import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
+import { Button, Divider, Form, Grid, InputNumber, Layout, Modal, Space, Switch, Table, Typography } from '@arco-design/web-react';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import { IconCopy, IconDelete, IconEdit, IconPlus, IconSave } from '@arco-design/web-react/icon';
-import { reverse } from 'lodash';
-import { useEffect, useRef, useState } from 'react';
+import { cloneDeep, reverse } from 'lodash';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AmpTrialHtml, AT, uid as Uid } from '../data/ampTypes';
 import { uid } from '../data/uid';
@@ -36,7 +35,7 @@ export interface FreeformEditorProps {
 
 export default function FreeformEditor({ field, page }: FreeformEditorProps) {
   const [isFullEditorOpen, setIsFullEditorOpen] = useState(false);
-  const { form } = useFormContext();
+  const { form } = Form.useFormContext();
   const elementsWatch = useWatch(`${field}.elements`, form) as AT.FreeformLayout.CanvasElementTree | undefined;
   const elementsTableData = elementsWatch?.children?.map(node => ({
     key: node.data?.uid,
@@ -44,24 +43,6 @@ export default function FreeformEditor({ field, page }: FreeformEditorProps) {
     displaySrcString: printDisplaySrc(node.data?.displayItem.displaySrc),
   }));
 
-  // a text in the middle and 2 buttons on the right
-  const title = (
-    <Row style={{ alignItems: 'center', margin: '0 20px' }}>
-      <Col offset={6} span={12}>
-        <Title heading={6}>Page #{page + 1}</Title>
-      </Col>
-      <Col span={6} style={{ textAlign: 'right' }}>
-        <Space>
-          {/* <Button onClick={() => window.confirm('Your edits will be discarded. Continue?') && setIsFullEditorOpen(false)}>
-            Discard changes
-          </Button> */}
-          <Button icon={<IconSave />} type='primary' onClick={() => setIsFullEditorOpen(false)}>
-            Save & Close
-          </Button>
-        </Space>
-      </Col>
-    </Row>
-  );
 
   return (
     <Space align='start'>
@@ -82,7 +63,7 @@ export default function FreeformEditor({ field, page }: FreeformEditorProps) {
             simple
             alignCenter
             style={{ width: '100%', height: '100vh', overflowY: 'hidden', padding: 0 }}
-            title={title}
+            title={null}
             footer={null}
             visible={isFullEditorOpen}
             onOk={() => setIsFullEditorOpen(false)}
@@ -90,7 +71,7 @@ export default function FreeformEditor({ field, page }: FreeformEditorProps) {
             autoFocus={false}
             focusLock={true}
           >
-            <FreeformFullEditor field={field} page={page} />
+            <FreeformFullEditor field={field} page={page} closeEditor={() => setIsFullEditorOpen(false)} />
           </Modal>,
           document.body
         )
@@ -102,8 +83,9 @@ export default function FreeformEditor({ field, page }: FreeformEditorProps) {
 export interface FreeformFullEditorProps {
   field: string;
   page: number;
+  closeEditor?: () => void;
 }
-export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
+export function FreeformFullEditor({ field, page, closeEditor }: FreeformFullEditorProps) {
 
   const [isPreviewEnabled, _setIsPreviewEnabled] = useState(() => GLOBAL_IS_PREVIEW_ENABLED);
   const setIsPreviewEnabled = (v: boolean) => {
@@ -112,9 +94,9 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
   };
 
   // Canvas size
-  const { form } = useFormContext();
-  const canvasWidthWatch = (useWatch(`${field}.width`, form) as number | undefined);
-  const canvasHeightWatch = (useWatch(`${field}.height`, form) as number | undefined);
+  const { form } = Form.useFormContext();
+  const canvasWidthWatch = useWatch(`${field}.width`, form) as number | undefined;
+  const canvasHeightWatch = useWatch(`${field}.height`, form) as number | undefined;
   useEffect(() => {
     if (canvasWidthWatch === undefined || canvasHeightWatch === undefined) {
       form.setFieldsValue({
@@ -205,7 +187,7 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
     const newElementUid = uid();
     addElement({
       uid: newElementUid,
-      name: `Element ${newElementUid}`,
+      name: getNewElementName(elements.map(e => e.name)),
       boxStyle: {
         x: 0,
         y: 0,
@@ -244,6 +226,25 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
       setSelectedElementUids([newElement.uid]);
     }
   }
+
+  // a text in the middle and 2 buttons on the right
+  const title = (
+    <Row style={{ alignItems: 'center', margin: '0 20px' }}>
+      <Col offset={6} span={12} style={{ textAlign: 'center' }}>
+        <Title heading={6} style={{ margin: '1em 0' }}>Page #{page + 1}</Title>
+      </Col>
+      <Col span={6} style={{ textAlign: 'right' }}>
+        <Space>
+          {/* <Button onClick={() => window.confirm('Your edits will be discarded. Continue?') && setIsFullEditorOpen(false)}>
+            Discard changes
+          </Button> */}
+          <Button icon={<IconSave />} type='primary' onClick={() => closeEditor?.()}>
+            Save & Close
+          </Button>
+        </Space>
+      </Col>
+    </Row>
+  );
 
   const controlPanel = (
     <div>
@@ -293,6 +294,7 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
                 containerHeight={canvasHeight}
                 scale={scale}
                 value={element}
+                page={page}
                 onChange={updates => updateElement(element, updates)}
                 isFocused={selectedElementUids.includes(element.uid)}
                 onClick={e => onClickElement(e, element)}
@@ -304,64 +306,65 @@ export function FreeformFullEditor({ field, page }: FreeformFullEditorProps) {
     </div>
   );
 
-
   return (
-    <div ref={ref} style={{ width: '100%' }}>
-      <Layout style={{ width: '100%', height: 'calc(100vh - 200px)' }}>
-        <Header style={{ padding: '0 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    // Make it fullscreen using: no modal title + no modal footer + children 100vh
+    <div ref={ref} style={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div>
+        {title}
+        <Divider style={{ margin: 0 }} />
+        <div style={{ padding: '8px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Space>
-            <Item layout='inline'>
+            <Item layout='inline' style={{ marginBottom: 0 }} >
               {controlPanel}
             </Item>
-            <Item label='Width' field={`${field}.width`} layout='inline'>
+            <Item label='Width' field={`${field}.width`} layout='inline' style={{ marginBottom: 0 }} >
               <InputNumber suffix='px' />
             </Item>
-            <Item label='Height' field={`${field}.height`} layout='inline'>
+            <Item label='Height' field={`${field}.height`} layout='inline' style={{ marginBottom: 0 }} >
               <InputNumber suffix='px' />
             </Item>
           </Space>
           <Space>
-            <Item label='Preview' layout='inline'>
+            <Item label='Preview' layout='inline' style={{ marginBottom: 0 }} >
               <Switch checked={isPreviewEnabled} onChange={setIsPreviewEnabled} />
             </Item>
-            <Item label='Editor zoom:' layout='inline'>
+            <Item label='Editor zoom:' layout='inline' style={{ marginBottom: 0 }} >
               <span>{(scale * 100).toFixed(0)}%</span>
             </Item>
           </Space>
-        </Header >
+        </div>
+      </div>
 
-        <Layout>
-          <Sider style={{ width: 280 }}>
-            <FreeformLayersEditor elements={elements} setElements={setElements} selectedElementUids={selectedElementUids} setSelectedElementUids={setSelectedElementUids} />
-          </Sider>
-          <Content style={{ backgroundColor: '#AAA', paddingTop: 20 }}>{layoutCanvas}</Content>
-          <Sider style={{ width: 280, overflowY: 'auto' }}>
-            {
-              selectedElement && selectedElementField ? (
-                <FreeformPropertyPanel page={page} field={selectedElementField} selectedElement={selectedElement} updateElement={updateElement} />
-              ) : null
-            }
-          </Sider>
-        </Layout>
+      <div style={{ flex: 1, minHeight: 0 /* let flex container not fit to this's height */, display: 'flex' }} >
+        <div style={{ width: '15em' }}>
+          <FreeformLayersEditor elements={elements} setElements={setElements} selectedElementUids={selectedElementUids} setSelectedElementUids={setSelectedElementUids} />
+        </div>
+        <div style={{ flex: 1, backgroundColor: '#AAA', padding: 20, overflow: 'scroll' }}>
+          {layoutCanvas}
+        </div>
+        <div style={{ width: '15em', minHeight: 0 /* let flex container not fit to this's height */, overflowY: 'scroll' }}>
+          {
+            selectedElement && selectedElementField ? (
+              <FreeformPropertyPanel elements={elements} page={page} field={selectedElementField} selectedElement={selectedElement} updateElement={updateElement} />
+            ) : null
+          }
+        </div>
+      </div>
 
-        <Footer style={{ maxHeight: 48 }}>
-          <Row style={{ margin: '0 20px' }}>
-            <Col span={12}>
-              <ATPageResponseConfig field={`advancedTimeline.pages[${page}]`} />
-            </Col>
-            <Col span={12}>
-              <SwapSwitch field={`advancedTimeline.pages[${page}].swap`} />
-              <Space>
-                <Item field={`advancedTimeline.pages[${page}].fitScreen`} triggerPropName='checked' noStyle>
-                  <Switch />
-                </Item>
-                <Text bold>Fit to screen <Text type='secondary'>(effective only in Trial HTML Fullscreen mode)</Text></Text>
-              </Space>
-            </Col>
-          </Row>
-        </Footer>
-      </Layout>
-
+      <Row style={{ margin: '0 20px' }}>
+        <Col span={12}>
+          <ATPageResponseConfig field={`advancedTimeline.pages[${page}]`} />
+        </Col>
+        <Col span={12}>
+          <SwapSwitch field={`advancedTimeline.pages[${page}].swap`} />
+          <Space>
+            <Item field={`advancedTimeline.pages[${page}].fitScreen`} triggerPropName='checked' noStyle>
+              <Switch />
+            </Item>
+            <Text bold>Fit to screen <Text type='secondary'>(effective only in Trial HTML Fullscreen mode)</Text></Text>
+          </Space>
+        </Col>
+      </Row>
     </div>
   );
 }
@@ -401,3 +404,18 @@ export function mergeOverrideArray<A extends Plain, B extends Plain>(a: A, b: B)
 //     }
 //   );
 // }
+
+// Find the biggest existing "Element N" name, and return "Element (N+1)"
+function getNewElementName(existingNames: string[]) {
+  let maxIndex = 0;
+  for (const name of existingNames) {
+    const match = name.match(/^Element (\d+)$/);
+    if (match) {
+      const index = parseInt(match[1], 10);
+      if (index > maxIndex) {
+        maxIndex = index;
+      }
+    }
+  }
+  return `Element ${maxIndex + 1}`;
+}

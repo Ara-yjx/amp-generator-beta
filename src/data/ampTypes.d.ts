@@ -110,12 +110,15 @@ export namespace AT {
     | ProbabilityCondition
     | ['and' | 'or', ...Condition[]];
 
-  type LayoutedDisplayItem = {
-    displaySrc: DisplaySrc;
+  type ResponsiveDisplayItem = {
     swap?: boolean;
     bindKeyboard?: string[];
     mouseClick?: boolean;
     mouseClickAccuratePoint?: boolean;
+  }
+
+  type LayoutedDisplayItem = ResponsiveDisplayItem & {
+    displaySrc: DisplaySrc;
   };
 
   type Style = {

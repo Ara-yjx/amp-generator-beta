@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef } from 'react';
 import Moveable from 'react-moveable';
 import { AT } from '../data/ampTypes';
 import { DeepPartial } from '../util/util';
@@ -36,7 +36,6 @@ type CanvasSize = {
   height: number,
 }
 
-const SNAPPED_ELEMENT_CLASSNAME = 'freeform-moveable-element-snapped';
 
 export interface FreeformElementControlRef {
   updateRect: () => void;
@@ -49,6 +48,7 @@ export interface FreeformElementControlProps {
 
   value: AT.FreeformLayout.ElementDisplayItem,
   onChange: (updates: DeepPartial<AT.FreeformLayout.ElementDisplayItem>) => void,
+  page: number,
 
   isFocused: boolean,
   onClick: React.MouseEventHandler,
@@ -58,7 +58,7 @@ export interface FreeformElementControlProps {
 }
 
 export const FreeformElementControl = forwardRef<FreeformElementControlRef, FreeformElementControlProps>(
-  ({ container, containerWidth, containerHeight, value, onChange, isFocused, onClick, scale, children }, ref) => {
+  ({ container, containerWidth, containerHeight, value, onChange, page, isFocused, onClick, scale, children }, ref) => {
 
     // Basically, React will only render to create the element
     //   and the position will be updated by Moveable callback (on update) and useEffect (first render + after rounding)
@@ -69,8 +69,8 @@ export const FreeformElementControl = forwardRef<FreeformElementControlRef, Free
     const targetRef = useRef<HTMLDivElement>(null);
     const moveableRef = useRef<Moveable>(null);
 
-    const canvasSize = { width: containerWidth, height: containerHeight };
-    const cssStyle = toCssStyle(value.boxStyle, canvasSize);
+    const canvasSize = useMemo(() => ({ width: containerWidth, height: containerHeight }), [containerWidth, containerHeight]);
+    const cssStyle = useMemo(() => toCssStyle(value.boxStyle, canvasSize), [value.boxStyle, canvasSize]);
 
     // Expose updateRect
     useImperativeHandle(ref, () => {
@@ -95,11 +95,19 @@ export const FreeformElementControl = forwardRef<FreeformElementControlRef, Free
       isFocused && targetRef.current && moveableRef.current?.updateRect();
     }, [isFocused, targetRef.current, moveableRef.current]);
 
+    // Update position and updateRect when canvas size changes (but not when cssStyle changes, for performance)
+    useEffect(() => {
+      if (targetRef.current) {
+        setElementStyle(targetRef.current, cssStyle);
+        moveableRef.current?.updateRect();
+      }
+    }, [canvasSize, moveableRef.current, targetRef.current]);
+
     return (
       <>
         <div
-          ref={targetRef} 
-          className={isFocused ? undefined : SNAPPED_ELEMENT_CLASSNAME} // Moveable bug: self will snap to self
+          ref={targetRef}
+          className={`freeform-page-${page}${isFocused ? '' : '-not-focused'}`}
           style={{ position: 'absolute', overflow: 'hidden', cursor: isFocused ? 'move' : undefined }}
           onClick={onClick}
         >
@@ -128,9 +136,7 @@ export const FreeformElementControl = forwardRef<FreeformElementControlRef, Free
                   transform: e.target.style.transform ?? '',
                 }, canvasSize);
                 const roundedCssStyle = toCssStyle(canonicalStyle, canvasSize);
-                if (e.target.style.width !== `${roundedCssStyle.width}px`) e.target.style.width = `${roundedCssStyle.width}px`;
-                if (e.target.style.height !== `${roundedCssStyle.height}px`) e.target.style.height = `${roundedCssStyle.height}px`;
-                if (e.target.style.transform !== roundedCssStyle.transform) e.target.style.transform = roundedCssStyle.transform;
+                setElementStyle(e.target, roundedCssStyle);
                 onChange({ boxStyle: canonicalStyle });
               }}
 
@@ -143,7 +149,8 @@ export const FreeformElementControl = forwardRef<FreeformElementControlRef, Free
               verticalGuidelines={[0, containerWidth / 2, containerWidth]}
               horizontalGuidelines={[0, containerHeight / 2, containerHeight]}
               elementSnapDirections={{ "top": true, "left": true, "bottom": true, "right": true, "center": true, "middle": true }}
-              elementGuidelines={[`.${SNAPPED_ELEMENT_CLASSNAME}`]}
+              // Moveable bug: self would snap to self; would also try to snap to other page's invisible element and fail (no snap at all)
+              elementGuidelines={[`.freeform-page-${page}-not-focused`]}
               isDisplaySnapDigit={false} // for simplicity
               isDisplayInnerSnapDigit={false}
             />
@@ -207,4 +214,11 @@ function parseTransform(transform: string): { translateX: number, translateY: nu
     result.rotate = unit === 'deg' ? value : value * (180 / Math.PI); // convert radians to degrees
   }
   return result;
+}
+
+/** A high-performance helper to set CSS styles on a target element */
+function setElementStyle(element: HTMLElement | SVGElement, cssStyle: ElementCssStyle) {
+  if (element.style.width !== `${cssStyle.width}px`) element.style.width = `${cssStyle.width}px`;
+  if (element.style.height !== `${cssStyle.height}px`) element.style.height = `${cssStyle.height}px`;
+  if (element.style.transform !== cssStyle.transform) element.style.transform = cssStyle.transform;
 }
