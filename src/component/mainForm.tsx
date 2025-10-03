@@ -18,6 +18,7 @@ import { IconCloudDownload, IconQuestionCircle } from '@arco-design/web-react/ic
 import { AdvancedTimeline } from './advancedTimeline';
 import { Debugger } from './debugger';
 import { MixedPools } from './mixedPools';
+import { useParams } from 'react-router';
 
 const { Item } = Form;
 const RadioGroup = Radio.Group;
@@ -48,6 +49,12 @@ const DownloadButton: React.FC<{ values?: AmpParams }> = ({ values }) => {
 export const MainForm: React.FC<{}> = ({ }) => {
 
   console.log('MainForm')
+
+  const { expId } = useParams();
+  useEffect(() => {
+    console.log('expId:', expId);
+  }, [expId]);
+
   const formRef = useRef<FormInstance<AmpParams>>(null);
 
   const [primeValidation, setPrimeValidation] = useState<PrimeValidation | null>(null);
