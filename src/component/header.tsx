@@ -3,9 +3,9 @@ import { IconBook, IconCheckCircle, IconEmail, IconPen, IconQuestionCircle } fro
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import cite from '../data/cite';
+import Login from './login';
 
 const { Title, Paragraph } = Typography;
-
 
 function Header() {
 
@@ -14,7 +14,7 @@ function Header() {
   const [isContactModalVisible, setIsContactModalVisible] = useState(false);
 
   return (
-    <>
+    <div>
       <h1 style={{ color: '#3491FA', letterSpacing: 1 }}>STIMULIZE</h1>
       <Space split={<Divider type='vertical' />} style={{ marginBottom: 30 }}>
         <Link href='./SP-Builder_User_Manual_20240307.pdf' target='_blank' icon={<IconBook />}>
@@ -78,7 +78,11 @@ function Header() {
           </Modal>
         ), document.body)
       }
-    </>
+
+      <div style={{ position: 'absolute', top: 20, right: 20 }}>
+        <Login />
+      </div>
+    </div>
   );
 }
 
