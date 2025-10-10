@@ -132,3 +132,9 @@ export function traceSourcePools(displaySrc: AT.DisplaySrc, mixedPools: AmpParam
       return [];
   }
 }
+
+// When fitScreen, blankSpaceAtTop should be ignored, and fullscreen should be enabled
+export function hasFitScreen(advancedTimeline: AmpParams['advancedTimeline']): boolean {
+  // in the future when we add fitScreen to grid layout, we can remove the `p.layoutType === 'freeform'` here
+  return !!advancedTimeline?.pages.some(p => p.layoutType === 'freeform' && p.fitScreen);
+}

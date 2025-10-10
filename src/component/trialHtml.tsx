@@ -1,5 +1,4 @@
 import { Checkbox, Form, Input, InputNumber, Radio, Space, Switch, Tooltip, Typography } from '@arco-design/web-react';
-import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import { IconQuestionCircle, IconToTop } from '@arco-design/web-react/icon';
 import React, { useEffect } from 'react';
@@ -8,6 +7,7 @@ import { renderTrialHtml } from '../data/renderTrialHtml';
 import { TextColorPicker } from './textColorPicker';
 import { TrialHtmlPreview } from './trialHtmlPreview';
 import { IconWidth, IconHeight } from './widthHeightIcon';
+import { hasFitScreen } from '../util/util';
 
 const { Item } = Form;
 const { Text } = Typography;
@@ -16,7 +16,7 @@ const { Text } = Typography;
 const ConfigModeForm: React.FC = () => {
 
   // When change to darkMode, change text content color
-  const { form } = useFormContext();
+  const { form } = Form.useFormContext();
   const darkModeWatch = useWatch('trialHtml.darkMode', form) as AmpParams['trialHtml']['darkMode'];
   useEffect(() => {
     if (darkModeWatch === true) {
@@ -41,6 +41,15 @@ const ConfigModeForm: React.FC = () => {
     }
   }, [isConcurrentDisplaysEnabled, isAdvancedTimelineEnabled]);
 
+  // When fitScreen, marginTop must be ignored
+  const advancedTimelineWatch = useWatch('advancedTimeline', form) as AmpParams['advancedTimeline'];
+  const isHasFitScreen = hasFitScreen(advancedTimelineWatch);
+  useEffect(() => {
+    if (isHasFitScreen) {
+      form.setFieldValue('trialHtml.marginTop', 0);
+      form.setFieldValue('fullscreen', true);
+    }
+  }, [advancedTimelineWatch, form]);
 
   return (
     <div>
@@ -57,8 +66,13 @@ const ConfigModeForm: React.FC = () => {
         </Item>
       </Space>
 
-      <Item field='trialHtml.marginTop' label={<b style={{ whiteSpace: 'nowrap' }}><IconToTop /> Blank space above content</b>} layout='vertical' style={{ width: 200 }}>
-        <InputNumber suffix='px' />
+      <Item
+        disabled={isHasFitScreen}
+        field='trialHtml.marginTop'
+        label={<b style={{ whiteSpace: 'nowrap' }}><IconToTop /> Blank space above content</b>} layout='vertical'
+        style={{ width: 200 }}
+      >
+        <InputNumber suffix='px'/>
       </Item>
 
       <Item label={<b>Screen</b>} layout='vertical'>
@@ -71,7 +85,12 @@ const ConfigModeForm: React.FC = () => {
           </Space>
           <Space size='small'>
             <Text type='secondary'>Fullscreen</Text>
-            <Item field='fullscreen' triggerPropName='checked' noStyle>
+            <Item
+              disabled={isHasFitScreen}
+              field='fullscreen'
+              triggerPropName='checked'
+              noStyle
+            >
               <Switch />
             </Item>
           </Space>
@@ -164,7 +183,7 @@ const CustomModeForm: React.FC = () => (
 
 export const TrialHtml: React.FC = () => {
 
-  const { form } = useFormContext();
+  const { form } = Form.useFormContext();
   const trialHtmlWatch = useWatch('trialHtml', form) as AmpParams['trialHtml'];
   const isConfigMode = typeof trialHtmlWatch.customHtml !== 'string';
   const concurrentDisplaysWatch = useWatch('timeline.concurrentDisplays', form) as AmpTimeline['concurrentDisplays'];

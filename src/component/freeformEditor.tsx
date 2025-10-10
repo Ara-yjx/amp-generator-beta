@@ -1,6 +1,6 @@
-import { Button, Divider, Form, Grid, InputNumber, Layout, Modal, Space, Switch, Table, Typography } from '@arco-design/web-react';
+import { Button, Divider, Form, Grid, InputNumber, Modal, Space, Switch, Table, Tooltip, Typography } from '@arco-design/web-react';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
-import { IconCopy, IconDelete, IconEdit, IconPlus, IconSave } from '@arco-design/web-react/icon';
+import { IconCopy, IconDelete, IconEdit, IconPlus, IconQuestionCircle, IconSave } from '@arco-design/web-react/icon';
 import { cloneDeep, reverse } from 'lodash';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -19,7 +19,6 @@ import { FreeformElementPreviewInternal } from './freeformElementPreviewInternal
 // Using "transform" to the whole editor will cause rendering issues
 
 const { Item } = Form;
-const { Content, Sider, Footer, Header } = Layout;
 const { Row, Col } = Grid;
 const { Text, Title } = Typography;
 
@@ -361,7 +360,10 @@ export function FreeformFullEditor({ field, page, closeEditor }: FreeformFullEdi
             <Item field={`advancedTimeline.pages[${page}].fitScreen`} triggerPropName='checked' noStyle>
               <Switch />
             </Item>
-            <Text bold>Fit to screen <Text type='secondary'>(effective only in Trial HTML Fullscreen mode)</Text></Text>
+            <Text bold>Fit to screen</Text>
+            <Tooltip content='When fitScreen is enabled, TrialHTML blank-space-at-top will be automatically turned off, and fullscreen will be automatically enabled'>
+              <IconQuestionCircle />
+            </Tooltip>
           </Space>
         </Col>
       </Row>

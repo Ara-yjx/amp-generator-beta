@@ -90,7 +90,7 @@ export function FreeformPropertyPanel({ elements, page, field, selectedElement, 
       <Divider />
 
       <Title heading={6}>Preview</Title>
-      <Select options={previewOptions} style={{ width: '100%' }}
+      <Select options={previewOptions} style={{ width: 160 }}
         value={JSON.stringify(selectedElement.previewStimuliItemRef)}
         onChange={v => updateElement(selectedElement, { previewStimuliItemRef: typeof v === 'string' ? JSON.parse(v) : undefined })}
       />
