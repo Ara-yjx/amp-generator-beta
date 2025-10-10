@@ -69,83 +69,85 @@ export const MainForm: React.FC<{}> = ({ }) => {
   };
 
   return (
-    <PrimeValidationContext.Provider value={primeValidation}>
-      <Form
-        layout='vertical'
-        ref={formRef}
-        initialValues={emptyAmpParams}
-        onValuesChange={onValuesChange}
-      >
-        {window.location.hostname === 'localhost' && <Debugger />}
-        <LoadSave />
+    <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+      <PrimeValidationContext.Provider value={primeValidation}>
+        <Form
+          layout='vertical'
+          ref={formRef}
+          initialValues={emptyAmpParams}
+          onValuesChange={onValuesChange}
+        >
+          {window.location.hostname === 'localhost' && <Debugger />}
+          <LoadSave />
 
-        <h3 style={{ textAlign: 'left' }}>Stimuli Pool</h3>
-        <StimuliPool />
-        <br />
+          <h3 style={{ textAlign: 'left' }}>Stimuli Pool</h3>
+          <StimuliPool />
+          <br />
 
 
-        <MixedPools />
-        <br />
+          <MixedPools />
+          <br />
 
-        <h3 style={{ textAlign: 'left' }}>Trial Flow</h3>
+          <h3 style={{ textAlign: 'left' }}>Trial Flow</h3>
 
-        <Item field='trialType' style={{ textAlign: 'left' }}>
-          <RadioGroup type='button' options={[{ value: 'simple', label: 'Simple' }, { value: 'advanced', label: 'Advanced' }]} />
-        </Item>
+          <Item field='trialType' style={{ textAlign: 'left' }}>
+            <RadioGroup type='button' options={[{ value: 'simple', label: 'Simple' }, { value: 'advanced', label: 'Advanced' }]} />
+          </Item>
 
-        <Item shouldUpdate>{
-          values => values.trialType === 'simple' ? (
-            <Item field='timeline'>
-              <Timeline />
+          <Item shouldUpdate>{
+            values => values.trialType === 'simple' ? (
+              <Item field='timeline'>
+                <Timeline />
+              </Item>
+            ) : (
+              <AdvancedTimeline />
+            )
+          }</Item>
+
+          <span style={{ textAlign: 'left' }}>
+            <Item label='Number of total trials' field='totalTrials' >
+              <InputNumber min={0} style={{ width: 160 }} suffix='trials' />
             </Item>
-          ) : (
-            <AdvancedTimeline />
-          )
-        }</Item>
+            <Item shouldUpdate noStyle>
+              {values => <WarnTotalTrials values={values} />}
+            </Item>
+            <MultiRounds />
+            <Item label={
+              <Space>
+                Survey Identifier (for Reference Survey)
+                <Tooltip content={<p>
+                  When using qualtrics "Reference Survey" to include another survey into this survey, you need to distinguish the Embedded Data of two surveys so that they don't mix up.<br />
+                  To do so, you can add different "Survey Identifier" for each survey. The Embedded Data will have Survey Identifier as suffix.<br />
+                  For example, if the Survey Identifier is set to "111", Embedded Data "stimuliItems" will become "stimuliItems:111" instead.<br />
+                  <Divider />
+                  If you need to run additional trial after finishing the referenced survey,
+                  you need to manually add a Embedded Data block in Qualtrics Survey Flow that sets "sptSurveyIdentifier" to <i>the identifier of your main survey</i> before the trial block.
+                </p>
+                }>
+                  <IconQuestionCircle />
+                </Tooltip>
+              </Space>
+            } field='surveyIdentifier'>
+              <Input style={{ width: 160 }} />
+            </Item>
+          </span>
 
-        <span style={{ textAlign: 'left' }}>
-          <Item label='Number of total trials' field='totalTrials' >
-            <InputNumber min={0} style={{ width: 160 }} suffix='trials' />
-          </Item>
-          <Item shouldUpdate noStyle>
-            {values => <WarnTotalTrials values={values} />}
-          </Item>
-          <MultiRounds />
-          <Item label={
-            <Space>
-              Survey Identifier (for Reference Survey)
-              <Tooltip content={<p>
-                When using qualtrics "Reference Survey" to include another survey into this survey, you need to distinguish the Embedded Data of two surveys so that they don't mix up.<br />
-                To do so, you can add different "Survey Identifier" for each survey. The Embedded Data will have Survey Identifier as suffix.<br />
-                For example, if the Survey Identifier is set to "111", Embedded Data "stimuliItems" will become "stimuliItems:111" instead.<br />
-                <Divider />
-                If you need to run additional trial after finishing the referenced survey,
-                you need to manually add a Embedded Data block in Qualtrics Survey Flow that sets "sptSurveyIdentifier" to <i>the identifier of your main survey</i> before the trial block.
-              </p>
-              }>
-                <IconQuestionCircle />
-              </Tooltip>
-            </Space>
-          } field='surveyIdentifier'>
-            <Input style={{ width: 160 }} />
-          </Item>
-        </span>
+          <Collapse bordered={false} style={{ marginBottom: 20 }}>
+            <Collapse.Item name='0' header={<h3>Trial Block HTML</h3>}>
+              <TrialHtml />
+            </Collapse.Item>
+          </Collapse>
 
-        <Collapse bordered={false} style={{ marginBottom: 20 }}>
-          <Collapse.Item name='0' header={<h3>Trial Block HTML</h3>}>
-            <TrialHtml />
-          </Collapse.Item>
-        </Collapse>
-
-        {/* <Item shouldUpdate>
+          {/* <Item shouldUpdate>
           {
             values => (
               <DownloadButton values={values} />
             )
           }
         </Item> */}
-        <DownloadButton values={formValues as AmpParams} />
-      </Form >
-    </PrimeValidationContext.Provider>
+          <DownloadButton values={formValues as AmpParams} />
+        </Form >
+      </PrimeValidationContext.Provider>
+    </div>
   )
 };

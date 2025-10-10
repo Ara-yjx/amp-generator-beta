@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Button, Modal, Tabs, Form, Input, Message } from '@arco-design/web-react';
-import { getProjects, login, logout, register } from '../data/backend';
+import { clearAuthToken, clearUsername, getAuthToken, getProjects, getUsername, login, logout, register, setAuthToken, setUsername } from '../data/backend';
 import { AuthContext } from '../context/AuthContext';
 import { IconUser } from '@arco-design/web-react/icon';
 
@@ -9,12 +9,12 @@ const { TabPane } = Tabs;
 // Promise-based API for requiring user login from anywhere
 type LoginWaiter = { resolve: () => void; reject: (err: any) => void };
 let loginWaiters: LoginWaiter[] = [];
-let openLoginModal: ((tab?: 'login' | 'register') => void) | null = null;
+let openLoginModal: (() => void) | null = null;
 
-export function requireLogin(tab: 'login' | 'register' = 'login'): Promise<void> {
+export function requireLogin(): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     loginWaiters.push({ resolve, reject });
-    openLoginModal?.(tab);
+    openLoginModal?.();
   });
 }
 
@@ -42,8 +42,8 @@ export default function Login() {
 
   // Bridge for global requireLogin() to open this modal
   useEffect(() => {
-    openLoginModal = (tab: 'login' | 'register' = 'login') => {
-      setActiveTab(tab);
+    openLoginModal = () => {
+      setActiveTab('login');
       setVisible(true);
     };
     return () => {
@@ -54,12 +54,28 @@ export default function Login() {
     };
   }, []);
 
-  const onLoginSubmit = async (values: any) => {
+  // Auto-login on mount if both token and username exist in localStorage
+  useEffect(() => {
+    const token = getAuthToken();
+    const username = getUsername();
+    if (token && username) {
+      setUser({ username });
+    }
+  }, [setUser]);
+
+  const onLoginSubmit = async (values: { email: string, username: string, password: string }) => {
     setLoading(true);
     try {
       const res = await login(values);
-      Message.success(res?.meta?.message || `Logged in`);
-      if (res?.data?.user) setUser(res.data.user);
+      if (!res.data.access_token) {
+        throw new Error('API Backend error: No access token received. Please try again.');
+      }
+      setAuthToken(res.data.access_token);
+      Message.success(`Logged in`);
+      if (res?.data?.user.username) {
+        setUsername(res.data.user.username);
+        setUser({ username: res.data.user.username });
+      }
       resolveAllLoginWaiters();
       setVisible(false);
     } catch (err: any) {
@@ -69,17 +85,12 @@ export default function Login() {
     }
   };
 
-  const onRegisterSubmit = async (values: any) => {
+  const onRegisterSubmit = async (values: { email: string, username: string, password: string }) => {
     setLoading(true);
     try {
       const regRes = await register(values);
       Message.success(regRes?.meta?.message || `Registered successfully`);
-      // Auto login after register
-      const loginRes = await login(values);
-      Message.success(loginRes?.meta?.message || `Logged in`);
-      if (loginRes?.data?.user) setUser(loginRes.data.user);
-      resolveAllLoginWaiters();
-      setVisible(false);
+      await onLoginSubmit(values);
     } catch (err: any) {
       Message.error(err?.error || err?.meta?.message || 'Register/Login failed');
     } finally {
@@ -89,6 +100,8 @@ export default function Login() {
 
   const onClickLogOut = () => {
     setUser(null);
+    clearAuthToken();
+    clearUsername();
     Message.success('Logged out');
     logout().catch(() => { /* noop */ });
   }

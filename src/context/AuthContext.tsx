@@ -1,6 +1,6 @@
 import React, { createContext, useMemo, useState } from 'react';
 
-export type AuthUser = { id: number; email: string; username: string };
+export type AuthUser = { username: string };
 
 export type AuthContextType = {
   user: AuthUser | null;
