@@ -1,0 +1,109 @@
+import { Button, Message, Modal } from '@arco-design/web-react';
+import { IconUser } from '@arco-design/web-react/icon';
+import { useContext, useEffect, useState } from 'react';
+import { AuthContext } from '../context/AuthContext';
+import { getAuth, logout } from '../data/backend';
+import { LoginForm } from './loginForm';
+
+// Promise-based API for requiring user login from anywhere
+type LoginWaiter = { resolve: () => void; reject: (err: any) => void };
+let loginWaiters: LoginWaiter[] = [];
+let openLoginModal: (() => void) | null = null;
+
+export function requireLogin(): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    loginWaiters.push({ resolve, reject });
+    openLoginModal?.();
+  });
+}
+
+function resolveAllLoginWaiters() {
+  const waiters = loginWaiters;
+  loginWaiters = [];
+  waiters.forEach(w => {
+    try { w.resolve(); } catch { /* noop */ }
+  });
+}
+
+function rejectOneLoginWaiter(err: any) {
+  const w = loginWaiters.pop();
+  try { w?.reject(err); } catch { /* noop */ }
+}
+
+export default function LoginModal() {
+  const [visible, setVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  const [loading, setLoading] = useState(false);
+  const { authState, setAuthState } = useContext(AuthContext);
+
+  // Bridge for global requireLogin() to open this modal
+  useEffect(() => {
+    openLoginModal = () => {
+      setActiveTab('login');
+      setVisible(true);
+    };
+    return () => {
+      // Reset on unmount only if this instance set it
+      if (openLoginModal) {
+        openLoginModal = null;
+      }
+    };
+  }, []);
+
+  // Auto-login on mount if both token and username exist in localStorage
+  useEffect(() => {
+    const auth = getAuth();
+    auth && setAuthState(auth);
+  }, [setAuthState]);
+
+  const onLoginSuccess = () => {
+    resolveAllLoginWaiters();
+    setVisible(false);
+  };
+
+  const onClickLogOut = () => {
+    setAuthState(null);
+    logout().catch(() => { /* noop */ });
+    Message.success('Logged out');
+  };
+
+  const onCancel = () => {
+    rejectOneLoginWaiter(new Error('Login cancelled'));
+    setVisible(false);
+  };
+
+  return (
+    <>
+      {authState ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span>Hello {authState.username}</span>
+          <Button icon={<IconUser />} size='small' onClick={onClickLogOut}>
+            Logout
+          </Button>
+        </div>
+      ) : (
+        <Button icon={<IconUser />} type='primary' size='small' onClick={() => setVisible(true)}>
+          Login
+        </Button>
+      )}
+
+      {/* <Button onClick={() => getProjects().then(v => Message.success(JSON.stringify(v)))}>List Projects</Button> */}
+
+      <Modal
+        visible={visible}
+        confirmLoading={loading}
+        footer={null}
+        unmountOnExit
+        onCancel={onCancel}
+      >
+        <LoginForm
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          loading={loading}
+          setLoading={setLoading}
+          onLoginSuccess={onLoginSuccess}
+        />
+      </Modal>
+    </>
+  );
+}

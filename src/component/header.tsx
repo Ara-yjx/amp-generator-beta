@@ -3,7 +3,7 @@ import { IconBook, IconCheckCircle, IconEmail, IconPen, IconQuestionCircle } fro
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import cite from '../data/cite';
-import Login from './login';
+import LoginModal from './loginModal';
 
 const { Title, Paragraph } = Typography;
 
@@ -80,7 +80,7 @@ function Header() {
       }
 
       <div style={{ position: 'absolute', top: 20, right: 20 }}>
-        <Login />
+        <LoginModal />
       </div>
     </div>
   );

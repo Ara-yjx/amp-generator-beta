@@ -1,13 +1,11 @@
 // Backend API client for Stimulize-backend
 
-import { Message } from "@arco-design/web-react";
-import { requireLogin } from "../component/login";
-import { ProjectEntity } from "./apiTypes";
+import { Message } from '@arco-design/web-react';
+import { requireLogin } from '../component/loginModal';
+import { ProjectEntity } from './apiTypes';
 
 const API_BASE = 'https://q15bwdgudf.execute-api.us-east-2.amazonaws.com/live';
-// const API_BASE = 'http://localhost:3000/live';
-const LS_AUTH_TOKEN_KEY = 'stimulize_access_token';
-const LS_USERNAME_KEY = 'stimulize_username';
+const LS_AUTH_KEY = 'stimulize_auth';
 
 // typing of all request
 interface Response<T> {
@@ -18,50 +16,41 @@ interface Response<T> {
   };
 }
 
-export function getAuthToken() {
+export type AuthState = {
+  token: string;
+  username: string;
+}
+
+
+/**
+ * getAuth/setAuth is data level and is managed by the backend operations, whereas AuthContext is UI level and is managed by the components
+ */
+export function getAuth(): AuthState | null {
   try {
-    return localStorage.getItem(LS_AUTH_TOKEN_KEY);
+    const auth = localStorage.getItem(LS_AUTH_KEY);
+    return auth ? JSON.parse(auth) : null;
   } catch {
     return null;
   }
 }
 
-export function setAuthToken(token: string) {
+export function setAuth(auth: AuthState) {
   try {
-    localStorage.setItem(LS_AUTH_TOKEN_KEY, token);
+    localStorage.setItem(LS_AUTH_KEY, JSON.stringify(auth));
   } catch { }
 }
 
-export function clearAuthToken() {
+export function clearAuth() {
   try {
-    localStorage.removeItem(LS_AUTH_TOKEN_KEY);
+    localStorage.removeItem(LS_AUTH_KEY);
   } catch { }
 }
 
-export function getUsername() {
-  try {
-    return localStorage.getItem(LS_USERNAME_KEY);
-  } catch {
-    return null;
-  }
-}
-
-export function setUsername(username: string) {
-  try {
-    localStorage.setItem(LS_USERNAME_KEY, username);
-  } catch { }
-}
-
-export function clearUsername() {
-  try {
-    localStorage.removeItem(LS_USERNAME_KEY);
-  } catch { }
-}
-
-async function apiPost<T>(path: string, data: any = {}, useAuth: boolean = false): Promise<Response<T>> {
+async function apiPost<T>(path: string, data: any = {}, requireAuth: boolean = false): Promise<Response<T>> {
+  console.log('apiPost', path, data, requireAuth);
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (useAuth) {
-    const token = getAuthToken();
+  if (requireAuth) {
+    const token = getAuth()?.token;
     if (token) {
       headers['Authorization'] = `${token}`;
     } else {
@@ -73,7 +62,7 @@ async function apiPost<T>(path: string, data: any = {}, useAuth: boolean = false
       }
     }
   }
-    const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${API_BASE}${path}`, {
     method: 'POST',
     headers,
     body: JSON.stringify(data),
@@ -81,14 +70,13 @@ async function apiPost<T>(path: string, data: any = {}, useAuth: boolean = false
   // 400 means auth expired. Request login and retry
   if (res.status === 400) {
     Message.info('Your login session has expired. Please login again.');
-    clearAuthToken();
-    clearUsername();
+    clearAuth();
     await requireLogin();
-    return apiPost<T>(path, data, useAuth);
+    return apiPost<T>(path, data, requireAuth);
   } else {
     const json = await res.json() as Response<T>;
     if (!res.ok) throw json;
-      return json;
+    return json;
   }
 }
 
@@ -96,7 +84,7 @@ async function apiPost<T>(path: string, data: any = {}, useAuth: boolean = false
 async function apiPostForm<T>(path: string, form: FormData, useAuth: boolean = false): Promise<Response<T>> {
   const headers: Record<string, string> = {};
   if (useAuth) {
-    const token = getAuthToken();
+    const token = getAuth()?.token;
     if (token) {
       headers['Authorization'] = `${token}`;
     } else {
@@ -114,31 +102,33 @@ async function apiPostForm<T>(path: string, form: FormData, useAuth: boolean = f
   });
   if (res.status === 400) {
     Message.info('Your login session has expired. Please login again.');
-    clearAuthToken();
-    clearUsername();
+    clearAuth();
     await requireLogin();
     return apiPostForm<T>(path, form, useAuth);
   } else {
     const json = await res.json() as Response<T>;
     if (!res.ok) throw json;
-      return json;
+    return json;
   }
 }
 
 // Auth APIs
-export async function login({ email, username, password }: { email: string, username: string, password: string }) {
+export async function login({ email, username, password }: { email: string, username: string, password: string }): Promise<Response<any> & { auth: AuthState }> {
   const result = await apiPost<{ access_token: string, user: { email: string, id: number, username: string } }>(
     '/api/login',
     { email, username, password }
   );
-  if (result?.data?.access_token) setAuthToken(result.data.access_token);
-  return result;
+  if (result?.data?.access_token) {
+    setAuth({ token: result.data.access_token, username: result.data.user.username });
+    return { ...result, auth: { token: result.data.access_token, username: result.data.user.username } };
+  } else {
+    throw new Error('API Backend error: No access token received. Please try again.');
+  }
 }
 
 export async function logout() {
-  clearAuthToken();
-  const result = await apiPost('/api/logout', {}, true);
-  return result;
+  clearAuth();
+  return await apiPost('/api/logout', {}, true);
 }
 
 // Registration API

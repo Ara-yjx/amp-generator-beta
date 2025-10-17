@@ -68,6 +68,11 @@ export const MainForm: React.FC<{}> = ({ }) => {
     setFormValues(values);
   };
 
+  useEffect(() => {
+    window.onbeforeunload = () => 'Leaving the page will reset all settings. Have you saved your settings?';
+    return () => { window.onbeforeunload = null; };
+  });
+
   return (
     <div style={{ maxWidth: 1080, margin: '0 auto' }}>
       <PrimeValidationContext.Provider value={primeValidation}>
