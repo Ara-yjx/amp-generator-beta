@@ -1,7 +1,7 @@
 import { Button, Form, Input, Message, Tabs } from '@arco-design/web-react';
 import React, { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { login, register, setAuth } from '../data/backend';
+import { login, register } from '../data/backend';
 
 const { TabPane } = Tabs;
 
@@ -26,9 +26,6 @@ export const LoginForm: React.FC<{
     setLoading(true);
     try {
       const res = await login(values);
-      if (!res.data.access_token) {
-        throw new Error('API Backend error: No access token received. Please try again.');
-      }
       setAuthState(res.auth);
       Message.success(`Logged in`);
       onLoginSuccess();

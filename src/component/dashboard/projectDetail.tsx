@@ -15,8 +15,8 @@ export const ProjectDetail: React.FC<{ project: Project }> = ({ project }) => {
   const [createForm] = Form.useForm();
 
   const columns = useMemo(() => ([
-    { title: 'ID', dataIndex: 'id', width: 100 },
-    { title: 'Name', dataIndex: 'name', width: 220 },
+    // { title: 'ID', dataIndex: 'id', width: 100 },
+    // { title: 'Name', dataIndex: 'name', width: 220 },
     { title: 'Description', dataIndex: 'description' },
     {
       title: 'Created At',
@@ -43,6 +43,7 @@ export const ProjectDetail: React.FC<{ project: Project }> = ({ project }) => {
       render: (_: any, record: ExperimentEntity) => (
         <Space>
           <Popconfirm
+            style={{ width: 300 }}
             focusLock
             title='Delete this experiment?'
             content='This action cannot be undone.'
@@ -118,7 +119,7 @@ export const ProjectDetail: React.FC<{ project: Project }> = ({ project }) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <Space align='center' style={{ justifyContent: 'space-between' }}>
-        <div>
+        <div style={{ textAlign: 'left' }}>
           <Title heading={5} style={{ margin: 0 }}>{project.name}</Title>
           <Text type='secondary'>{project.description || 'No description'}</Text>
         </div>
@@ -150,9 +151,9 @@ export const ProjectDetail: React.FC<{ project: Project }> = ({ project }) => {
         unmountOnExit
       >
         <Form form={createForm} layout='vertical'>
-          <Form.Item label='Name' field='name' rules={[{ required: true, message: 'Please enter a name' }]}>
+          {/* <Form.Item label='Name' field='name' rules={[{ required: true, message: 'Please enter a name' }]}>
             <Input placeholder='Experiment name' allowClear />
-          </Form.Item>
+          </Form.Item> */}
           <Form.Item label='Description' field='description'>
             <Input.TextArea placeholder='Optional description' allowClear maxLength={500} showWordLimit />
           </Form.Item>

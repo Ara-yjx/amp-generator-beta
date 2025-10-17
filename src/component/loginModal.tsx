@@ -64,7 +64,10 @@ export default function LoginModal() {
   const onClickLogOut = () => {
     setAuthState(null);
     logout().catch(() => { /* noop */ });
-    Message.success('Logged out');
+    Message.success('Logged out... Redirecting to login page in 3 seconds...');
+    setTimeout(() => {
+      window.location.href = '/login';
+    }, 3000);
   };
 
   const onCancel = () => {

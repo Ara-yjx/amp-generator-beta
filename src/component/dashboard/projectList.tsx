@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { List, Button, Modal, Form, Input, Typography, Message, Space } from '@arco-design/web-react';
 import { getProjects, createProject } from '../../data/backend';
-import { Project, projectFromEntity } from '../../data/apiTypes';
+import { Project } from '../../data/apiTypes';
 import { IconPlus, IconRefresh } from '@arco-design/web-react/icon';
 
 const { Title, Text } = Typography;
@@ -37,7 +37,7 @@ const ProjectList: React.FC<{ focusedProject: Project | null; setFocusedProject:
       await form.validate();
       const values = form.getFieldsValue() as { name: string; description?: string };
       setCreating(true);
-      const created = projectFromEntity(await createProject(values));
+      const created = await createProject(values);
       Message.success('Project created');
       setCreateOpen(false);
       form.resetFields();
@@ -77,6 +77,7 @@ const ProjectList: React.FC<{ focusedProject: Project | null; setFocusedProject:
             <Text type='secondary'>
               {item.description || 'No description'}
             </Text>
+            <br />
             <Text type='secondary'>
               {item.createdAt
                 ? new Date(item.createdAt).toLocaleString()

@@ -2,7 +2,7 @@
 
 import { Message } from '@arco-design/web-react';
 import { requireLogin } from '../component/loginModal';
-import { ProjectEntity } from './apiTypes';
+import { Project, ProjectEntity, projectFromEntity } from './apiTypes';
 
 const API_BASE = 'https://q15bwdgudf.execute-api.us-east-2.amazonaws.com/live';
 const LS_AUTH_KEY = 'stimulize_auth';
@@ -19,8 +19,8 @@ interface Response<T> {
 export type AuthState = {
   token: string;
   username: string;
-}
-
+  id: number;
+};
 
 /**
  * getAuth/setAuth is data level and is managed by the backend operations, whereas AuthContext is UI level and is managed by the components
@@ -46,21 +46,28 @@ export function clearAuth() {
   } catch { }
 }
 
-async function apiPost<T>(path: string, data: any = {}, requireAuth: boolean = false): Promise<Response<T>> {
-  console.log('apiPost', path, data, requireAuth);
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+/**
+ * @param useJsonContentType should set to false for Multipart/form-data (file upload)
+ * @returns 
+ */
+async function apiPost<T>(path: string, data: any = {}, requireAuth: boolean = false, useJsonContentType: boolean = true): Promise<Response<T>> {
+  console.debug('apiPost', path, data, requireAuth);
+  const headers: Record<string, string> = useJsonContentType ? { 'Content-Type': 'application/json' } : {};
   if (requireAuth) {
-    const token = getAuth()?.token;
-    if (token) {
-      headers['Authorization'] = `${token}`;
-    } else {
+    if (!getAuth()?.token) {
       try {
-        console.log('requireLogin', requireLogin)
         await requireLogin();
       } catch (err) {
+        console.warn('apiPost requireLogin failure', err);
         Message.error('Login is required to use this feature');
+        throw err;
       }
     }
+    const token = getAuth()?.token;
+    if (!token) {
+      throw new Error('Auth token not found after login');
+    }
+    headers['Authorization'] = token;
   }
   const res = await fetch(`${API_BASE}${path}`, {
     method: 'POST',
@@ -80,47 +87,16 @@ async function apiPost<T>(path: string, data: any = {}, requireAuth: boolean = f
   }
 }
 
-// Multipart/form-data POST helper (for file uploads)
-async function apiPostForm<T>(path: string, form: FormData, useAuth: boolean = false): Promise<Response<T>> {
-  const headers: Record<string, string> = {};
-  if (useAuth) {
-    const token = getAuth()?.token;
-    if (token) {
-      headers['Authorization'] = `${token}`;
-    } else {
-      try {
-        await requireLogin();
-      } catch (err) {
-        Message.error('Login is required to use this feature');
-      }
-    }
-  }
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: 'POST',
-    headers, // do NOT set Content-Type; browser will set boundary
-    body: form,
-  });
-  if (res.status === 400) {
-    Message.info('Your login session has expired. Please login again.');
-    clearAuth();
-    await requireLogin();
-    return apiPostForm<T>(path, form, useAuth);
-  } else {
-    const json = await res.json() as Response<T>;
-    if (!res.ok) throw json;
-    return json;
-  }
-}
 
 // Auth APIs
-export async function login({ email, username, password }: { email: string, username: string, password: string }): Promise<Response<any> & { auth: AuthState }> {
-  const result = await apiPost<{ access_token: string, user: { email: string, id: number, username: string } }>(
+export async function login({ email, username, password }: { email: string, username: string, password: string }): Promise<{ response: Response<any>, auth: AuthState }> {
+  const response = await apiPost<{ access_token: string, user: { email: string, id: number, username: string } }>(
     '/api/login',
     { email, username, password }
   );
-  if (result?.data?.access_token) {
-    setAuth({ token: result.data.access_token, username: result.data.user.username });
-    return { ...result, auth: { token: result.data.access_token, username: result.data.user.username } };
+  if (response?.data?.access_token) {
+    setAuth({ token: response.data.access_token, id: response.data.user.id, username: response.data.user.username });
+    return { response, auth: { token: response.data.access_token, id: response.data.user.id, username: response.data.user.username } };
   } else {
     throw new Error('API Backend error: No access token received. Please try again.');
   }
@@ -139,12 +115,26 @@ export async function register({ email, username, password }: { email: string, u
 
 
 // Project APIs
-export async function createProject({ name, description }: { name?: string, description?: string }): Promise<ProjectEntity> {
-  return (await apiPost<{ project: ProjectEntity }>('/api/createProject', { name, description }, true)).data.project;
+export async function createProject({ name, description }: { name?: string, description?: string }): Promise<Project> {
+  const response = await apiPost<{ project: Pick<ProjectEntity, 'id' | 'name' | 'description' | 'created_at' | 'creator_id'> }>('/api/createProject', { name, description }, true);
+  return {
+    id: response.data.project.id,
+    name: response.data.project.name,
+    description: response.data.project.description,
+    createdAt: response.data.project.created_at,
+    creatorId: getAuth()?.id ?? 0,
+    lastUpdatedAt: response.data.project.created_at,
+    isOwner: true,
+    hasAccess: true,
+  }
 }
 
-export async function getProjects(): Promise<{ projects: ProjectEntity[] }> {
-  return (await apiPost<{ projects: ProjectEntity[] }>('/api/getProjects', {}, true)).data;
+export async function getProjects() {
+  const response = await apiPost<{ projects: ProjectEntity[] }>('/api/getProjects', {}, true);
+  return {
+    response,
+    projects: response.data.projects.map(projectFromEntity),
+  }
 }
 
 export async function getProject(projectId: number): Promise<ProjectEntity> {
@@ -209,7 +199,7 @@ export async function deleteExperiment(experimentId: number) {
 export async function uploadExperimentFile(experimentId: number, file: File) {
   const form = new FormData();
   form.append('files', file);
-  return (await apiPostForm<{ file: ExperimentFileInfo }>(`/api/uploadFIle/${experimentId}`, form, true)).data.file;
+  return (await apiPost<{ file: ExperimentFileInfo }>(`/api/uploadFIle/${experimentId}`, form, true, false)).data.file;
 }
 
 export async function getExperimentFiles(experimentId: number) {
