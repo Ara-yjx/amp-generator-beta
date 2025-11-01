@@ -83,6 +83,7 @@ export const LoadSave = () => {
           const values = JSON.parse(content).values;
           transformOldValues(values);
           form.setFieldsValue(values);
+          lastSavedVersionRef.current.data = undefined;
           Message.success('Loaded successfully. 🎉');
         } else {
           throw 'Cannot read file content';
@@ -100,12 +101,14 @@ export const LoadSave = () => {
     if (window.confirm('⚠️⚠️⚠️ This will overwrite all settings. Continue?')) {
       form.resetFields();
       form.setFieldsValue(defaultAmpParams);
+      lastSavedVersionRef.current.data = undefined;
     }
   };
 
   // load experiment once from cloud
   useEffect(() => {
     experimentId && loadFromCloud(experimentId, form);
+    lastSavedVersionRef.current.data = undefined;
   }, [experimentId]);
 
   const isBrokenModeWatch = Form.useWatch('editorBrokenMode', form);
