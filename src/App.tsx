@@ -31,7 +31,7 @@ function App() {
             <Layout.Content>
               <Routes>
                 <Route path='/' element={<MainForm />} />
-                <Route path='/experiment/:expId?/edit' element={<MainForm />} />
+                <Route path='/exp/:expId?/edit' element={<MainForm />} />
                 <Route path='/my' element={authState ? <Dashboard /> : <Navigate to='/login' />} />
                 <Route path='/login' element={<LoginPage />} />
               </Routes>

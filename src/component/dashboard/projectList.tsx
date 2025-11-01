@@ -3,6 +3,7 @@ import { List, Button, Modal, Form, Input, Typography, Message, Space } from '@a
 import { getProjects, createProject } from '../../data/backend';
 import { Project } from '../../data/apiTypes';
 import { IconPlus, IconRefresh } from '@arco-design/web-react/icon';
+import { sortBy } from 'lodash';
 
 const { Title, Text } = Typography;
 
@@ -18,9 +19,12 @@ const ProjectList: React.FC<{ focusedProject: Project | null; setFocusedProject:
   const loadProjects = async () => {
     setLoading(true);
     try {
-      const data = await getProjects();
-      console.log('Loaded projects:', data);
-      setProjects(data?.projects ?? []);
+      const { projects } = await getProjects();
+      console.log('Loaded projects:', projects);
+      const projectSorted = sortBy(projects, p => p.lastUpdatedAt);
+      projectSorted.reverse(); // TODO: upgrade and use toReversed
+      setProjects(projectSorted ?? []);
+      setFocusedProject(projectSorted?.[0] || null);
     } catch (e) {
       Message.error('Failed to load projects');
     } finally {
@@ -42,6 +46,7 @@ const ProjectList: React.FC<{ focusedProject: Project | null; setFocusedProject:
       setCreateOpen(false);
       form.resetFields();
       setProjects((prev) => [created, ...prev]);
+      setFocusedProject(created);
     } catch (e) {
       // validation or request error
       if ((e as any)?.error) return; // form validation error already shown by Arco
