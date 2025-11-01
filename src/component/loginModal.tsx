@@ -4,6 +4,7 @@ import { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { getAuth, logout } from '../data/backend';
 import { LoginForm } from './loginForm';
+import { useNavigate } from 'react-router';
 
 // Promise-based API for requiring user login from anywhere
 type LoginWaiter = { resolve: () => void; reject: (err: any) => void };
@@ -35,6 +36,7 @@ export default function LoginModal() {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   const [loading, setLoading] = useState(false);
   const { authState, setAuthState } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   // Bridge for global requireLogin() to open this modal
   useEffect(() => {
@@ -66,7 +68,7 @@ export default function LoginModal() {
     logout().catch(() => { /* noop */ });
     Message.success('Logged out... Redirecting to login page in 3 seconds...');
     setTimeout(() => {
-      window.location.href = '/login';
+      navigate('/login');
     }, 3000);
   };
 

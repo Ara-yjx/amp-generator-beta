@@ -3,6 +3,7 @@ import LoginForm from './loginForm';
 import { Divider, Space } from '@arco-design/web-react';
 import { BubblyButton } from './bubblyButton';
 import { AuthContext } from '../context/AuthContext';
+import { useNavigate } from 'react-router';
 
 const LoginPage: React.FC = () => {
 
@@ -11,9 +12,10 @@ const LoginPage: React.FC = () => {
 
   // if already logged in, redirect to /my/
   const { authState } = useContext(AuthContext);
+  const navigate = useNavigate();
   useEffect(() => {
     if (authState) {
-      window.location.href = '/my/';
+      navigate('/my');
     }
   }, [authState]);
 
@@ -35,7 +37,7 @@ const LoginPage: React.FC = () => {
           setActiveTab={setActiveTab}
           loading={loading}
           setLoading={setLoading}
-          onLoginSuccess={() => { window.location.href = '/my/'; }}
+          onLoginSuccess={() => { navigate('/my'); }}
         />
       </div>
 

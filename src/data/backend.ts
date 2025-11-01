@@ -104,7 +104,7 @@ export async function login({ email, username, password }: { email: string, user
 
 export async function logout() {
   clearAuth();
-  return await apiPost('/api/logout', {}, true);
+  return await apiPost('/api/logout', {});
 }
 
 // Registration API
