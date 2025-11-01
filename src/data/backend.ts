@@ -46,6 +46,17 @@ export function clearAuth() {
   } catch { }
 }
 
+export function addAuthListener(callback: (auth: AuthState | null) => void) {
+  const listener = (event: StorageEvent) => {
+    if (event.key === LS_AUTH_KEY) {
+      const auth = event.newValue ? JSON.parse(event.newValue) : null;
+      callback(auth);
+    }
+  };
+  window.addEventListener('storage', listener);
+  return () => window.removeEventListener('storage', listener);
+}
+
 /**
  * @param useJsonContentType should set to false for Multipart/form-data (file upload)
  * @returns 
