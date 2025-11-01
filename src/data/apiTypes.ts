@@ -41,6 +41,8 @@ export type ExperimentEntity = {
   created_at: string;
   last_updated_at: string;
   experiment_data: object;
+  has_access?: boolean;
+  is_owner?: boolean;
 };
 
 export type Experiment = {
@@ -51,6 +53,8 @@ export type Experiment = {
   experimentData: object;
   createdAt: string;
   lastUpdatedAt: string;
+  hasAccess?: boolean;
+  isOwner?: boolean;
 };
 
 export function experimentFromEntity(e: ExperimentEntity): Experiment {
@@ -62,5 +66,43 @@ export function experimentFromEntity(e: ExperimentEntity): Experiment {
     createdAt: e.created_at,
     lastUpdatedAt: e.last_updated_at,
     experimentData: e.experiment_data,
+    hasAccess: e.has_access,
+    isOwner: e.is_owner,
   };
 }
+
+export type ExperimentFileEntity = {
+  file_id: string;
+  filename: string;
+  s3_arn: string;
+  s3_key: string;
+  content_type: string;
+  uploaded_at: string;
+};
+
+export type ExperimentFile = {
+  fileId: string;
+  filename: string;
+  s3Arn: string;
+  s3Key: string;
+  contentType: string;
+  uploadedAt: string;
+};
+
+export function experimentFileFromEntity(ef: ExperimentFileEntity): ExperimentFile {
+  return {
+    fileId: ef.file_id,
+    filename: ef.filename,
+    s3Arn: ef.s3_arn,
+    s3Key: ef.s3_key,
+    contentType: ef.content_type,
+    uploadedAt: ef.uploaded_at,
+  };
+} 
+
+/** The experiment_data */
+export type ExperimentData = {
+  settings: string; // JSON string
+  lastUpdatedBy?: number; // user id
+}
+

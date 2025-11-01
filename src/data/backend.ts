@@ -2,7 +2,7 @@
 
 import { Message } from '@arco-design/web-react';
 import { requireLogin } from '../component/loginModal';
-import { Project, ProjectEntity, projectFromEntity } from './apiTypes';
+import { Experiment, experimentFromEntity, Project, ProjectEntity, projectFromEntity, ExperimentFileEntity, ExperimentFile, experimentFileFromEntity, ExperimentData } from './apiTypes';
 
 const API_BASE = 'https://q15bwdgudf.execute-api.us-east-2.amazonaws.com/live';
 const LS_AUTH_KEY = 'stimulize_auth';
@@ -147,66 +147,47 @@ export async function createProject({ name, description }: { name?: string, desc
   }
 }
 
-export async function getProjects() {
+export async function getProjects(): Promise<{ response: Response<{ projects: ProjectEntity[] }>, projects: Project[] }> {
   const response = await apiPost<{ projects: ProjectEntity[] }>('/api/getProjects', {}, true);
-  return {
-    response,
-    projects: response.data.projects.map(projectFromEntity),
-  }
+  return { response, projects: response.data.projects.map(projectFromEntity) };
 }
 
-export async function getProject(projectId: number): Promise<ProjectEntity> {
-  return (await apiPost<{ project: ProjectEntity }>(`/api/getProject/${projectId}`, {}, true)).data.project;
+export async function getProject(projectId: number): Promise<{ response: Response<{ project: ProjectEntity }>, project: Project }> {
+  const response = await apiPost<{ project: ProjectEntity }>(`/api/getProject/${projectId}`, {}, true);
+  return { response, project: projectFromEntity(response.data.project) };
 }
 
-export async function updateProject(projectId: number, { name, description }: { name: string, description?: string }): Promise<ProjectEntity> {
-  return (await apiPost<{ project: ProjectEntity }>(`/api/updateProject/${projectId}`, { name, description }, true)).data.project;
+export async function updateProject(projectId: number, { name, description }: { name: string, description?: string }): Promise<{ response: Response<{ project: ProjectEntity }>, project: Project }> {
+  const response = await apiPost<{ project: ProjectEntity }>(`/api/updateProject/${projectId}`, { name, description }, true);
+  return { response, project: projectFromEntity(response.data.project) };
 }
 
 export async function deleteProject(projectId: number) {
   return await apiPost(`/api/deleteProject/${projectId}`, {}, true);
 }
 
-// =============================
-// Experiment APIs
-// =============================
-
-// Types for experiments and files (minimal based on API docs)
-export type ExperimentEntity = {
-  id: number;
-  name?: string;
-  description?: string;
-  metadata?: any;
-  created_at?: string;
-  creator_id?: number;
-  project_id?: number;
-  has_access?: boolean;
-  is_owner?: boolean;
-};
-
-export type ExperimentFileInfo = {
-  file_id: string;
-  filename: string;
-  s3_arn: string;
-  s3_key: string;
-  content_type: string;
-  uploaded_at: string;
-};
-
-export async function createExperiment(projectId: number, payload?: { name?: string; description?: string }): Promise<ExperimentEntity> {
-  return (await apiPost<{ experiment: ExperimentEntity }>(`/api/createExperiment`, { project_id: projectId, ...(payload || {}) }, true)).data.experiment;
+export async function createExperiment(projectId: number, payload?: { name?: string; description?: string }): Promise<{ response: Response<{ experiment: any }>, experiment: Experiment }> {
+  const response = await apiPost<{ experiment: any }>(`/api/createExperiment`, { project_id: projectId, ...(payload || {}) }, true);
+  return { response, experiment: experimentFromEntity(response.data.experiment) };
 }
 
-export async function getExperimentsByProjectId(projectId: number): Promise<{ experiments: ExperimentEntity[] }> {
-  return (await apiPost<{ experiments: ExperimentEntity[] }>(`/api/getExperimentsByProjectId`, { project_id: projectId }, true)).data;
+export async function getExperimentsByProjectId(projectId: number): Promise<{ response: Response<{ experiments: any[] }>, experiments: Experiment[] }> {
+  const response = await apiPost<{ experiments: any[] }>(`/api/getExperimentsByProjectId`, { project_id: projectId }, true);
+  return { response, experiments: (response.data.experiments || []).map(experimentFromEntity) };
 }
 
-export async function getExperiment(experimentId: number): Promise<ExperimentEntity> {
-  return (await apiPost<{ experiment: ExperimentEntity }>(`/api/getExperiment/${experimentId}`, {}, true)).data.experiment;
+export async function getExperiment(experimentId: number): Promise<{ response: Response<{ experiment: any }>, experiment: Experiment }> {
+  const response = await apiPost<{ experiment: any }>(`/api/getExperiment/${experimentId}`, {}, true);
+  return { response, experiment: experimentFromEntity(response.data.experiment) };
 }
 
-export async function updateExperiment(experimentId: number, payload: { description?: string; metadata?: any }): Promise<ExperimentEntity> {
-  return (await apiPost<{ experiment: ExperimentEntity }>(`/api/updateExperiment/${experimentId}`, payload, true)).data.experiment;
+export async function updateExperiment(
+  experimentId: number, { description, experimentData }: { description?: string; experimentData?: ExperimentData }
+): Promise<{
+  response: Response<{ experiment: any }>, experiment: Experiment
+}> {
+  const response = await apiPost<{ experiment: any }>(`/api/updateExperiment/${experimentId}`, { description, metadata: experimentData }, true);
+  return { response, experiment: experimentFromEntity(response.data.experiment) };
 }
 
 export async function deleteExperiment(experimentId: number) {
@@ -214,18 +195,31 @@ export async function deleteExperiment(experimentId: number) {
 }
 
 // File operations for experiments
-export async function uploadExperimentFile(experimentId: number, file: File) {
+export async function uploadExperimentFile(experimentId: number, file: File): Promise<{ response: Response<{ file: ExperimentFileEntity }>, file: ExperimentFile }> {
   const form = new FormData();
   form.append('files', file);
-  return (await apiPost<{ file: ExperimentFileInfo }>(`/api/uploadFIle/${experimentId}`, form, true, false)).data.file;
+  const response = await apiPost<{ file: ExperimentFileEntity }>(`/api/uploadFile/${experimentId}`, form as any, true, false);
+  return { response, file: experimentFileFromEntity(response.data.file) };
 }
 
-export async function getExperimentFiles(experimentId: number) {
-  return (await apiPost<{ experiment_id: number; files: ExperimentFileInfo[]; count: number }>(`/api/getFIles/${experimentId}`, {}, true)).data;
+export async function getExperimentFiles(experimentId: number): Promise<{ response: Response<{ experiment_id: number; files: ExperimentFileEntity[]; count: number }>, experimentId: number, files: ExperimentFile[], count: number }> {
+  const response = await apiPost<{ experiment_id: number; files: ExperimentFileEntity[]; count: number }>(`/api/getFiles/${experimentId}`, {}, true);
+  return {
+    response,
+    experimentId: response.data.experiment_id,
+    files: (response.data.files || []).map(experimentFileFromEntity),
+    count: response.data.count,
+  };
 }
 
-export async function shareExperimentFile(experimentId: number, fileId: string) {
-  return (await apiPost<{ shared_url: string; expires_at: string; file_info: ExperimentFileInfo }>(`/api/experiment/${experimentId}/shareFile/${fileId}`, {}, true)).data;
+export async function shareExperimentFile(experimentId: number, fileId: string): Promise<{ response: Response<{ shared_url: string; expires_at: string; file_info: ExperimentFileEntity }>, sharedUrl: string, expiresAt: string, fileInfo: ExperimentFile }> {
+  const response = await apiPost<{ shared_url: string; expires_at: string; file_info: ExperimentFileEntity }>(`/api/experiment/${experimentId}/shareFile/${fileId}`, {}, true);
+  return {
+    response,
+    sharedUrl: response.data.shared_url,
+    expiresAt: response.data.expires_at,
+    fileInfo: experimentFileFromEntity(response.data.file_info),
+  };
 }
 
 export async function deleteExperimentFile(experimentId: number, fileId: string) {
