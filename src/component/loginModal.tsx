@@ -4,7 +4,7 @@ import { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { getAuth, logout } from '../data/backend';
 import { LoginForm } from './loginForm';
-import { useNavigate } from 'react-router';
+import { useHref, useLocation, useNavigate } from 'react-router';
 
 // Promise-based API for requiring user login from anywhere
 type LoginWaiter = { resolve: () => void; reject: (err: any) => void };
@@ -36,7 +36,6 @@ export default function LoginModal() {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   const [loading, setLoading] = useState(false);
   const { authState, setAuthState } = useContext(AuthContext);
-  const navigate = useNavigate();
 
   // Bridge for global requireLogin() to open this modal
   useEffect(() => {
@@ -66,16 +65,29 @@ export default function LoginModal() {
   const onClickLogOut = () => {
     setAuthState(null);
     logout().catch(() => { /* noop */ });
-    Message.success('Logged out... Redirecting to login page in 3 seconds...');
-    setTimeout(() => {
-      navigate('/login');
-    }, 3000);
+    Message.success('Logged out.');
   };
 
   const onCancel = () => {
     rejectOneLoginWaiter(new Error('Login cancelled'));
     setVisible(false);
   };
+
+  // Do login. A little bit hack here - loginModal decides login mode (open modal/go to login page)
+  const location = useLocation();
+  const loginPageHref = useHref('/login');
+  const onClickLogIn = () => {
+    switch (location.pathname) {
+      case '/login':
+        break;
+      case '/':
+        window.open(loginPageHref, '_blank');
+        break;
+      default:
+        setVisible(true);
+    }
+  };
+
 
   return (
     <>
@@ -87,7 +99,7 @@ export default function LoginModal() {
           </Button>
         </div>
       ) : (
-        <Button icon={<IconUser />} type='primary' size='small' onClick={() => setVisible(true)}>
+        <Button icon={<IconUser />} type='primary' size='small' onClick={onClickLogIn}>
           Login
         </Button>
       )}

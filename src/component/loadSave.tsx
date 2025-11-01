@@ -28,6 +28,8 @@ const SaveSettingsButton: React.FC<{ values?: any }> = (values) => {
 export const LoadSave = () => {
 
   const { form } = Form.useFormContext();
+  const { expId } = useParams();
+  const myPageHref = useHref('/my');
 
   const onFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -61,7 +63,7 @@ export const LoadSave = () => {
   };
 
   return (
-    <div style={{ display: 'flex' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
       <input
         type='file'
         style={{ display: 'none' }}
@@ -79,6 +81,17 @@ export const LoadSave = () => {
           Use Example Settings
         </Button>
       </Space>
+
+      {
+        expId ? null : (
+          <Space size='mini'>
+            <Text type='secondary'>Local Mode</Text>
+            <Tooltip content={<p>Login and create a project through <Link href={myPageHref}>My</Link> page to sync your settings to cloud.</p>}>
+              <IconQuestionCircle />
+            </Tooltip>
+          </Space>
+        )
+      }
     </div>
   )
 };
