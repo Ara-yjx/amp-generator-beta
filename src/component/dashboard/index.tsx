@@ -11,7 +11,7 @@ export const Dashboard: React.FC = () => {
 
   return (
     <Layout>
-      <Sider width={300} style={{ background: '#fff', borderRight: '1px solid #eee', padding: 16 }}>
+      <Sider width={300} style={{ background: '#fff', borderRight: '1px solid #eee', padding: 24 }}>
         <ProjectList focusedProject={focusedProject} setFocusedProject={setFocusedProject} />
       </Sider>
       <Content style={{ padding: 24, minHeight: '100vh', background: '#f9f9f9' }}>

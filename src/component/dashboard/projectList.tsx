@@ -59,7 +59,7 @@ const ProjectList: React.FC<{ focusedProject: Project | null; setFocusedProject:
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <Space align='center' style={{ justifyContent: 'space-between' }}>
-        <Title heading={5} style={{ margin: 0 }}>
+        <Title heading={2} style={{ margin: 0 }}>
           Projects
         </Title>
         <Space>

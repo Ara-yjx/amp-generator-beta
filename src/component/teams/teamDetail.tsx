@@ -151,7 +151,7 @@ export const TeamDetail: React.FC<{
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <Space align='center' style={{ justifyContent: 'space-between' }}>
         <div style={{ textAlign: 'left', flex: 1 }}>
-          <Title heading={5} style={{ margin: 0, marginBottom: 4 }}>Team Members</Title>
+          <Title heading={2} style={{ margin: 0, marginBottom: 4 }}>Team Members</Title>
           {editing ? (
             <Space direction='vertical' style={{ width: '100%' }}>
               <Input

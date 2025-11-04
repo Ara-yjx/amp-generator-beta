@@ -2,8 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Experiment, ExperimentFile, Project } from '../../data/apiTypes';
 import { createExperiment, deleteExperiment, getExperimentsByProjectId, getExperimentFiles } from '../../data/backend';
 import { Button, Form, Input, Message, Modal, Popconfirm, Space, Table, Typography } from '@arco-design/web-react';
-import { IconPlus, IconRefresh, IconDelete, IconEdit, IconShareExternal, IconShareInternal } from '@arco-design/web-react/icon';
-import { href, useHref } from 'react-router';
+import { IconPlus, IconRefresh, IconDelete, IconEdit } from '@arco-design/web-react/icon';
+import { useHref } from 'react-router';
 
 const { Title, Text } = Typography;
 
@@ -61,13 +61,12 @@ export const ProjectDetail: React.FC<{ project: Project }> = ({ project }) => {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [createForm] = Form.useForm();
-  const expHref = useHref('/exp/${v}/edit');
 
   const columns = useMemo(() => ([
     // { title: 'ID', dataIndex: 'id', width: 100 },
     // { title: 'Name', dataIndex: 'name', width: 220 },
     {
-      title: 'Edit', dataIndex: 'id', width: 100,
+      title: 'Build Experiment', dataIndex: 'id', width: 200,
       render: (v: number) => <ProjectEditButton expId={v} />
     },
     { title: 'Description', dataIndex: 'description' },
@@ -173,7 +172,7 @@ export const ProjectDetail: React.FC<{ project: Project }> = ({ project }) => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <Space align='center' style={{ justifyContent: 'space-between' }}>
         <div style={{ textAlign: 'left' }}>
-          <Title heading={5} style={{ margin: 0 }}>Experiments</Title>
+          <Title heading={2} style={{ margin: 0 }}>Experiments</Title>
           <Title heading={5} style={{ margin: 0 }}>{project.name}</Title>
           <Text type='secondary'>{project.description || 'No description'}</Text>
         </div>
@@ -181,9 +180,7 @@ export const ProjectDetail: React.FC<{ project: Project }> = ({ project }) => {
           <Button icon={<IconPlus />} type='primary' onClick={handleOpenCreate}>
             Create Experiment
           </Button>
-          <Button icon={<IconRefresh />} onClick={loadExperiments} loading={loading}>
-            Refresh
-          </Button>
+          <Button icon={<IconRefresh />} onClick={loadExperiments} loading={loading} />
         </Space>
       </Space>
 
