@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Experiment, ExperimentFile, Project } from '../../data/apiTypes';
-import { createExperiment, deleteExperiment, getExperimentsByProjectId, getExperimentFiles } from '../../data/backend';
+import { createExperiment, deleteExperiment, getExperimentsByProjectId, getExperimentFiles, updateProject, updateExperiment } from '../../data/backend';
 import { Button, Form, Input, Message, Modal, Popconfirm, Space, Table, Typography } from '@arco-design/web-react';
-import { IconPlus, IconRefresh, IconDelete, IconEdit } from '@arco-design/web-react/icon';
+import { IconPlus, IconRefresh, IconDelete, IconEdit, IconCheck, IconClose } from '@arco-design/web-react/icon';
 import { useHref } from 'react-router';
 
 const { Title, Text } = Typography;
@@ -54,13 +54,24 @@ export const ProjectEditButton: React.FC<{ expId: number }> = ({ expId }) => {
   );
 }
 
-export const ProjectDetail: React.FC<{ project: Project }> = ({ project }) => {
+export const ProjectDetail: React.FC<{
+  project: Project;
+  onUpdateProject: (project: Project) => void;
+}> = ({ project, onUpdateProject }) => {
   const [experiments, setExperiments] = useState<Experiment[]>([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [createForm] = Form.useForm();
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [updating, setUpdating] = useState(false);
+  const [editingExpId, setEditingExpId] = useState<number | null>(null);
+  const [editExpDescription, setEditExpDescription] = useState('');
+  const [updatingExpId, setUpdatingExpId] = useState<number | null>(null);
+  const [hoveredExpId, setHoveredExpId] = useState<number | null>(null);
 
   const columns = useMemo(() => ([
     // { title: 'ID', dataIndex: 'id', width: 100 },
@@ -69,7 +80,64 @@ export const ProjectDetail: React.FC<{ project: Project }> = ({ project }) => {
       title: 'Build Experiment', dataIndex: 'id', width: 200,
       render: (v: number) => <ProjectEditButton expId={v} />
     },
-    { title: 'Description', dataIndex: 'description' },
+    {
+      title: 'Description',
+      dataIndex: 'description',
+      render: (_: any, record: Experiment) => {
+        const isEditing = editingExpId === record.id;
+        const isHovered = hoveredExpId === record.id;
+
+        return (
+          <div
+            style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 32 }}
+            onMouseEnter={() => setHoveredExpId(record.id)}
+            onMouseLeave={() => setHoveredExpId(null)}
+          >
+            {isEditing ? (
+              <Space style={{ width: '100%' }}>
+                <Input.TextArea
+                  value={editExpDescription}
+                  onChange={setEditExpDescription}
+                  placeholder='Experiment description'
+                  autoSize={{ minRows: 1, maxRows: 4 }}
+                  style={{ flex: 1 }}
+                />
+                <Button
+                  size='mini'
+                  type='primary'
+                  icon={<IconCheck />}
+                  onClick={() => handleSaveExpDescription(record.id)}
+                  loading={updatingExpId === record.id}
+                />
+                <Button
+                  size='mini'
+                  icon={<IconClose />}
+                  onClick={() => {
+                    setEditingExpId(null);
+                    setEditExpDescription('');
+                  }}
+                  disabled={updatingExpId === record.id}
+                />
+              </Space>
+            ) : (
+              <>
+                <span style={{ flex: 1 }}>{record.description || '(No description)'}</span>
+                {isHovered && (
+                  <Button
+                    size='mini'
+                    icon={<IconEdit />}
+                    onClick={() => {
+                      setEditingExpId(record.id);
+                      setEditExpDescription(record.description || '');
+                    }}
+                  />
+                )}
+              </>
+            )}
+          </div>
+        );
+      }
+    },
     {
       title: 'Created At',
       dataIndex: 'createdAt',
@@ -113,7 +181,7 @@ export const ProjectDetail: React.FC<{ project: Project }> = ({ project }) => {
         </Space>
       )
     }
-  ]), []);
+  ]), [editingExpId, editExpDescription, updatingExpId, hoveredExpId, deletingId]);
 
   const loadExperiments = async () => {
     setLoading(true);
@@ -130,6 +198,9 @@ export const ProjectDetail: React.FC<{ project: Project }> = ({ project }) => {
   useEffect(() => {
     if (project?.id != null) {
       loadExperiments();
+      setEditing(false);
+      setEditName(project.name);
+      setEditDescription(project.description || '');
     }
   }, [project?.id]);
 
@@ -168,13 +239,106 @@ export const ProjectDetail: React.FC<{ project: Project }> = ({ project }) => {
     }
   };
 
+  const handleStartEdit = () => {
+    setEditName(project.name);
+    setEditDescription(project.description || '');
+    setEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditing(false);
+    setEditName(project.name);
+    setEditDescription(project.description || '');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editName.trim()) {
+      Message.error('Project name cannot be empty');
+      return;
+    }
+    setUpdating(true);
+    try {
+      const { project: updatedProject } = await updateProject(project.id, { name: editName.trim(), description: editDescription.trim() });
+      Message.success('Project updated');
+      setEditing(false);
+      onUpdateProject(updatedProject);
+    } catch (e: any) {
+      Message.error(e?.meta?.message || 'Failed to update project');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleSaveExpDescription = async (experimentId: number) => {
+    setUpdatingExpId(experimentId);
+    try {
+      const { experiment: updatedExp } = await updateExperiment(experimentId, { description: editExpDescription.trim() });
+      Message.success('Description updated');
+      setExperiments(prev => prev.map(exp => exp.id === experimentId ? updatedExp : exp));
+      setEditingExpId(null);
+      setEditExpDescription('');
+    } catch (e: any) {
+      Message.error(e?.meta?.message || 'Failed to update description');
+    } finally {
+      setUpdatingExpId(null);
+    }
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <Space align='center' style={{ justifyContent: 'space-between' }}>
-        <div style={{ textAlign: 'left' }}>
-          <Title heading={2} style={{ margin: 0 }}>Experiments</Title>
-          <Title heading={5} style={{ margin: 0 }}>{project.name}</Title>
-          <Text type='secondary'>{project.description || 'No description'}</Text>
+        <div style={{ textAlign: 'left', flex: 1 }}>
+          <Title heading={2} style={{ margin: 0, marginBottom: 4 }}>Experiments</Title>
+          {editing ? (
+            <Space direction='vertical' style={{ width: '100%' }}>
+              <Input
+                value={editName}
+                onChange={setEditName}
+                placeholder='Project name'
+                style={{ maxWidth: 400 }}
+              />
+              <Input.TextArea
+                value={editDescription}
+                onChange={setEditDescription}
+                placeholder='Project description (optional)'
+                autoSize={{ minRows: 2, maxRows: 4 }}
+                style={{ maxWidth: 400 }}
+              />
+              <Space>
+                <Button
+                  size='small'
+                  type='primary'
+                  icon={<IconCheck />}
+                  onClick={handleSaveEdit}
+                  loading={updating}
+                >
+                  Save
+                </Button>
+                <Button
+                  size='small'
+                  icon={<IconClose />}
+                  onClick={handleCancelEdit}
+                  disabled={updating}
+                >
+                  Cancel
+                </Button>
+              </Space>
+            </Space>
+          ) : (
+            <div>
+              <div>
+                <Title heading={5} style={{ margin: 0 }}>{project.name}</Title>
+                <Text type='secondary'>{project.description || '(No description)'}</Text><br />
+                <Text type='secondary'>Project ID: {project.id}</Text>
+              </div>
+              <Button
+                size='mini'
+                icon={<IconEdit />}
+                onClick={handleStartEdit}
+                style={{ marginTop: 2 }}
+              />
+            </div>
+          )}
         </div>
         <Space>
           <Button icon={<IconPlus />} type='primary' onClick={handleOpenCreate}>

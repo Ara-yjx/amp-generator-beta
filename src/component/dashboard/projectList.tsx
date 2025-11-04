@@ -8,8 +8,12 @@ import { sortBy } from 'lodash';
 const { Title, Text } = Typography;
 
 
-const ProjectList: React.FC<{ focusedProject: Project | null; setFocusedProject: (project: Project | null) => void }> = ({ focusedProject, setFocusedProject }) => {
-  const [projects, setProjects] = useState<Project[]>([]);
+const ProjectList: React.FC<{ 
+  focusedProject: Project | null; 
+  setFocusedProject: (project: Project | null) => void;
+  projects: Project[];
+  setProjects: React.Dispatch<React.SetStateAction<Project[]>>;
+}> = ({ focusedProject, setFocusedProject, projects, setProjects }) => {
   const [loading, setLoading] = useState(false);
 
   const [createOpen, setCreateOpen] = useState(false);
