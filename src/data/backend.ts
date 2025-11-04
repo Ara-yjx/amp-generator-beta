@@ -87,17 +87,23 @@ async function apiPost<T>(path: string, data: any = {}, requireAuth: boolean = f
   });
   // Prev: 400 means auth expired. Now: meta.code 401 means auth expired. Request login and retry
   if (res.status === 400) {
-    return await loginAndContinue();
+    if (requireAuth) {
+      return await loginAndRetry();
+    }
   } else {
     const json = await res.json() as Response<T>;
     if (!res.ok) throw json;
     if (json.meta.code === 401) {
-      return await loginAndContinue();
+      if (requireAuth) {
+        return await loginAndRetry();
+      }
     }
     return json;
   }
+  Message.error('Unexpected error when calling server.');
+  throw new Error('Unexpected error in apiPost');
   
-  async function loginAndContinue() {
+  async function loginAndRetry() {
     Message.info('Your login session has expired. Please login again.');
     clearAuth();
     await requireLogin();
