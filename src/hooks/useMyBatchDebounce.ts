@@ -18,9 +18,12 @@ export function useMyBatchDebounce<Args extends unknown[]>(
 
   // Emit the last value and reset timer
   const flush = useCallback(() => {
-    if (timerRef.current == null) return;
+    if (lastArgsRef.current == null) return;
+    if (timerRef.current != null) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
     const args = lastArgsRef.current as Args;
-    timerRef.current = null;
     lastArgsRef.current = null;
     cbRef.current(...args);
   }, []);
@@ -33,12 +36,19 @@ export function useMyBatchDebounce<Args extends unknown[]>(
     }
   }, [delay, flush]);
 
-  // clean up on component unmount (don't force output)
-  useEffect(() => () => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = null;
-    lastArgsRef.current = null;
-  }, []);
+  // clean up on component unmount - flush pending data
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      flush();
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      flush(); // Flush on component unmount (page transition)
+    };
+  }, [flush]);
 
   return push;
 }
