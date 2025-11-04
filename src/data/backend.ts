@@ -2,7 +2,7 @@
 
 import { Message } from '@arco-design/web-react';
 import { requireLogin } from '../component/loginModal';
-import { Experiment, experimentFromEntity, Project, ProjectEntity, projectFromEntity, ExperimentFileEntity, ExperimentFile, experimentFileFromEntity, ExperimentData } from './apiTypes';
+import { Experiment, experimentFromEntity, Project, ProjectEntity, projectFromEntity, ExperimentFileEntity, ExperimentFile, experimentFileFromEntity, ExperimentData, Team, TeamEntity, teamFromEntity, TeamMember, TeamMemberEntity, teamMemberFromEntity } from './apiTypes';
 
 const API_BASE = 'https://q15bwdgudf.execute-api.us-east-2.amazonaws.com/live';
 const LS_AUTH_KEY = 'stimulize_auth';
@@ -225,5 +225,55 @@ export async function shareExperimentFile(experimentId: number, fileId: string):
 export async function deleteExperimentFile(experimentId: number, fileId: string) {
   // API docs label looks duplicated; using deleteFile endpoint name here.
   return await apiPost(`/api/experiment/${experimentId}/deleteFile/${fileId}`, {}, true);
+}
+
+// =============================
+// Team APIs
+// =============================
+
+export async function createTeam({ name, description }: { name: string; description?: string }): Promise<{ response: Response<{ team: TeamEntity }>, team: Team }> {
+  const response = await apiPost<{ team: TeamEntity }>('/api/teams/create', { name, description }, true);
+  return { response, team: teamFromEntity(response.data.team) };
+}
+
+export async function getTeams(): Promise<{ response: Response<{ teams: TeamEntity[] }>, teams: Team[] }> {
+  const response = await apiPost<{ teams: TeamEntity[] }>('/api/teams/getTeams', {}, true);
+  return { response, teams: (response.data.teams || []).map(teamFromEntity) };
+}
+
+export async function getTeam(teamId: number): Promise<{ response: Response<{ team: TeamEntity }>, team: Team }> {
+  const response = await apiPost<{ team: TeamEntity }>(`/api/teams/getTeam/${teamId}`, {}, true);
+  return { response, team: teamFromEntity(response.data.team) };
+}
+
+export async function updateTeam(teamId: number, { name, description }: { name: string; description?: string }): Promise<{ response: Response<{ team: TeamEntity }>, team: Team }> {
+  const response = await apiPost<{ team: TeamEntity }>(`/api/teams/updateTeam/${teamId}`, { name, description }, true);
+  return { response, team: teamFromEntity(response.data.team) };
+}
+
+export async function addTeamMember(teamId: number, userId: number): Promise<{ response: Response<{ team: TeamEntity }>, team: Team }> {
+  const response = await apiPost<{ team: TeamEntity }>(`/api/teams/addMember/${teamId}`, { user_id: userId }, true);
+  return { response, team: teamFromEntity(response.data.team) };
+}
+
+export async function removeTeamMember(teamId: number, userId: number): Promise<{ response: Response<{ team: TeamEntity }>, team: Team }> {
+  const response = await apiPost<{ team: TeamEntity }>(`/api/teams/removeMember/${teamId}`, { user_id: userId }, true);
+  return { response, team: teamFromEntity(response.data.team) };
+}
+
+export async function getTeamMembers(teamId: number): Promise<{ response: Response<{ members: TeamMemberEntity[] }>, members: TeamMember[] }> {
+  const response = await apiPost<{ members: TeamMemberEntity[] }>(`/api/teams/getTeamMembers/${teamId}`, {}, true);
+  return { response, members: (response.data.members || []).map(teamMemberFromEntity) };
+}
+
+export async function checkTeamAccess(teamId: number): Promise<{ response: Response<{ team_id: number; has_access: boolean; is_owner: boolean; user_role: string }>, teamId: number, hasAccess: boolean, isOwner: boolean, userRole: string }> {
+  const response = await apiPost<{ team_id: number; has_access: boolean; is_owner: boolean; user_role: string }>(`/api/teams/checkTeamAccess/${teamId}`, {}, true);
+  return {
+    response,
+    teamId: response.data.team_id,
+    hasAccess: response.data.has_access,
+    isOwner: response.data.is_owner,
+    userRole: response.data.user_role,
+  };
 }
 

@@ -98,6 +98,65 @@ export function experimentFileFromEntity(ef: ExperimentFileEntity): ExperimentFi
     contentType: ef.content_type,
     uploadedAt: ef.uploaded_at,
   };
+}
+
+// Team types
+export type TeamEntity = {
+  id: number;
+  name: string;
+  description?: string;
+  owner_id: number;
+  created_at: string;
+  is_owner?: boolean;
+  has_access?: boolean;
+};
+
+export type Team = {
+  id: number;
+  name: string;
+  description?: string;
+  ownerId: number;
+  createdAt: string;
+  isOwner?: boolean;
+  hasAccess?: boolean;
+};
+
+export function teamFromEntity(t: TeamEntity): Team {
+  return {
+    id: t.id,
+    name: t.name,
+    description: t.description,
+    ownerId: t.owner_id,
+    createdAt: t.created_at,
+    isOwner: t.is_owner,
+    hasAccess: t.has_access,
+  };
+}
+
+export type TeamMemberEntity = {
+  id: number;
+  username: string;
+  email: string;
+  role: string;
+  joined_at: string;
+};
+
+export type TeamMember = {
+  id: number;
+  username: string;
+  email: string;
+  role: string;
+  joinedAt: string;
+};
+
+export function teamMemberFromEntity(tm: TeamMemberEntity): TeamMember {
+  return {
+    id: tm.id,
+    username: tm.username,
+    email: tm.email,
+    role: tm.role,
+    joinedAt: tm.joined_at,
+  };
 } 
 
 /** The experiment_data */

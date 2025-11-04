@@ -8,6 +8,7 @@ import Dashboard from './component/dashboard';
 import Header from './component/header';
 import LoginPage from './component/loginPage';
 import { MainForm } from './component/mainForm';
+import Teams from './component/teams';
 import { AuthContext } from './context/AuthContext';
 
 
@@ -33,6 +34,7 @@ function App() {
                 <Route path='/' element={<MainForm />} />
                 <Route path='/exp/:expId?/edit' element={<MainForm />} />
                 <Route path='/my' element={authState ? <Dashboard /> : <Navigate to='/login' />} />
+                <Route path='/team' element={authState ? <Teams /> : <Navigate to='/login' />} />
                 <Route path='/login' element={<LoginPage />} />
               </Routes>
             </Layout.Content>
