@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import cite from '../data/cite';
 import LoginModal from './loginModal';
+import NavButtonDropdown from './navButtonDropdown';
 
 const { Title, Paragraph } = Typography;
 
@@ -15,6 +16,10 @@ function Header() {
 
   return (
     <div>
+      <div style={{ position: 'absolute', top: 20, left: 20 }}>
+        <NavButtonDropdown />
+      </div>
+
       <h1 style={{ color: '#3491FA', letterSpacing: 1 }}>STIMULIZE</h1>
       <Space split={<Divider type='vertical' />} style={{ marginBottom: 30 }}>
         <Link href='./SP-Builder_User_Manual_20240307.pdf' target='_blank' icon={<IconBook />}>
