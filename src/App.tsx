@@ -13,17 +13,12 @@ import { AuthContext } from './context/AuthContext';
 
 
 function App() {
-  let baseRoute;
-  try {
-    baseRoute = new URL(process.env.PUBLIC_URL).pathname;
-  } catch { }
-  console.log('baseRoute: ', baseRoute);
 
   const { authState } = useContext(AuthContext);
 
   return (
     <ConfigProvider locale={enUS}>
-      <HashRouter basename={baseRoute}>
+      <HashRouter>
         <div className="App">
           <Layout>
             <Layout.Header>
