@@ -2,7 +2,7 @@ import { Button, Message, Modal } from '@arco-design/web-react';
 import { IconUser } from '@arco-design/web-react/icon';
 import { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { getAuth, logout } from '../data/backend';
+import { addAuthListener, getAuth, logout } from '../data/backend';
 import { LoginForm } from './loginForm';
 import { useHref, useLocation, useNavigate } from 'react-router';
 
@@ -69,7 +69,9 @@ export default function LoginModal() {
   };
 
   const onCancel = () => {
-    rejectOneLoginWaiter(new Error('Login cancelled'));
+    // Will add this back when we have better handling for cancel login
+    // rejectOneLoginWaiter(new Error('Login cancelled'));
+    Message.warning('Login canceled. Some network operations might be canceled.')
     setVisible(false);
   };
 
@@ -87,6 +89,16 @@ export default function LoginModal() {
         setVisible(true);
     }
   };
+
+  // If login from other tab, close modal
+  useEffect(() => {
+    const removeListener = addAuthListener((auth) => {
+      if (auth) {
+        setVisible(false);
+      }
+    });
+    return removeListener;
+  }, []);
 
   if (location.pathname === '/login') {
     return null;
