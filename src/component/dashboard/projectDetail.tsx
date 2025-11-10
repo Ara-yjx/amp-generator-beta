@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Experiment, ExperimentFile, Project } from '../../data/apiTypes';
-import { createExperiment, deleteExperiment, getExperimentsByProjectId, getExperimentFiles, updateProject, updateExperiment } from '../../data/backend';
+import { createExperiment, deleteExperiment, getExperimentsByProjectId, getExperimentFiles, updateProject, updateExperimentDescription } from '../../data/backend';
 import { Button, Form, Input, Message, Modal, Popconfirm, Space, Table, Typography } from '@arco-design/web-react';
 import { IconPlus, IconRefresh, IconDelete, IconEdit, IconCheck, IconClose } from '@arco-design/web-react/icon';
 import { useHref } from 'react-router';
@@ -272,7 +272,7 @@ export const ProjectDetail: React.FC<{
   const handleSaveExpDescription = async (experimentId: number) => {
     setUpdatingExpId(experimentId);
     try {
-      const { experiment: updatedExp } = await updateExperiment(experimentId, { description: editExpDescription.trim() });
+      const { experiment: updatedExp } = await updateExperimentDescription(experimentId, { description: editExpDescription.trim() });
       Message.success('Description updated');
       setExperiments(prev => prev.map(exp => exp.id === experimentId ? updatedExp : exp));
       setEditingExpId(null);

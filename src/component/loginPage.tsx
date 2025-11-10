@@ -1,9 +1,10 @@
 import React, { useContext, useEffect, useState } from 'react';
 import LoginForm from './loginForm';
-import { Divider, Space } from '@arco-design/web-react';
+import { Button, Divider, Space } from '@arco-design/web-react';
 import { BubblyButton } from './bubblyButton';
 import { AuthContext } from '../context/AuthContext';
-import { useNavigate } from 'react-router';
+import { useHref, useNavigate } from 'react-router';
+import { IconEdit } from '@arco-design/web-react/icon';
 
 const LoginPage: React.FC = () => {
 
@@ -18,6 +19,8 @@ const LoginPage: React.FC = () => {
       navigate('/my');
     }
   }, [authState]);
+  
+  const localEditorHref = useHref('/exp');
 
   return (
     <Space
@@ -25,12 +28,6 @@ const LoginPage: React.FC = () => {
       style={{ margin: '0 auto', padding: 30 }}
       size={30}
     >
-      <BubblyButton href='/'>
-        Start building experiment without login
-      </BubblyButton>
-
-      <Divider orientation='center'>OR</Divider>
-
       <div style={{ width: 480 }}>
         <LoginForm
           activeTab={activeTab}
@@ -41,6 +38,11 @@ const LoginPage: React.FC = () => {
         />
       </div>
 
+      <Divider orientation='center'>OR</Divider>
+
+      <Button icon={<IconEdit />} type='outline' shape='round' size='large' href={localEditorHref} target='_blank'>
+        Try STIMULIZE as Guest
+      </Button>
     </Space>
   );
 };

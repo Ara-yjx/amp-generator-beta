@@ -10,10 +10,11 @@ const LS_AUTH_KEY = 'stimulize_auth';
 // typing of all request
 interface Response<T> {
   data: T;
-  meta: {
-    code: number;
-    message: string;
+  meta?: {
+    code?: number;
+    message?: string;
   };
+  error?: string;
 }
 
 export type AuthState = {
@@ -61,7 +62,7 @@ export function addAuthListener(callback: (auth: AuthState | null) => void) {
  * @param useJsonContentType should set to false for Multipart/form-data (file upload)
  * @returns 
  */
-async function apiPost<T>(path: string, data: any = {}, requireAuth: boolean = false, useJsonContentType: boolean = true): Promise<Response<T>> {
+async function apiPost<T>(path: string, data: any = {}, requireAuth: string | boolean = false, useJsonContentType: boolean = true, isFirstTry: boolean = true): Promise<Response<T>> {
   console.debug('apiPost', path, data, requireAuth);
   const headers: Record<string, string> = useJsonContentType ? { 'Content-Type': 'application/json' } : {};
   if (requireAuth) {
@@ -92,22 +93,31 @@ async function apiPost<T>(path: string, data: any = {}, requireAuth: boolean = f
     }
   } else {
     const json = await res.json() as Response<T>;
-    if (!res.ok) throw json;
-    if (json.meta.code === 401) {
-      if (requireAuth) {
-        return await loginAndRetry();
+    if (res.ok) {
+      if (json.meta?.code === 401) {
+        if (requireAuth) {
+          return await loginAndRetry();
+        } else {
+          Message.error('Unexpected error when calling server. Please try again later.');
+          throw new Error('Unexpected error in apiPost');
+        }
       }
+      if (json.error) {
+        Message.error(`Error: ${json.error}`);
+      }
+      return json;
     }
-    return json;
+    Message.error(`Error when calling server: ${json.meta?.message ?? json.error ?? ''}. Please try again later.`);
   }
-  Message.error('Unexpected error when calling server.');
   throw new Error('Unexpected error in apiPost');
   
   async function loginAndRetry() {
-    Message.info('Your login session has expired. Please login again.');
+    if (isFirstTry) {
+      Message.info(`${typeof requireAuth === 'string' ? requireAuth : ''}${getAuth() ? 'Your login session has expired. Please login again.' : ''}`);  
+    }
     clearAuth();
     await requireLogin();
-    return apiPost<T>(path, data, requireAuth, useJsonContentType);
+    return apiPost<T>(path, data, requireAuth, useJsonContentType, false);
   }
 }
 
@@ -187,12 +197,29 @@ export async function getExperiment(experimentId: number): Promise<{ response: R
   return { response, experiment: experimentFromEntity(response.data.experiment) };
 }
 
-export async function updateExperiment(
-  experimentId: number, { description, experimentData }: { description?: string; experimentData?: ExperimentData }
+export async function updateExperimentDescription(
+  experimentId: number, { description }: { description?: string }
 ): Promise<{
   response: Response<{ experiment: any }>, experiment: Experiment
 }> {
-  const response = await apiPost<{ experiment: any }>(`/api/updateExperiment/${experimentId}`, { description, metadata: experimentData }, true);
+  const response = await apiPost<{ experiment: any }>(
+    `/api/updateExperiment/${experimentId}`, 
+    { description},
+    'Login is required to update experiment. '
+  );
+  return { response, experiment: experimentFromEntity(response.data.experiment) };
+}
+
+export async function updateExperimentData(
+  experimentId: number, { experimentData }: { experimentData?: ExperimentData }
+): Promise<{
+  response: Response<{ experiment: any }>, experiment: Experiment
+}> {
+  const response = await apiPost<{ experiment: any }>(
+    `/api/updateExperiment/${experimentId}`, 
+    { metadata: experimentData },
+    'Login is required to save experiment settings to cloud. '
+  );
   return { response, experiment: experimentFromEntity(response.data.experiment) };
 }
 

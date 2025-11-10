@@ -31,7 +31,8 @@ function App() {
             </Layout.Header>
             <Layout.Content>
               <Routes>
-                <Route path='/' element={<MainForm />} />
+                <Route path='/' element={<LoginPage />} />
+                <Route path='/exp' element={<MainForm />} />
                 <Route path='/exp/:expId?/edit' element={<MainForm />} />
                 <Route path='/my' element={authState ? <Dashboard /> : <Navigate to='/login' />} />
                 <Route path='/team' element={authState ? <Teams /> : <Navigate to='/login' />} />

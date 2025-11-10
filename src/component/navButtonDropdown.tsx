@@ -10,19 +10,19 @@ const NavButtonDropdown = () => {
 
   // Decide whether to open page in new tab. A little bit hack here by self-checking location
   const isEditorPage = useMatch('/exp/:expId?/edit');
-  const isIndexPage = useLocation().pathname === '/';
-  const isTargetBlank = isEditorPage || isIndexPage;
+  const isLocalEditorPage = useMatch('/exp');
+  const isTargetBlank = isEditorPage || isLocalEditorPage;
 
   return (
     <Dropdown
       droplist={
         <Menu>
-          <Menu.Item key='home' >
+          <Menu.Item key='/my'>
             <Link href={homeHref} target={isTargetBlank ? '_blank' : undefined}>
               <IconHome /> &nbsp; Home
             </Link>
           </Menu.Item>
-          <Menu.Item key='team'>
+          <Menu.Item key='/team'>
             <Link href={teamHref} target={isTargetBlank ? '_blank' : undefined}>
               <IconUserGroup /> &nbsp; Teams
             </Link>

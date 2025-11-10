@@ -80,7 +80,7 @@ export default function LoginModal() {
     switch (location.pathname) {
       case '/login':
         break;
-      case '/':
+      case '/exp':
         window.open(loginPageHref, '_blank');
         break;
       default:
@@ -88,6 +88,9 @@ export default function LoginModal() {
     }
   };
 
+  if (location.pathname === '/login') {
+    return null;
+  }
 
   return (
     <>

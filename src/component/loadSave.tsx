@@ -4,7 +4,7 @@ import { IconDesktop, IconDownload, IconPaste, IconQuestionCircle, IconUpload } 
 import React, { useEffect, useRef } from 'react';
 import { useHref, useNavigate, useParams } from 'react-router';
 import { ExperimentData } from '../data/apiTypes';
-import { getExperiment, updateExperiment } from '../data/backend';
+import { getExperiment, updateExperimentData } from '../data/backend';
 import { transformOldValues, transformValuesOnSave } from '../data/backwardCompatibility';
 import { defaultAmpParams } from '../data/defaultAmpParams';
 import { generateBlob } from '../data/generate';
@@ -67,7 +67,19 @@ export const LoadSave = () => {
   const { expId } = useParams();
   const navigate = useNavigate();
 
-  const experimentId: number | null = parseExpId(expId, () => navigate('/my'));
+  // Parse experiment ID from string to number
+  const parseExpId = (expId: string | undefined): number | null => {
+    if (!expId) return null;
+    const id = Number(expId);
+    if (isNaN(id)) {
+      Message.error('The experiment ID in URL is invalid. Will redirect to My page in 3 seconds.');
+      setTimeout(() => navigate('/my'), 3000);
+      return null;
+    };
+    return id;
+  }
+
+  const experimentId: number | null = parseExpId(expId);
   const lastSavedVersionRef = useRef<{ data?: { time: string } }>({});
 
   const myPageHref = useHref('/my');
@@ -139,8 +151,13 @@ export const LoadSave = () => {
           ) : null
         ) : (
           <Space size='mini'>
-            <Text type='secondary'>Local Mode</Text>
-            <Tooltip content={<p>Login and create a project through <Link href={myPageHref}>My</Link> page to sync your settings to cloud.</p>}>
+            <Text type='secondary'>Guest Mode</Text>
+            <Tooltip content={
+              <p>
+                You can only load and save your STIMULIZE settings to local files.<br /> To sync your settings to cloud, login and create a project through&nbsp;
+                <Link icon href={myPageHref} target='_blank' style={{ color: 'white', textDecoration: 'underline' }} hoverable={false}>My page</Link>.
+              </p>
+            }>
               <IconQuestionCircle />
             </Tooltip>
           </Space>
@@ -155,17 +172,7 @@ export const LoadSave = () => {
   )
 };
 
-// Parse experiment ID from string
-function parseExpId(expId: string | undefined, onFailure: () => void): number | null {
-  if (!expId) return null;
-  const id = Number(expId);
-  if (isNaN(id)) {
-    Message.error('The experiment ID in URL is invalid. Will redirect to My page in 3 seconds.');
-    setTimeout(() => onFailure(), 3000);
-    return null;
-  };
-  return id;
-}
+
 
 // Load, transformOldValues, apply to form
 async function loadFromCloud(experimentId: number, form: FormInstance): Promise<void> {
@@ -228,7 +235,7 @@ async function saveToCloud(experimentId: number, values: any, lastSavedTime: str
   }
 
   async function continueSave() {
-    const { experiment } = await updateExperiment(experimentId, {
+    const { experiment } = await updateExperimentData(experimentId, {
       experimentData: {
         settings: JSON.stringify(transformValuesOnSave({ values })),
       }
