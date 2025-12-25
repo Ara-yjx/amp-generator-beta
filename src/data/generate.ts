@@ -81,7 +81,7 @@ export function hydrateQsf(params: AmpParams) {
   setEd('fullscreen', Boolean(params.fullscreen));
   setEd('backgroundColor', params.trialHtml.backgroundColor);
   if (params.selectedOutputs) {
-    const transformedSelectedOutputs = transformSelectedOutputs(params.selectedOutputs);
+    const transformedSelectedOutputs = transformSelectedOutputs(params);
     setEd('selectedOutputs', transformedSelectedOutputs);
     // Add selected outputs EDs
     transformedSelectedOutputs.forEach(so => addEd(so.outputName!));
@@ -471,9 +471,10 @@ function isFreeform(page: AT.Page): page is AT.Page & { layoutType: 'freeform', 
 }
 
 /** Add default name and make page 1-based */
-function transformSelectedOutputs(selectedOutputs: SelectedOutputItem[]): SelectedOutputItem[] {
-  return selectedOutputs.map(so => ({
-    outputName: getDefaultSelectedOutputName(so),
+function transformSelectedOutputs(params: AmpParams): SelectedOutputItem[] {
+  if (!params.selectedOutputs) return [];
+  return params.selectedOutputs.map(so => ({
+    outputName: getDefaultSelectedOutputName(so, params.advancedTimeline?.pages),
     ...so,
     page: so.page + 1, // 1-based
   }));

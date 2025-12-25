@@ -170,6 +170,7 @@ export namespace AT {
   type LayoutType = 'grid' | 'freeform'; // undefined means 'grid'
 
   interface Page {
+    name?: string,
     // isConditionEnabled: boolean,
     // condition?: Condition,
     condition?: ConditionTree,

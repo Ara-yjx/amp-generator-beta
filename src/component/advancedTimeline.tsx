@@ -1,4 +1,4 @@
-import { Button, Card, Checkbox, Divider, Form, InputNumber, Radio, Select, Space, Switch, Tag, Tooltip, Typography } from '@arco-design/web-react';
+import { Button, Card, Checkbox, Divider, Form, Input, InputNumber, Radio, Select, Space, Switch, Tag, Tooltip, Typography } from '@arco-design/web-react';
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import { IconApps, IconArrowFall, IconBranch, IconDelete, IconEdit, IconPlus, IconQuestionCircle, IconSkipNext, IconToTop } from '@arco-design/web-react/icon';
@@ -56,6 +56,7 @@ export const ATLayout: React.FC<{ field: string }> = ({ field }) => {
   )
 }
 
+/** @deprecated */
 export const ATPageCondition: React.FC<{ field: string, pageIndex: number }> = ({ field, pageIndex }) => {
 
   const { form } = useFormContext();
@@ -267,7 +268,12 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
 
   const cardTitle = (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <Space size='large'>
       <h4>Page #{pageIndex + 1}</h4>
+      <Item field={`${field}.name`} noStyle>
+        <Input placeholder='(no name)' style={{ width: 200 }} />
+      </Item>
+      </Space>
       <Space size={40}>
         <Button
           type={conditionWatch ? 'primary' : 'default'}

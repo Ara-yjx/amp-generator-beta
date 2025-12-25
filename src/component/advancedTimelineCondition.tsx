@@ -1,6 +1,4 @@
 import { Button, Form, InputNumber, Select, Space, Typography } from '@arco-design/web-react';
-import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
-import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import { IconArrowLeft, IconBranch, IconDelete, IconMinus, IconPlus } from '@arco-design/web-react/icon';
 import { range } from 'lodash';
 import React, { useEffect } from 'react';
@@ -10,16 +8,17 @@ import { RenderBranchProps, RenderLeafProps, Tree } from './tree';
 import { hasParent } from '../data/tree';
 
 
-const { Item, List } = Form;
+const { Item, useFormContext, useWatch } = Form;
 
 
 // refresh := onDataInternalChange
 const ResponseCondition: React.FC<{ data: AT.ResponseCondition, refresh: () => void, pageIndex: number }> = ({ data, refresh, pageIndex }) => {
   const { form } = useFormContext();
-  const conditionPageOptions = range(pageIndex).map((_, index) => ({
-    label: `Page #${index + 1}`, value: index,
-  }));
   const pagesWatch = useWatch('advancedTimeline.pages', form) as AT.Page[] | undefined;
+  const conditionPageOptions = range(pageIndex).map((_, index) => ({
+    label: `Page #${index + 1}${pagesWatch?.[index]?.name ? ` (${pagesWatch[index].name})` : ''}`, 
+    value: index,
+  }));
   const selectedPageWatch = pagesWatch?.[data[1]];
   const selectedPageResponseWatch = selectedPageWatch?.response;
   const conditionResponseOptions = [];
@@ -51,7 +50,7 @@ const ResponseCondition: React.FC<{ data: AT.ResponseCondition, refresh: () => v
   return (
     <Space style={{ fontSize: 14 }} >
       <Select
-        options={conditionPageOptions} style={{ width: 100 }}
+        options={conditionPageOptions} style={{ width: 200 }}
         value={data[1]} onChange={(v) => { data[1] = v; refresh() }}
       />
       <Select

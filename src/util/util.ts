@@ -139,20 +139,24 @@ export function hasFitScreen(advancedTimeline: AmpParams['advancedTimeline']): b
   return !!advancedTimeline?.pages.some(p => p.layoutType === 'freeform' && p.fitScreen);
 }
 
-export function getDefaultSelectedOutputName(selectedOutput: Omit<SelectedOutputItem, 'outputName'>): string {
-  const pageNum = selectedOutput.page + 1;
+export function getDefaultSelectedOutputName(selectedOutput: Omit<SelectedOutputItem, 'outputName'>, pages?: AT.Page[]): string {
+  const pageString = sanitizeName(pages?.[selectedOutput.page]?.name) || (selectedOutput.page + 1).toString();
   switch (selectedOutput.type) {
     case 'response':
-      return `response_${pageNum}`;
+      return `response_${pageString}`;
     case 'actualResponse':
-      return `actualResponse_${pageNum}`;
+      return `actualResponse_${pageString}`;
     case 'stimuliItem': {
-      const displayKey = selectedOutput.displayKey ?? '';
-      return `stimuliItem_${pageNum}_${displayKey}`;
+      const displayKey = sanitizeName(selectedOutput.displayKey ?? '');
+      return `stimuliItem_${pageString}_${displayKey}`;
     }
     case 'actualStimuliItem': {
-      const displayKey = selectedOutput.displayKey ?? '';
-      return `actualStimuliItem_${pageNum}_${displayKey}`;
+      const displayKey = sanitizeName(selectedOutput.displayKey ?? '');
+      return `actualStimuliItem_${pageString}_${displayKey}`;
     }
   }
+}
+
+export function sanitizeName(name?: string): string {
+  return name?.replace(/[^a-zA-Z0-9_-]/g, '') ?? '';
 }

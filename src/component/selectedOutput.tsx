@@ -12,13 +12,13 @@ const { Option } = Select;
 const OutputRow: React.FC<{ item: any; index: number; remove: (index: number) => void }> = ({ item, index, remove }) => {
   const { form } = Form.useFormContext();
   const valueWatch = useWatch(`selectedOutputs[${index}]`, form) as SelectedOutputItem | undefined;
-  const pages = useWatch('advancedTimeline.pages', form) as AT.Page[] | undefined;
-  const pageCount = pages?.length ?? 1;
+  const pagesWatch = useWatch('advancedTimeline.pages', form) as AT.Page[] | undefined;
+  const pageCount = pagesWatch?.length ?? 1;
   const pageIndex = valueWatch?.page;
 
   const displayElementOptions = [];
-  if (pageIndex !== undefined && pages && pages[pageIndex]) {
-    const page = pages[pageIndex];
+  if (pageIndex !== undefined && pagesWatch && pagesWatch[pageIndex]) {
+    const page = pagesWatch[pageIndex];
     if (valueWatch?.type && ['stimuliItem', 'actualStimuliItem'].includes(valueWatch.type)) {
       if (page.layoutType === 'freeform' && page.freeformDisplays) {
         for (const el of page.freeformDisplays?.elements.children ?? []) {
@@ -42,7 +42,7 @@ const OutputRow: React.FC<{ item: any; index: number; remove: (index: number) =>
           field={`${item.field}.outputName`}
           label='Output Embedded Data Name'
         >
-          <Input style={{ width: '15rem' }} placeholder={valueWatch && `${getDefaultSelectedOutputName(valueWatch)}`} />
+          <Input style={{ width: '15rem' }} placeholder={valueWatch && `${getDefaultSelectedOutputName(valueWatch, pagesWatch)}`} />
         </Item>
         <Item
           field={`${item.field}.page`}
@@ -50,9 +50,9 @@ const OutputRow: React.FC<{ item: any; index: number; remove: (index: number) =>
           rules={[{ required: true }]}
         >
           <Select style={{ width: 100 }}>
-            {Array.from({ length: pageCount }, (_, i) => (
-              <Option key={i} value={i}>
-                {i + 1}
+            {Array.from({ length: pageCount }, (_, pageIndex) => (
+              <Option key={pageIndex} value={pageIndex}>
+                #{pageIndex + 1}{pagesWatch?.[pageIndex]?.name ? ` (${pagesWatch[pageIndex].name})` : ''}
               </Option>
             ))}
           </Select>
