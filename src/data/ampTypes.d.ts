@@ -204,6 +204,15 @@ export interface Label {
   color: string;
 }
 
+export type SelectedOutputItem = {
+  type: 'stimuliItem' | 'actualStimuliItem' | 'response' | 'actualResponse';
+  page: number;
+  displayKey?: string; // for 'stimuliItem' and/or 'actualStimuliItem'
+  outputName?: string;
+  // format: 'json' | 'string';
+};
+
+
 export interface AmpParams {
   uidCounter?: number;
   stimuli: AmpStimuli[];
@@ -219,4 +228,5 @@ export interface AmpParams {
   surveyIdentifier?: string;
   labels?: Label[];
   fullscreen?: boolean;
+  selectedOutputs?: SelectedOutputItem[];
 }

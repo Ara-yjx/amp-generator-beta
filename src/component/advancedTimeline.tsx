@@ -2,12 +2,11 @@ import { Button, Card, Checkbox, Divider, Form, InputNumber, Radio, Select, Spac
 import useFormContext from '@arco-design/web-react/es/Form/hooks/useContext';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import { IconApps, IconArrowFall, IconBranch, IconDelete, IconEdit, IconPlus, IconQuestionCircle, IconSkipNext, IconToTop } from '@arco-design/web-react/icon';
-import { isEqual, range, sortBy, sortedUniq } from 'lodash';
+import { isEqual, range, sortBy } from 'lodash';
 import React, { Fragment, useEffect } from 'react';
-import type { AT, AmpParams } from '../data/ampTypes';
+import type { AT, AmpParams, SelectedOutputItem } from '../data/ampTypes';
 import useOptionGuards from '../hooks/useOptionGuard';
 import { flatMap2d, forEach2d, getDisplayKey, getLayoutFromLayoutDisplays } from '../util/util';
-import { AcceptedKeys } from './acceptedKeys';
 import { LayoutEditor } from './layoutEditor';
 import { ArcoFormItem } from '../util/arco';
 import { AdvancedTimelineCondition } from './advancedTimelineCondition';
@@ -16,6 +15,8 @@ import FreeformEditor from './freeformEditor';
 import ATElementResponseConfig from './ATElementResponseConfig';
 import ATPageResponseConfig from './ATPageResponseConfig';
 import { SwapSwitch } from './swapSwitch';
+import { ATPageResponseSelectedOutputs } from './ATPageResponseSelectedOutputs';
+import { ATStimuliSelectedOutputs } from './ATStimuliSelectedOutputs';
 
 const { Item, List } = Form;
 const { Text, Title } = Typography;
@@ -233,12 +234,14 @@ export const ATLayoutItemSrcSelector: React.FC<ArcoFormItem<AT.DisplaySrc> & { p
 const ATLayoutItem: React.FC<{ field: string, pageIndex: number, row: number, col: number, options?: { label: string, value: number }[] }> = (
   { field, pageIndex, row, col }
 ) => {
+  const displayKey = getDisplayKey(row, col);
   return (
     <Space direction='vertical' style={{ border: '1px dashed grey', padding: 5 }}>
-      <Tag color='orange' bordered>{getDisplayKey(row, col)}</Tag>
+      <Tag color='orange' bordered>{displayKey}</Tag>
       <Item field={`${field}.displaySrc`} noStyle>
         <ATLayoutItemSrcSelector pageIndex={pageIndex} />
       </Item>
+      <ATStimuliSelectedOutputs pageIndex={pageIndex} displayKey={displayKey} />
       <Item field={field} noStyle>
         <ATElementResponseConfig pageIndex={pageIndex} />
       </Item>
@@ -323,6 +326,7 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
         <Divider />
 
         <ATPageResponseConfig field={field} />
+        <ATPageResponseSelectedOutputs pageIndex={pageIndex} />
 
         <Divider />
 
@@ -381,6 +385,13 @@ export const AdvancedTimeline: React.FC = () => {
       form.setFieldValue('advancedTimeline.pages', [emptyPage()]);
     }
   }, [pagesWatch?.length]);
+  const deletePageSelectedOutputs = (pageIndex: number) => {
+    const selectedOutputs = form.getFieldValue('selectedOutputs') as SelectedOutputItem[] | undefined;
+    if (selectedOutputs) {
+      const newSelectedOutputs = selectedOutputs.filter(so => so.page !== pageIndex);
+      form.setFieldValue('selectedOutputs', newSelectedOutputs);
+    }
+  };
   return (
     <Card style={{ textAlign: 'left' }}>
       <List field='advancedTimeline.pages' noStyle>{
@@ -393,7 +404,7 @@ export const AdvancedTimeline: React.FC = () => {
             {
               fields.map(({ key, field }, index) => (
                 <Fragment key={key}>
-                  <ATPage field={field} pageIndex={index} remove={() => remove(index)} />
+                  <ATPage field={field} pageIndex={index} remove={() => { deletePageSelectedOutputs(index); remove(index); }} />
                   {(index !== fields.length - 1) && <ATPageInterval field={`${field}.interval`} />}
                 </Fragment>
               ))

@@ -1,5 +1,5 @@
 import { sortBy, sum } from 'lodash';
-import { AmpParams, AmpStimuli, AmpStimuliItem, AmpStimuliPrimeItem, AmpTrialHtml, AT, DisplayLayout, MixedPool } from '../data/ampTypes';
+import { AmpParams, AmpStimuli, AmpStimuliItem, AmpStimuliPrimeItem, AmpTrialHtml, AT, DisplayLayout, MixedPool, SelectedOutputItem } from '../data/ampTypes';
 
 
 export type DeepPartial<T> = T extends object ? {
@@ -137,4 +137,22 @@ export function traceSourcePools(displaySrc: AT.DisplaySrc, mixedPools: AmpParam
 export function hasFitScreen(advancedTimeline: AmpParams['advancedTimeline']): boolean {
   // in the future when we add fitScreen to grid layout, we can remove the `p.layoutType === 'freeform'` here
   return !!advancedTimeline?.pages.some(p => p.layoutType === 'freeform' && p.fitScreen);
+}
+
+export function getDefaultSelectedOutputName(selectedOutput: Omit<SelectedOutputItem, 'outputName'>): string {
+  const pageNum = selectedOutput.page + 1;
+  switch (selectedOutput.type) {
+    case 'response':
+      return `response_${pageNum}`;
+    case 'actualResponse':
+      return `actualResponse_${pageNum}`;
+    case 'stimuliItem': {
+      const displayKey = selectedOutput.displayKey ?? '';
+      return `stimuliItem_${pageNum}_${displayKey}`;
+    }
+    case 'actualStimuliItem': {
+      const displayKey = selectedOutput.displayKey ?? '';
+      return `actualStimuliItem_${pageNum}_${displayKey}`;
+    }
+  }
 }

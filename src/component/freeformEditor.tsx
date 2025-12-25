@@ -14,6 +14,7 @@ import FreeformLayersEditor from './freeformLayersEditor';
 import FreeformPropertyPanel from './freeformPropertyPanel';
 import { SwapSwitch } from './swapSwitch';
 import { FreeformElementPreviewInternal } from './freeformElementPreviewInternal';
+import { ATPageResponseSelectedOutputs } from './ATPageResponseSelectedOutputs';
 
 
 // Using "transform" to the whole editor will cause rendering issues
@@ -353,6 +354,7 @@ export function FreeformFullEditor({ field, page, closeEditor }: FreeformFullEdi
       <Row style={{ margin: '0 20px' }}>
         <Col span={12}>
           <ATPageResponseConfig field={`advancedTimeline.pages[${page}]`} />
+          <ATPageResponseSelectedOutputs pageIndex={page} />
         </Col>
         <Col span={12}>
           <SwapSwitch field={`advancedTimeline.pages[${page}].swap`} />

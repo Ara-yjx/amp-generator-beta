@@ -1,7 +1,7 @@
 import { cloneDeep, omit, range } from 'lodash';
 import qsfTemplate from '../assets/qsfTemplate.json';
-import { type UidDetail, flatMap2d, forEach2d, getDisplayKey, getUidDetail, isNotUndefined, map2d } from '../util/util';
-import type { AmpParams, AmpStimuliStyle, AmpStimuliPrimeItem, AmpTimeline, AT, BranchData, LeafData, MixedPoolSource, uid } from './ampTypes';
+import { type UidDetail, flatMap2d, forEach2d, getDefaultSelectedOutputName, getDisplayKey, getUidDetail, isNotUndefined, map2d } from '../util/util';
+import type { AmpParams, AmpStimuliStyle, AmpStimuliPrimeItem, AmpTimeline, AT, BranchData, LeafData, MixedPoolSource, uid, SelectedOutputItem } from './ampTypes';
 import { renderATTrialHtml, renderTrialHtml } from './renderTrialHtml';
 import { traverseTree } from './tree';
 
@@ -24,15 +24,28 @@ export function hydrateQsf(params: AmpParams) {
       if (value === null) {
         ed.Type = 'Recipient';
         ed.Value = undefined; // Value field will be removed when stringify. That's how Qualtrics represents empty value.
-      } else if (typeof value === 'object') {
-        ed.Value = JSON.stringify(value);
-      } else if (value === undefined) {
-        ed.Value = 'null'; // when reading, 'undefined' cannot be parsed
       } else {
-        ed.Value = `${value}`; // (true, false...) are serialized
+        ed.Type = 'Custom';
+        if (typeof value === 'object') {
+          ed.Value = JSON.stringify(value);
+        } else if (value === undefined) {
+          ed.Value = 'null'; // when reading, 'undefined' cannot be parsed
+        } else {
+          ed.Value = `${value}`; // (true, false...) are serialized
+        }
       }
       console.debug('setEd', name, ed.Value);
     }
+  }
+  function addEd(name: string) {
+    embeddedData.push({
+      "Description": name,
+      "Type": "Recipient",
+      "Field": name,
+      "VariableType": "String",
+      "DataVisibility": [],
+      "AnalyzeText": false
+    } as EmbeddedDataTemplate);
   }
 
   const stimuliItems = [{
@@ -67,6 +80,13 @@ export function hydrateQsf(params: AmpParams) {
   setEd('darkMode', Boolean(params.trialHtml.darkMode));
   setEd('fullscreen', Boolean(params.fullscreen));
   setEd('backgroundColor', params.trialHtml.backgroundColor);
+  if (params.selectedOutputs) {
+    const transformedSelectedOutputs = transformSelectedOutputs(params.selectedOutputs);
+    setEd('selectedOutputs', transformedSelectedOutputs);
+    // Add selected outputs EDs
+    transformedSelectedOutputs.forEach(so => addEd(so.outputName!));
+    console.debug('selectedOutputs', params.selectedOutputs);
+  }
 
   addOutputEdForMouseTracking(params, template);
   addSurveyIdentifier(params, template);
@@ -448,4 +468,13 @@ function cleanMixedPoolSourceCount(count: MixedPoolSource['count']) {
 
 function isFreeform(page: AT.Page): page is AT.Page & { layoutType: 'freeform', freeformDisplays: AT.FreeformLayout.Canvas } {
   return page.layoutType === 'freeform' && page.freeformDisplays !== undefined;
+}
+
+/** Add default name and make page 1-based */
+function transformSelectedOutputs(selectedOutputs: SelectedOutputItem[]): SelectedOutputItem[] {
+  return selectedOutputs.map(so => ({
+    outputName: getDefaultSelectedOutputName(so),
+    ...so,
+    page: so.page + 1, // 1-based
+  }));
 }

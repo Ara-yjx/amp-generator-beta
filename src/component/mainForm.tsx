@@ -18,6 +18,7 @@ import { IconCloudDownload, IconQuestionCircle } from '@arco-design/web-react/ic
 import { AdvancedTimeline } from './advancedTimeline';
 import { Debugger } from './debugger';
 import { MixedPools } from './mixedPools';
+import { SelectedOutput } from './selectedOutput';
 
 const { Item } = Form;
 const RadioGroup = Radio.Group;
@@ -129,6 +130,8 @@ export const MainForm: React.FC<{}> = ({ }) => {
             <TrialHtml />
           </Collapse.Item>
         </Collapse>
+
+        <SelectedOutput />
 
         {/* <Item shouldUpdate>
           {

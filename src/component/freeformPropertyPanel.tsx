@@ -8,6 +8,7 @@ import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import { StimuliThumbnail } from './stimuliThumbnail';
 import { useEffect } from 'react';
 import { isEqual } from 'lodash';
+import { ATStimuliSelectedOutputs } from './ATStimuliSelectedOutputs';
 
 const { Item } = Form;
 const { Title } = Typography;
@@ -86,6 +87,11 @@ export function FreeformPropertyPanel({ elements, page, field, selectedElement, 
 
       <Title heading={6}>Response Config</Title>
       <ATElementResponseConfig value={selectedElement.displayItem} onChange={v => updateElement(selectedElement, { displayItem: v })} pageIndex={page} />
+
+      <Divider />
+
+      <Title heading={6}>Output to Embeded Data</Title>
+      <ATStimuliSelectedOutputs pageIndex={page} displayKey={selectedElement.name} />
 
       <Divider />
 
