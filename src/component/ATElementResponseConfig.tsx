@@ -1,10 +1,10 @@
-import React from "react";
+import React from 'react';
 
 import { Checkbox, Form, Space, Typography } from '@arco-design/web-react';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
 import type { AT } from '../data/ampTypes';
 import { AcceptedKeys } from './acceptedKeys';
-import { ArcoFormItem } from "../util/arco";
+import { ArcoFormItem } from '../util/arco';
 
 const { Item } = Form;
 const { Text } = Typography;
@@ -52,7 +52,8 @@ export const ATElementResponseConfig: React.FC<ATElementResponseConfigProps> = (
       }
       {
         mouseClickEnabledWatch && (
-          <Space direction='vertical'>
+          <div>
+            <div>
             <Item noStyle>
               <Checkbox
                 checked={value.mouseClick}
@@ -62,12 +63,15 @@ export const ATElementResponseConfig: React.FC<ATElementResponseConfigProps> = (
                 Clickable
               </Checkbox>
             </Item>
+            </div>
+            <div>
             <Item noStyle>
               <Checkbox checked={value.mouseClickAccuratePoint} onChange={v => onChange?.({ ...value, mouseClickAccuratePoint: v })}>
                 <Text type='secondary'>add accurate point</Text>
               </Checkbox>
             </Item>
-          </Space>
+            </div>
+          </div>
         )
       }
     </Space>

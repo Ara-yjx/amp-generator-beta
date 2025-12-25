@@ -27,13 +27,13 @@ export const ATPageResponseConfig: React.FC<{ field: string }> = ({ field }) => 
   }, [mouseClickEnabledWatch, mouseTrackingWatch]);
 
   return (
-    <>
-      <Space style={{ margin: '10px 0', width: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <Space style={{ margin: '10px 0' }}>
         <IconSkipNext />
-        <Text bold>Go to next page when</Text>
+        <Text bold>Response (Go to next page when...)</Text>
       </Space>
 
-      <Space wrap size={[0, -18]} style={{ paddingLeft: 10, width: '100%' }}>
+      <Space wrap size={[0, -18]} style={{ paddingLeft: 10 }}>
         <Item field={`${field}.response.timeout.enabled`} triggerPropName='checked' layout='inline'>
           <Checkbox>
             <div style={{ display: 'inline-block', width: '10em' }}>After fixed duration</div>
@@ -45,7 +45,7 @@ export const ATPageResponseConfig: React.FC<{ field: string }> = ({ field }) => 
       </Space>
 
       {/* TODO: Space should only wrap 'keys' and 'delayBefore' input, fix all item paddings  */}
-      <Space wrap size={[0, -18]} style={{ paddingLeft: 10, width: '100%' }}>
+      <Space wrap size={[0, -18]} style={{ paddingLeft: 10 }}>
         <Item field={`${field}.response.keyboard.enabled`} triggerPropName='checked' layout='inline'>
           <Checkbox>
             <div style={{ display: 'inline-block', width: '10em' }}>Keyboard response</div>
@@ -63,7 +63,7 @@ export const ATPageResponseConfig: React.FC<{ field: string }> = ({ field }) => 
         }
       </Space>
 
-      <Space wrap size={[0, -18]} style={{ paddingLeft: 10, width: '100%' }}>
+      <Space wrap size={[0, -18]} style={{ paddingLeft: 10 }}>
         <Item field={`${field}.response.mouseClick.enabled`} triggerPropName='checked' layout='inline'>
           <Checkbox>
             <div style={{ display: 'inline-block' }}>Mouse click response</div>
@@ -75,7 +75,7 @@ export const ATPageResponseConfig: React.FC<{ field: string }> = ({ field }) => 
           </Checkbox>
         </Item>
       </Space>
-    </>
+    </div>
   )
 }
 
