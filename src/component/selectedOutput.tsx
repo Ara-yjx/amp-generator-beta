@@ -114,7 +114,6 @@ export const SelectedOutput: React.FC = () => {
                   icon={<IconPlus />}
                   onClick={() => {
                     add({
-                      outputName: 'output' + (fields.length + 1),
                       type: 'stimuliItem',
                       page: 0,
                     } as SelectedOutputItem);

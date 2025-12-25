@@ -391,6 +391,7 @@ export const AdvancedTimeline: React.FC = () => {
       form.setFieldValue('advancedTimeline.pages', [emptyPage()]);
     }
   }, [pagesWatch?.length]);
+  // Delete selectedOutputs when deleting page
   const deletePageSelectedOutputs = (pageIndex: number) => {
     const selectedOutputs = form.getFieldValue('selectedOutputs') as SelectedOutputItem[] | undefined;
     if (selectedOutputs) {
@@ -398,6 +399,16 @@ export const AdvancedTimeline: React.FC = () => {
       form.setFieldValue('selectedOutputs', newSelectedOutputs);
     }
   };
+  // Create selectedOutput of response when creating page
+  const createResponseSelectedOutput = (pageIndex: number) => {
+    const selectedOutputs = form.getFieldValue('selectedOutputs') ?? [] as SelectedOutputItem[];
+    const newSelectedOutput: SelectedOutputItem = {
+      type: 'response',
+      page: pageIndex,
+    };
+    const newSelectedOutputs = [...selectedOutputs, newSelectedOutput];
+    form.setFieldValue('selectedOutputs', newSelectedOutputs);
+  }
   return (
     <Card style={{ textAlign: 'left' }}>
       <List field='advancedTimeline.pages' noStyle>{
@@ -415,7 +426,7 @@ export const AdvancedTimeline: React.FC = () => {
                 </Fragment>
               ))
             }
-            <Button type='outline' icon={<IconPlus />} onClick={() => add(emptyPage())} style={{ color: '#FF8D1F', borderColor: '#FF8D1F' }}>Add page</Button>
+            <Button type='outline' icon={<IconPlus />} onClick={() => { add(emptyPage()); createResponseSelectedOutput(fields.length); }} style={{ color: '#FF8D1F', borderColor: '#FF8D1F' }}>Add page</Button>
           </Space>
         </>
       }</List>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { Checkbox, Form, Space, Typography } from '@arco-design/web-react';
 import useWatch from '@arco-design/web-react/es/Form/hooks/useWatch';
@@ -27,6 +27,13 @@ export const ATElementResponseConfig: React.FC<ATElementResponseConfigProps> = (
   const keyboardClickEnabledWatch = useWatch(`advancedTimeline.pages[${pageIndex}].response.keyboard.enabled`, form) as boolean;
   const swapWatch = useWatch(`advancedTimeline.pages[${pageIndex}].swap`, form) as AT.Page['swap'];
 
+  const shouldShowBindKeys = swapWatch && keyboardClickEnabledWatch && value?.swap;
+  useEffect(() => {
+    if (!shouldShowBindKeys && value?.bindKeyboard && value.bindKeyboard.length > 0) {
+      onChange?.({ ...value, bindKeyboard: [] });
+    }
+  }, [shouldShowBindKeys]);
+
   if (!value) return null;
 
   return (
@@ -41,7 +48,7 @@ export const ATElementResponseConfig: React.FC<ATElementResponseConfigProps> = (
         )
       }
       {
-        swapWatch && keyboardClickEnabledWatch && (
+        shouldShowBindKeys && (
           <Space>
             <Text>Bind keys</Text>
             <Item noStyle>
