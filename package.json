@@ -4,7 +4,7 @@
   "private": true,
   "homepage": "https://spbuilder-team.github.io/",
   "dependencies": {
-    "@arco-design/web-react": "^2.50.2",
+    "@arco-design/web-react": "^2.66.7",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -21,6 +21,7 @@
     "react-color": "^2.19.3",
     "react-dom": "^18.2.0",
     "react-moveable": "^0.56.0",
+    "react-router": "^7.9.3",
     "react-scripts": "5.0.1",
     "react-sortable-hoc": "^2.0.0",
     "typescript": "^4.9.5",
