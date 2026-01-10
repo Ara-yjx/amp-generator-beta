@@ -30,7 +30,7 @@ export const LoginForm: React.FC<{
       Message.success(`Logged in`);
       onLoginSuccess();
     } catch (err: any) {
-      Message.error(err?.error || err?.meta?.message || 'Login failed');
+      Message.error('Login failed: ' + (err?.error || err?.message || err?.meta?.message || ''));
     } finally {
       setLoading(false);
     }

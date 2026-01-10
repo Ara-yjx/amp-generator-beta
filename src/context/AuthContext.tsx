@@ -1,7 +1,7 @@
 import React, { createContext, useMemo, useState } from 'react';
 import { addAuthListener, AuthState, getAuth } from '../data/backend';
 
-export type AuthContextType = {
+export type TAuthContext = {
   authState: AuthState | null;
   setAuthState: (u: AuthState | null) => void;
 };
@@ -10,7 +10,7 @@ export type AuthContextType = {
 /**
  * AuthContext is UI level and is managed by the components, whereas getAuth/setAuth is data level and is managed by the backend operations
  */
-const AuthContext = createContext<AuthContextType>({ authState: null, setAuthState: () => { } });
+const AuthContext = createContext<TAuthContext>({ authState: null, setAuthState: () => { } });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [authState, setAuthState] = useState<AuthState | null>(() => getAuth());

@@ -73,11 +73,14 @@ export const ProjectDetail: React.FC<{
   const [updatingExpId, setUpdatingExpId] = useState<number | null>(null);
   const [hoveredExpId, setHoveredExpId] = useState<number | null>(null);
 
+  const expHref = useHref('/exp');
+
+
   const columns = useMemo(() => ([
     // { title: 'ID', dataIndex: 'id', width: 100 },
     // { title: 'Name', dataIndex: 'name', width: 220 },
     {
-      title: 'Build Experiment', dataIndex: 'id', width: 200,
+      title: <b>Build Experiment</b>, dataIndex: 'id', width: 200,
       render: (v: number) => <ProjectEditButton expId={v} />
     },
     {
@@ -355,6 +358,10 @@ export const ProjectDetail: React.FC<{
         loading={loading}
         pagination={{ pageSize: 10 }}
         border
+        onRow={(record, index) => ({
+          style: { cursor: 'pointer' }, // hacky way to set row style, not recorded in Arco doc
+          onClick: () => window.open(`${expHref}/${record.id}/edit`, '_blank')?.focus(),
+        })}
       // expandedRowRender={(record, index) => <VersionList record={record} index={index} />}
       // expandProps={{
       //   columnTitle: 'Versions',

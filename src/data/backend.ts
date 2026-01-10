@@ -23,21 +23,38 @@ export type AuthState = {
   id: number;
 };
 
+/** internal type in localStorage */
+type AuthStateInternal = AuthState & {
+  tokenCreatedAt: number;
+  tokenExpiresAt: number;
+};
+
+const TOKEN_TTL = 12 * 60 * 60 * 1000; // 12 hours in ms
+
 /**
  * getAuth/setAuth is data level and is managed by the backend operations, whereas AuthContext is UI level and is managed by the components
+ * @returns Returns null if no auth or auth has expired
  */
 export function getAuth(): AuthState | null {
   try {
-    const auth = localStorage.getItem(LS_AUTH_KEY);
-    return auth ? JSON.parse(auth) : null;
-  } catch {
-    return null;
-  }
+    const authString = localStorage.getItem(LS_AUTH_KEY);
+    const auth = authString ? JSON.parse(authString) : null;
+    if (auth && auth.tokenExpiresAt && Date.now() < auth.tokenExpiresAt) {
+      return auth;
+    }
+  } catch {}
+  return null;
 }
 
 export function setAuth(auth: AuthState) {
   try {
-    localStorage.setItem(LS_AUTH_KEY, JSON.stringify(auth));
+    const now = Date.now();
+    const authInternal: AuthStateInternal = { 
+      ...auth, 
+      tokenCreatedAt: now, 
+      tokenExpiresAt: now + TOKEN_TTL 
+    };
+    localStorage.setItem(LS_AUTH_KEY, JSON.stringify(authInternal));
   } catch { }
 }
 
@@ -71,7 +88,7 @@ async function apiPost<T>(path: string, data: any = {}, requireAuth: string | bo
         await requireLogin();
       } catch (err) {
         console.warn('apiPost requireLogin failure', err);
-        Message.error('Login is required to use this feature');
+        Message.error('Please login (or re-login) to continue.');
         throw err;
       }
     }
@@ -86,34 +103,32 @@ async function apiPost<T>(path: string, data: any = {}, requireAuth: string | bo
     headers,
     body: JSON.stringify(data),
   });
+
+
+  let resJson: Response<T> | null = null;
+  try {
+    resJson = await res.json() as Response<T>;
+  } catch { }
+
   // Prev: 400 means auth expired. Now: meta.code 401 means auth expired. Request login and retry
-  if (res.status === 400) {
+  // Now now: 200 & {error: "Invalid, expired, or missing authentication token."} <- should let backend fix this
+  if (res.status === 401 || resJson?.meta?.code === 401 || resJson?.error === 'Invalid, expired, or missing authentication token.') {
     if (requireAuth) {
+      Message.info('Please login (or re-login) to continue.');
       return await loginAndRetry();
     }
-  } else {
-    const json = await res.json() as Response<T>;
-    if (res.ok) {
-      if (json.meta?.code === 401) {
-        if (requireAuth) {
-          return await loginAndRetry();
-        } else {
-          Message.error('Unexpected error when calling server. Please try again later.');
-          throw new Error('Unexpected error in apiPost');
-        }
-      }
-      if (json.error) {
-        Message.error(`Error: ${json.error}`);
-      }
-      return json;
-    }
-    Message.error(`Error when calling server: ${json.meta?.message ?? json.error ?? ''}. Please try again later.`);
   }
-  throw new Error('Unexpected error in apiPost');
-  
+
+  if (!res.ok || resJson === null || resJson.error) {
+    throw new Error(resJson?.error ?? 'Unexpected server error. Please try again later.');
+  }
+
+  return resJson;
+
+
   async function loginAndRetry() {
     if (isFirstTry) {
-      Message.info(`${typeof requireAuth === 'string' ? requireAuth : ''}${getAuth() ? 'Your login session has expired. Please login again.' : ''}`);  
+      Message.info(`${typeof requireAuth === 'string' ? requireAuth : ''}${getAuth() ? 'Your login session has expired. Please login again.' : ''}`);
     }
     clearAuth();
     await requireLogin();
@@ -203,8 +218,8 @@ export async function updateExperimentDescription(
   response: Response<{ experiment: any }>, experiment: Experiment
 }> {
   const response = await apiPost<{ experiment: any }>(
-    `/api/updateExperiment/${experimentId}`, 
-    { description},
+    `/api/updateExperiment/${experimentId}`,
+    { description },
     'Login is required to update experiment. '
   );
   return { response, experiment: experimentFromEntity(response.data.experiment) };
@@ -216,7 +231,7 @@ export async function updateExperimentData(
   response: Response<{ experiment: any }>, experiment: Experiment
 }> {
   const response = await apiPost<{ experiment: any }>(
-    `/api/updateExperiment/${experimentId}`, 
+    `/api/updateExperiment/${experimentId}`,
     { metadata: experimentData },
     'Login is required to save experiment settings to cloud. '
   );

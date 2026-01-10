@@ -4,7 +4,7 @@ import { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { addAuthListener, getAuth, logout } from '../data/backend';
 import { LoginForm } from './loginForm';
-import { useHref, useLocation, useNavigate } from 'react-router';
+import { useHref, useLocation } from 'react-router';
 
 // Promise-based API for requiring user login from anywhere
 type LoginWaiter = { resolve: () => void; reject: (err: any) => void };
@@ -51,11 +51,11 @@ export default function LoginModal() {
     };
   }, []);
 
-  // Auto-login on mount if both token and username exist in localStorage
-  useEffect(() => {
-    const auth = getAuth();
-    auth && setAuthState(auth);
-  }, [setAuthState]);
+  // // Auto-login on mount if both token and username exist in localStorage
+  // useEffect(() => {
+  //   const auth = getAuth();
+  //   auth && setAuthState(auth);
+  // }, [setAuthState]);
 
   const onLoginSuccess = () => {
     resolveAllLoginWaiters();
@@ -71,7 +71,7 @@ export default function LoginModal() {
   const onCancel = () => {
     // Will add this back when we have better handling for cancel login
     // rejectOneLoginWaiter(new Error('Login cancelled'));
-    Message.warning('Login canceled. Some network operations might be canceled.')
+    Message.warning('Login canceled. You might have to retry your previous action.');
     setVisible(false);
   };
 
@@ -90,7 +90,7 @@ export default function LoginModal() {
     }
   };
 
-  // If login from other tab, close modal
+  // If logged in from other tab, close modal
   useEffect(() => {
     const removeListener = addAuthListener((auth) => {
       if (auth) {

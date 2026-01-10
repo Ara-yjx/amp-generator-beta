@@ -32,7 +32,7 @@ const SaveSettingsButton: React.FC<{ values?: any }> = (values) => {
 
 
 const AutoSave = ({ lastSavedTime, updateLastSavedTime, experimentId }: { lastSavedTime: string | null, updateLastSavedTime: (time: string) => void, experimentId: number | null }) => {
-  // Don't know why `getFieldsValue` has error that gets the old value without 'editorBrokenMode'. But useWatch and Item with shouldUpdate works.
+  // Don't know why `getFieldsValue` has error that gets the old value without 'editorBrokenMode'. But useWatch and <Item shouldUpdate /> works.
   const { form } = Form.useFormContext();
   const editorBrokenModeWatch = Form.useWatch('editorBrokenMode', form);
 
