@@ -50,7 +50,7 @@ export const VersionList: React.FC<{ record: Experiment, index: number }> = ({ r
 export const ProjectEditButton: React.FC<{ expId: number }> = ({ expId }) => {
   const expHref = useHref(`/exp/${expId}/edit`);
   return (
-    <Button type='primary' size='mini' icon={<IconEdit />} href={expHref} target='_blank' />
+    <Button type='primary' size='mini' icon={<IconEdit />} href={expHref} target='_self'/>
   );
 }
 
@@ -360,7 +360,7 @@ export const ProjectDetail: React.FC<{
         border
         onRow={(record, index) => ({
           style: { cursor: 'pointer' }, // hacky way to set row style, not recorded in Arco doc
-          onClick: () => window.open(`${expHref}/${record.id}/edit`, '_blank')?.focus(),
+          onClick: (e) => { window.open(`${expHref}/${record.id}/edit`, '_self')?.focus(); e.stopPropagation(); },
         })}
       // expandedRowRender={(record, index) => <VersionList record={record} index={index} />}
       // expandProps={{
