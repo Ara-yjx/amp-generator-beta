@@ -40,7 +40,9 @@ export type ExperimentEntity = {
   description: string;
   created_at: string;
   last_updated_at: string;
-  experiment_data: object;
+  experiment_data: { 
+    settings?: string; // JSON string of {value: ...} . Is undefined for new experiment
+  };
   has_access?: boolean;
   is_owner?: boolean;
 };
@@ -50,7 +52,9 @@ export type Experiment = {
   projectId: number;
   name?: string;
   description: string;
-  experimentData: object;
+  experimentData: { 
+    settings?: string; // JSON string of {value: ...} . Is undefined for new experiment
+  };
   createdAt: string;
   lastUpdatedAt: string;
   hasAccess?: boolean;

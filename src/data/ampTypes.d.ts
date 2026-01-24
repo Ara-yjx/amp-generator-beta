@@ -230,4 +230,5 @@ export interface AmpParams {
   labels?: Label[];
   fullscreen?: boolean;
   selectedOutputs?: SelectedOutputItem[];
+editorBrokenMode?: boolean; // temporarily put it here to mark editor version issue; will later move it out
 }
