@@ -6,11 +6,22 @@ import { HashRouter, Navigate, Route, Routes } from 'react-router';
 import './App.css';
 import Dashboard from './component/dashboard';
 import Header from './component/header';
+import HomePage from './component/homePage';
 import LoginPage from './component/loginPage';
 import { MainForm } from './component/mainForm';
 import Teams from './component/teams';
 import { AuthContext } from './context/AuthContext';
 
+const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <Layout>
+    <Layout.Header>
+      <Header />
+    </Layout.Header>
+    <Layout.Content>
+      {children}
+    </Layout.Content>
+  </Layout>
+);
 
 function App() {
 
@@ -20,21 +31,14 @@ function App() {
     <ConfigProvider locale={enUS}>
       <HashRouter>
         <div className="App">
-          <Layout>
-            <Layout.Header>
-              <Header />
-            </Layout.Header>
-            <Layout.Content>
-              <Routes>
-                <Route path='/' element={<LoginPage />} />
-                <Route path='/exp' element={<MainForm />} />
-                <Route path='/exp/:expId?/edit' element={<MainForm />} />
-                <Route path='/my' element={authState ? <Dashboard /> : <Navigate to='/login' />} />
-                <Route path='/team' element={authState ? <Teams /> : <Navigate to='/login' />} />
-                <Route path='/login' element={<LoginPage />} />
-              </Routes>
-            </Layout.Content>
-          </Layout>
+          <Routes>
+            <Route path='/' element={<HomePage />} />
+            <Route path='/exp' element={<AppLayout><MainForm /></AppLayout>} />
+            <Route path='/exp/:expId?/edit' element={<AppLayout><MainForm /></AppLayout>} />
+            <Route path='/my' element={authState ? <AppLayout><Dashboard /></AppLayout> : <Navigate to='/login' />} />
+            <Route path='/team' element={authState ? <AppLayout><Teams /></AppLayout> : <Navigate to='/login' />} />
+            <Route path='/login' element={<AppLayout><LoginPage /></AppLayout>} />
+          </Routes>
         </div>
       </HashRouter>
     </ConfigProvider>

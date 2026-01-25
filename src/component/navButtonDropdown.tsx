@@ -1,5 +1,5 @@
 import { Button, Dropdown, Link, Menu } from '@arco-design/web-react';
-import { IconHome, IconUserGroup } from '@arco-design/web-react/icon';
+import { IconCompass, IconHome, IconUserGroup } from '@arco-design/web-react/icon';
 import { useHref, useLocation, useMatch } from 'react-router';
 
 
@@ -7,6 +7,7 @@ const NavButtonDropdown = () => {
 
   const homeHref = useHref('/my');
   const teamHref = useHref('/team');
+  const rootHref = useHref('/');
 
   // Decide whether to open page in new tab. A little bit hack here by self-checking location
   const isEditorPage = useMatch('/exp/:expId?/edit');
@@ -25,6 +26,11 @@ const NavButtonDropdown = () => {
           <Menu.Item key='/team'>
             <Link href={teamHref} target={isTargetBlank ? '_blank' : undefined}>
               <IconUserGroup /> &nbsp; Teams
+            </Link>
+          </Menu.Item>
+          <Menu.Item key='/'>
+            <Link href={rootHref} target={isTargetBlank ? '_blank' : undefined}>
+              <IconCompass /> &nbsp; STIMULIZE
             </Link>
           </Menu.Item>
         </Menu>
