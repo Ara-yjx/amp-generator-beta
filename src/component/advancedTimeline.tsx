@@ -17,6 +17,7 @@ import ATPageResponseConfig from './ATPageResponseConfig';
 import { SwapSwitch } from './swapSwitch';
 import { ATPageResponseSelectedOutputs } from './ATPageResponseSelectedOutputs';
 import { ATStimuliSelectedOutputs } from './ATStimuliSelectedOutputs';
+import { FlexibleFlowModal } from './flexibleFlowModal';
 
 const { Item, List } = Form;
 const { Text, Title } = Typography;
@@ -256,6 +257,7 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
   const { form } = useFormContext();
   const conditionWatch = useWatch(`${field}.condition`, form);
   const layoutTypeWatch = useWatch(`${field}.layoutType`, form);
+  const isFlowWatch = !!useWatch('advancedTimeline.flow', form);
 
   const onClickConditionButton = () => {
     const conditionField = `${field}.condition`;
@@ -269,15 +271,16 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
   const cardTitle = (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
       <Space size='large'>
-      <h4>Page #{pageIndex + 1}</h4>
-      <Item field={`${field}.name`} noStyle>
-        <Input placeholder='(no name)' style={{ width: 200 }} />
-      </Item>
+        <h4>Page #{pageIndex + 1}</h4>
+        <Item field={`${field}.name`} noStyle>
+          <Input placeholder='(no name)' style={{ width: 200 }} />
+        </Item>
       </Space>
       <Space size={40}>
         <Button
           type={conditionWatch ? 'primary' : 'default'}
           iconOnly icon={<IconBranch />} size='small'
+          disabled={isFlowWatch}
           onClick={onClickConditionButton}
         />
         <Button shape='circle' icon={<IconDelete />} status='danger' onClick={remove} />
@@ -364,6 +367,15 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
           )
         }
 
+        {
+          isFlowWatch && (
+            <>
+              <Divider />
+              <ATPageInterval field={`${field}.interval`} />
+            </>
+          )
+        }
+
       </Card >
     </div>
   )
@@ -371,12 +383,9 @@ export const ATPage: React.FC<{ field: string, pageIndex: number, remove: () => 
 
 export const ATPageInterval: React.FC<{ field: string }> = ({ field }) => {
   return (
-    <Space>
-      <IconArrowFall style={{ fontSize: 20, color: '#FF8D1F', verticalAlign: 'middle' }} />
-      <Item field={field} label='Interval' layout='inline' style={{ marginBottom: 0 }}>
-        <InputNumber suffix='ms' min={0} style={{ width: 100, minWidth: 60 }} />
-      </Item>
-    </Space>
+    <Item field={field} label='Interval' layout='inline' style={{ marginBottom: 0 }}>
+      <InputNumber suffix='ms' min={0} style={{ width: 100, minWidth: 60 }} />
+    </Item>
   );
 };
 
@@ -385,6 +394,7 @@ export const ATPageInterval: React.FC<{ field: string }> = ({ field }) => {
 export const AdvancedTimeline: React.FC = () => {
   const { form } = useFormContext();
   const pagesWatch = useWatch('advancedTimeline.pages', form) as AT.Page[];
+  const isFlowWatch = !!useWatch('advancedTimeline.flow', form);
   // make sure at lease one page
   useEffect(() => {
     if (!pagesWatch?.length) {
@@ -410,26 +420,38 @@ export const AdvancedTimeline: React.FC = () => {
     form.setFieldValue('selectedOutputs', newSelectedOutputs);
   }
   return (
-    <Card style={{ textAlign: 'left' }}>
-      <List field='advancedTimeline.pages' noStyle>{
-        (fields, { add, remove }) => <>
-          <Space direction='vertical' size='medium' style={{ width: '100%' }}>
-            {/* <IconArrowDown style={{ fontSize: 24, color: '#FF8D1F', verticalAlign: 'middle' }} /> */}
+    <>
+      <div style={{ textAlign: 'left' }}>
+        <FlexibleFlowModal />
+      </div>
+      <Card style={{ textAlign: 'left' }}>
+        <List field='advancedTimeline.pages' noStyle>{
+          (fields, { add, remove }) => <>
+            <Space direction='vertical' size='medium' style={{ width: '100%' }}>
+              {/* <IconArrowDown style={{ fontSize: 24, color: '#FF8D1F', verticalAlign: 'middle' }} /> */}
 
-            <Typography style={{ color: '#FF8D1F' }}>Start Trial</Typography>
-            <IconArrowFall style={{ fontSize: 20, color: '#FF8D1F' }} />
-            {
-              fields.map(({ key, field }, index) => (
-                <Fragment key={key}>
-                  <ATPage field={field} pageIndex={index} remove={() => { deletePageSelectedOutputs(index); remove(index); }} />
-                  {(index !== fields.length - 1) && <ATPageInterval field={`${field}.interval`} />}
-                </Fragment>
-              ))
-            }
-            <Button type='outline' icon={<IconPlus />} onClick={() => { add(emptyPage()); createResponseSelectedOutput(fields.length); }} style={{ color: '#FF8D1F', borderColor: '#FF8D1F' }}>Add page</Button>
-          </Space>
-        </>
-      }</List>
-    </Card>
+              {!isFlowWatch && <Typography style={{ color: '#FF8D1F' }}>Start Trial</Typography>}
+              {!isFlowWatch && <IconArrowFall style={{ fontSize: 20, color: '#FF8D1F' }} />}
+              {
+                fields.map(({ key, field }, index) => (
+                  <Fragment key={key}>
+                    <ATPage field={field} pageIndex={index} remove={() => { deletePageSelectedOutputs(index); remove(index); }} />
+                    {
+                      (index !== fields.length - 1) && !isFlowWatch && (
+                        <Space>
+                          <IconArrowFall style={{ fontSize: 20, color: '#FF8D1F', verticalAlign: 'middle' }} />
+                          <ATPageInterval field={`${field}.interval`} />
+                        </Space>
+                      )
+                    }
+                  </Fragment>
+                ))
+              }
+              <Button type='outline' icon={<IconPlus />} onClick={() => { add(emptyPage()); createResponseSelectedOutput(fields.length); }} style={{ color: '#FF8D1F', borderColor: '#FF8D1F' }}>Add page</Button>
+            </Space>
+          </>
+        }</List>
+      </Card>
+    </>
   );
 };

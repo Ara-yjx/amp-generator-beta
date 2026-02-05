@@ -12,11 +12,11 @@ const { Item, useFormContext, useWatch } = Form;
 
 
 // refresh := onDataInternalChange
-const ResponseCondition: React.FC<{ data: AT.ResponseCondition, refresh: () => void, pageIndex: number }> = ({ data, refresh, pageIndex }) => {
+const ResponseCondition: React.FC<{ data: AT.ResponseCondition, refresh: () => void, pageIndex: number | null }> = ({ data, refresh, pageIndex }) => {
   const { form } = useFormContext();
   const pagesWatch = useWatch('advancedTimeline.pages', form) as AT.Page[] | undefined;
-  const conditionPageOptions = range(pageIndex).map((_, index) => ({
-    label: `Page #${index + 1}${pagesWatch?.[index]?.name ? ` (${pagesWatch[index].name})` : ''}`, 
+  const conditionPageOptions = range(pageIndex ?? pagesWatch?.length ?? 0).map(index => ({
+    label: `Page #${index + 1}${pagesWatch?.[index]?.name ? ` (${pagesWatch[index].name})` : ''}`,
     value: index,
   }));
   const selectedPageWatch = pagesWatch?.[data[1]];
@@ -39,7 +39,7 @@ const ResponseCondition: React.FC<{ data: AT.ResponseCondition, refresh: () => v
   }
 
   useEffect(() => {
-    if (data[1] >= pageIndex) {
+    if (pageIndex !== null && data[1] >= pageIndex) {
       data[1] = 0;
       refresh();
     }
@@ -93,10 +93,11 @@ const ResponseCondition: React.FC<{ data: AT.ResponseCondition, refresh: () => v
 }
 
 
-const PoolSelectionCondition: React.FC<{ data: AT.PoolSelectionCondition, refresh: () => void, pageIndex: number }> = ({ data, refresh, pageIndex }) => {
+const PoolSelectionCondition: React.FC<{ data: AT.PoolSelectionCondition, refresh: () => void, pageIndex: number | null}> = ({ data, refresh, pageIndex }) => {
   const { form } = useFormContext();
+  const pagesWatch = useWatch('advancedTimeline.pages', form) as AT.Page[] | undefined;
 
-  const pageOptions = range(pageIndex).map((_, index) => ({
+  const pageOptions = range(pageIndex ?? pagesWatch?.length ?? 0).map(index => ({
     label: `Page #${index + 1}`, value: index,
   }));
   const conditionPageIndex = data[1];
@@ -149,7 +150,8 @@ const ProbabilityCondition: React.FC<{ data: AT.ProbabilityCondition, refresh: (
   );
 }
 
-export const AdvancedTimelineCondition: React.FC<{ field: string, pageIndex: number }> = ({ field, pageIndex }) => {
+/** When used in FlexibleFlow, pageIndex will be null, in which case the restriction of "can refer to only previous page" is unlocked. */
+export const AdvancedTimelineCondition: React.FC<{ field: string, pageIndex: number | null, noLabel?: boolean }> = ({ field, pageIndex, noLabel }) => {
 
   const RenderBranch: React.FC<RenderBranchProps<BranchData, LeafData>> = ({ path, data, setData, children, operations: { addLeaf, deleteNonRootBranch, deleteRoot } }) => (
     <div style={{ display: 'flex', alignItems: 'stretch', border: '1px solid lightgrey', padding: 2 }}>
@@ -213,10 +215,14 @@ export const AdvancedTimelineCondition: React.FC<{ field: string, pageIndex: num
 
   return (
     <Space style={{ fontSize: 14 }} direction='vertical'>
-      <Space>
-        <IconBranch />
-        Display this page only if
-      </Space>
+      {
+        !noLabel && (
+          <Space>
+            <IconBranch />
+            Display this page only if
+          </Space>
+        )
+      }
       {/* <Space>
         The response of
         <ResponseCondition field={field} pageIndex={pageIndex} />

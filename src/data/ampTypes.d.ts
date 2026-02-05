@@ -1,3 +1,4 @@
+import { FlexibleFlow } from '../component/flexibleFlow';
 import type { BranchNode, LeafNode, TreeNode } from '../data/tree';
 
 export type uid = number;
@@ -167,6 +168,39 @@ export namespace AT {
     }
   }
 
+  export namespace FlexibleFlow {
+
+    type Flow = FlowNode[];
+
+    interface ConditionFlowNode {
+      type: 'condition';
+      condition: ConditionTree;
+      branches: [
+        { value: true; flow: Flow },
+        { value: false; flow: Flow },
+      ];
+    }
+
+    interface PageFlowNode {
+      type: 'page';
+      pageIndex: number;
+      flowPageId?: number;
+    }
+
+    interface EndFlowNode {
+      type: 'end';
+    }
+
+    interface RandomizerFlowNode {
+      type: 'randomizer';
+      branchCount: number;
+      branches: { flow: Flow }[];
+    }
+
+    type FlowNode = ConditionFlowNode | PageFlowNode | EndFlowNode | RandomizerFlowNode;
+  }
+
+
   type LayoutType = 'grid' | 'freeform'; // undefined means 'grid'
 
   interface Page {
@@ -193,6 +227,7 @@ export namespace AT {
 
   type AdvancedTimeline = {
     pages: AT.Page[],
+    flow?: FlexibleFlow.Flow,
   };
 }
 
@@ -230,5 +265,5 @@ export interface AmpParams {
   labels?: Label[];
   fullscreen?: boolean;
   selectedOutputs?: SelectedOutputItem[];
-editorBrokenMode?: boolean; // temporarily put it here to mark editor version issue; will later move it out
+  editorBrokenMode?: boolean; // temporarily put it here to mark editor version issue; will later move it out
 }

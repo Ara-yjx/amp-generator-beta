@@ -105,6 +105,8 @@ export function hydrateQsf(params: AmpParams) {
     console.error('Failed to render trialHtml: qsf question element QID2 not found.')
   }
 
+  console.log('Generated QSF template:', template);
+
   return template;
 }
 
@@ -201,7 +203,8 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
       mouseTracking: transformATMouseTracking(page),
       style: page.style,
       fitScreen: page.fitScreen,
-    }))
+    })),
+    flow: transformATFlow(advancedTimeline.flow),
   };
 
 
@@ -337,6 +340,35 @@ function transformAdvancedTimeline(advancedTimeline: AT.AdvancedTimeline) {
 
   function transformATMouseTracking(page: AT.Page) {
     return page.response.mouseClick.enabled && page.mouseTracking;
+  }
+
+  function transformATFlow(flow: AT.FlexibleFlow.Flow | undefined): AT.FlexibleFlow.Flow | undefined {
+    if (!flow) return undefined;
+    // make pageIndex 1-based recursively
+    return flow.map(node => {
+      if (node.type === 'page') {
+        return { ...node, pageIndex: node.pageIndex + 1 } as AT.FlexibleFlow.PageFlowNode;
+      } else if (node.type === 'condition') {
+        return {
+          ...node,
+          condition: transformATCondition(node.condition),
+          branches: node.branches.map(branch => ({
+            ...branch,
+            flow: transformATFlow(branch.flow),
+          })),
+        } as AT.FlexibleFlow.ConditionFlowNode & { condition: AT.Condition };
+      } else if (node.type === 'randomizer') {
+        return {
+          ...node,
+          branches: node.branches.map(branch => ({
+            ...branch,
+            flow: transformATFlow(branch.flow),
+          })),
+        } as AT.FlexibleFlow.RandomizerFlowNode;
+      } else /* if (node.type === 'end') */ {
+        return node as AT.FlexibleFlow.EndFlowNode;
+      }
+    });
   }
 }
 
