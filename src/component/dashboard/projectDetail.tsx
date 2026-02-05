@@ -360,7 +360,7 @@ export const ProjectDetail: React.FC<{
         border
         onRow={(record, index) => ({
           style: { cursor: 'pointer' }, // hacky way to set row style, not recorded in Arco doc
-          onClick: (e) => { window.open(`${expHref}/${record.id}/edit`, '_self')?.focus(); e.stopPropagation(); },
+          onClick: (e) => { window.open(`${expHref}/${record.id}/edit`, '_blank')?.focus(); e.stopPropagation(); },
         })}
       // expandedRowRender={(record, index) => <VersionList record={record} index={index} />}
       // expandProps={{

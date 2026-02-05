@@ -26,7 +26,7 @@ const { Text, Title } = Typography;
 const DEFAULT_CANVAS_WIDTH = 1000;
 const DEFAULT_CANVAS_HEIGHT = 750;
 
-let GLOBAL_IS_PREVIEW_ENABLED = false;
+let GLOBAL_IS_PREVIEW_ENABLED = true;
 
 export interface FreeformEditorProps {
   field: string; // advancedTimeline.pages[${page}].freeformDisplays

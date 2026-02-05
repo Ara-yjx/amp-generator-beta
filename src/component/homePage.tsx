@@ -139,7 +139,7 @@ const HomePage: React.FC = () => {
               onClick={() => navigate('/my')}
               style={{ width: '100%', marginBottom: 30 }}
             >
-              Go to my experiments and projects
+              Go to My Experiments
             </Button>
           ) : (
             <LoginForm
@@ -162,7 +162,7 @@ const HomePage: React.FC = () => {
             target='_blank'
             style={{ width: '100%' }}
           >
-            {authState ? 'Try STIMULIZE in offline mode' : 'Try STIMULIZE as Guest'}
+            {authState ? 'Try STIMULIZE in Offline Mode' : 'Try STIMULIZE as Guest'}
           </Button>
         </div>
 
