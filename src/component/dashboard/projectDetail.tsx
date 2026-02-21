@@ -164,6 +164,7 @@ export const ProjectDetail: React.FC<{
       dataIndex: 'actions',
       width: 160,
       render: (_: any, record: Experiment) => (
+        <div onClick={e => e.stopPropagation()}>
         <Space>
           <Popconfirm
             style={{ width: 300 }}
@@ -182,6 +183,7 @@ export const ProjectDetail: React.FC<{
             </Button>
           </Popconfirm>
         </Space>
+        </div>
       )
     }
   ]), [editingExpId, editExpDescription, updatingExpId, hoveredExpId, deletingId]);

@@ -7,6 +7,10 @@ import LoginForm from './loginForm';
 import LoginModal from './loginModal';
 import NavigationLinks from './navigationLinks';
 
+// Should use `import stimulizeLogo from` but seems `react-scripts build` does not support it`  
+const stimulizeLogo = `${process.env.PUBLIC_URL}/stimulize-logo.png`;
+const stimulizeScreenshot = `${process.env.PUBLIC_URL}/stimulize-screenshot.png`;
+
 /**
  * BlueDiagonalBackground Component
  * Creates a diagonal blue trapezoid background that passes through the center of the screenshot.
@@ -93,7 +97,7 @@ const HomePage: React.FC = () => {
         padding: '20px 40px',
         zIndex: 10
       }}>
-        <img src="/stimulize-logo.png" alt="STIMULIZE Logo" style={{ height: 50 }} />
+        <img src={stimulizeLogo} alt="STIMULIZE Logo" style={{ height: 50 }} />
         <NavigationLinks />
         <LoginModal />
       </div>
@@ -178,7 +182,7 @@ const HomePage: React.FC = () => {
           }}>
             <img
               ref={screenshotImgRef}
-              src="/stimulize-screenshot.png"
+              src={stimulizeScreenshot}
               alt="STIMULIZE Screenshot"
               style={{
                 width: '100%',
