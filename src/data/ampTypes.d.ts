@@ -118,7 +118,19 @@ export namespace AT {
     mouseClickAccuratePoint?: boolean;
   }
 
-  type LayoutedDisplayItem = ResponsiveDisplayItem & {
+  type ConditionalShowHide = {
+    keyboard?: { keys: string[] },
+    timeout?: { duration: number },
+    mouseClick?: { [key: string]: {} },
+    mouseStasis?: { duration: number },
+  }
+
+  type InPageLogicDisplayItem = {
+    conditionalShow?: ConditionalShowHide,
+    conditionalHide?: ConditionalShowHide,
+  }
+
+  type LayoutedDisplayItem = ResponsiveDisplayItem & InPageLogicDisplayItem & {
     displaySrc: DisplaySrc;
   };
 
@@ -140,17 +152,17 @@ export namespace AT {
       elements: CanvasElementTree;
     }
 
-    type CanvasElementTree = { children: LeafNode<ElementDisplayItem>[] }; 
+    type CanvasElementTree = { children: LeafNode<ElementDisplayItem>[] };
     // currently tree of height=1
     // Equivalent to TreeNode<ElementNodeData, ElementDisplayItemData>
     // type CanvasElementTree = TreeNode<ElementNodeData, ElementDisplayItemData>;
-  
+
     interface ElementNode {
       uid: uid;
       name: string;
       // condition?: ConditionTree;
     }
-  
+
     interface ElementDisplayItem extends ElementNode {
       boxStyle: ElementCanonicalStyle;
       displayItem: LayoutedDisplayItem;

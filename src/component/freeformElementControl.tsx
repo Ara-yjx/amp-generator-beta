@@ -48,7 +48,7 @@ export interface FreeformElementControlProps {
   containerHeight: number,
 
   value: AT.FreeformLayout.ElementDisplayItem,
-  onChange: (updates: DeepPartial<AT.FreeformLayout.ElementDisplayItem>) => void,
+  onPatch: (updates: DeepPartial<AT.FreeformLayout.ElementDisplayItem>) => void,
   page: number,
 
   isFocused: boolean,
@@ -59,7 +59,7 @@ export interface FreeformElementControlProps {
 }
 
 export const FreeformElementControl = forwardRef<FreeformElementControlRef, FreeformElementControlProps>(
-  ({ container, containerWidth, containerHeight, value, onChange, page, isFocused, onClick, scale, children }, ref) => {
+  ({ container, containerWidth, containerHeight, value, onPatch, page, isFocused, onClick, scale, children }, ref) => {
 
     // Basically, React will only render to create the element
     //   and the position will be updated by Moveable callback (on update) and useEffect (first render + after rounding)
@@ -109,8 +109,8 @@ export const FreeformElementControl = forwardRef<FreeformElementControlRef, Free
         height: Number(e.target.style.height.replace('px', '')),
         transform: e.target.style.transform ?? '',
       }, canvasSize);
-      onChange({ boxStyle: canonicalStyle }); // todo: debounce this, but the parent callback also needs immutability
-    }, [canvasSize, onChange]);
+      onPatch({ boxStyle: canonicalStyle }); // todo: debounce this, but the parent callback also needs immutability
+    }, [canvasSize, onPatch]);
 
     return (
       <>

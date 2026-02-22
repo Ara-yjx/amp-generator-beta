@@ -81,6 +81,9 @@ export const ATElementResponseConfig: React.FC<ATElementResponseConfigProps> = (
           </div>
         )
       }
+      {!swapWatch && !shouldShowBindKeys && !mouseClickEnabledWatch && (
+        <Text type='secondary'>Keyboard or Mouse Click response not enabled.</Text>
+      )}
     </Space>
   )
 };

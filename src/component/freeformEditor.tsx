@@ -159,9 +159,13 @@ export function FreeformFullEditor({ field, page, closeEditor }: FreeformFullEdi
     setElements(newElements);
     return newElement;
   };
-  const updateElement = (element: AT.FreeformLayout.ElementDisplayItem, updates: DeepPartial<AT.FreeformLayout.ElementDisplayItem>) => {
+  const patchElement = (element: AT.FreeformLayout.ElementDisplayItem, updates: DeepPartial<AT.FreeformLayout.ElementDisplayItem>) => {
     const updatedElement = mergeOverrideArray(element, updates) as AT.FreeformLayout.ElementDisplayItem;
     const newElements = elements.map(e => e.uid === element.uid ? updatedElement : e);
+    setElements(newElements);
+  };
+  const updateElement = (newElement: AT.FreeformLayout.ElementDisplayItem) => {
+    const newElements = elements.map(e => e.uid === newElement.uid ? newElement : e);
     setElements(newElements);
   };
 
@@ -295,7 +299,7 @@ export function FreeformFullEditor({ field, page, closeEditor }: FreeformFullEdi
                 scale={scale}
                 value={element}
                 page={page}
-                onChange={updates => updateElement(element, updates)}
+                onPatch={updates => patchElement(element, updates)}
                 isFocused={selectedElementUids.includes(element.uid)}
                 onClick={e => onClickElement(e, element)}
                 children={isPreviewEnabled ? <FreeformElementPreviewInternal value={element} /> : <FreeformElementInternal value={element} />}
@@ -336,16 +340,16 @@ export function FreeformFullEditor({ field, page, closeEditor }: FreeformFullEdi
       </div>
 
       <div style={{ flex: 1, minHeight: 0 /* let flex container not fit to this's height */, display: 'flex' }} >
-        <div style={{ width: '15em' }}>
+        <div style={{ width: '20em' }}>
           <FreeformLayersEditor elements={elements} setElements={setElements} selectedElementUids={selectedElementUids} setSelectedElementUids={setSelectedElementUids} />
         </div>
         <div style={{ flex: 1, backgroundColor: '#AAA', padding: 20, overflow: 'scroll' }}>
           {layoutCanvas}
         </div>
-        <div style={{ width: '15em', minHeight: 0 /* let flex container not fit to this's height */, overflowY: 'scroll', overflowX: 'hidden' }}>
+        <div style={{ width: '20em', minHeight: 0 /* let child's flex container not fit to this's height */, overflowY: 'scroll', overflowX: 'hidden' }}>
           {
             selectedElement && selectedElementField ? (
-              <FreeformPropertyPanel elements={elements} page={page} field={selectedElementField} selectedElement={selectedElement} updateElement={updateElement} />
+              <FreeformPropertyPanel elements={elements} page={page} field={selectedElementField} selectedElement={selectedElement} updateElement={updateElement} patchElement={patchElement} />
             ) : null
           }
         </div>
