@@ -209,13 +209,7 @@ const MainFormContent: React.FC<{
               <TrialHtml />
             </Collapse.Item>
           </Collapse>
-
-          <Collapse bordered={false} style={{ marginBottom: 20 }}>
-            <Collapse.Item name='0' header={<h3>Trial Block HTML</h3>}>
-              <TrialHtml />
-            </Collapse.Item>
-          </Collapse>
-
+          
           <SelectedOutput />
 
           {/* <Item shouldUpdate>
