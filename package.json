@@ -4,6 +4,9 @@
   "private": true,
   "homepage": "https://spbuilder-team.github.io/",
   "dependencies": {
+    "file-saver": "^2.0.5",
+    "papaparse": "^5.4.1",
+    "recharts": "^2.8.0",
     "@arco-design/web-react": "^2.50.2",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
@@ -12,6 +15,8 @@
     "@types/lodash": "^4.14.197",
     "@types/node": "^16.18.39",
     "@types/react": "^18.2.16",
+    "@types/file-saver": "^2.0.7",
+    "@types/papaparse": "^5.3.14",
     "@types/react-color": "^3.0.11",
     "@types/react-dom": "^18.2.7",
     "@uiw/react-json-view": "^2.0.0-alpha.27",
@@ -20,6 +25,7 @@
     "react": "^18.2.0",
     "react-color": "^2.19.3",
     "react-dom": "^18.2.0",
+    "react-router-dom": "^6.30.3",
     "react-scripts": "5.0.1",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Logo Section -->
+    <header class="logo-header">
+        <h2 class="logo">SP-Builder</h2>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="main-container">
+        
+        <!-- Left Menu Section -->
+        <!-- Left Menu Section -->
+        <div class="menu">
+            <ul>
+                <li><a href="index.html">Overview</a></li>
+                <li><a href="stimuli.html">Set Your Stimuli Pool</a></li>
+                <li><a href="priming.html">Priming</a></li>
+                <li><a href="trial.html">Design Your Trial Flow</a></li>
+                <li><a href="preview.html">Preview Your Trial</a></li>
+                <li><a href="qualtrics.html">Embed into Qualtrics</a></li>
+                <li><a href="analyze.html">Analyze Your Data</a></li>
+                <li><a href="load.html">Load/Save Your Design</a></li>
+                <li><a href="Assets/SP-Builder_FAQ.pdf" target="_blank" rel="noopener noreferrer">Q&amp;A</a></li>
+            </ul>
+        </div>
+
+        <!-- Content Section -->
+        <div class="content">
+            <h1>Analyze Your Data</h1>
+            <div class="expand-collapse-controls">
+    <button type="button" id="expandAllBtn">Expand All</button>
+    <button type="button" id="collapseAllBtn">Collapse All</button>
+</div>
+
+        
+            <b class="expandable-title">Sequential Priming Paradigm Results</b>
+            <div class="expandable-content">
+                <div class="picture_container">
+                    <img src="Assets/sptresponses.png" width = 400px;  height = 100px />
+                </div>
+                <p>
+                    Participants’ responses to the trials in the sequential priming paradigms are recorded under the variable named “sptResponses.” 
+                    All responses for a sequential priming paradigm (regardless of the number of rounds it includes) are recorded into one variable, 
+                    which is presented as a sequence of key inputs.
+                </p>
+            </div>
+        
+            <b class="expandable-title">Shuffle Results</b>
+            <div class="expandable-content">
+                <div class="picture_container">
+                    <img src="Assets/shuffleresults.png" width = 600px;  height = 200px/>
+                </div>
+                <p>
+                    The stimulus item randomization results are recorded as “shuffleResult.” 
+                    The SP-Builder uses “/” to separate the randomization results for different rounds of sequential priming paradigms and uses “;” to separate the items from different stimuli in a round of the sequential priming paradigm. 
+                    The number here represents the item number.
+                </p>
+            </div>
+        
+            <b class="expandable-title">Response Time</b>
+            <div class="expandable-content">
+                <div class="picture_container">
+                    <img src="Assets/responsedurations.png" width = 520px;  height = 120px/>
+                </div>
+                <p>
+                    Participants’ response/reaction time is recorded as “sptResponseDurations.” All the numbers present the time that the participant spends to give their answer in a trial. 
+                    Again, the response/reaction time lists are separated by a semicolon (“;”) between two rounds.
+                </p>
+            </div>
+        
+            <b class="expandable-title">Priming Results</b>
+            <div class="expandable-content">
+                <div class="picture_container">
+                    <img src="Assets/primeresult.png" width = 520px;  height = 120px/>
+                </div>
+                <p>
+                    If researchers activate the “Priming” function, the result of the function will be recorded in the variable called “primeResult.” 
+                    The resulting name is formed as a combination of the stimulus number and the named selected item.
+                </p>
+            </div>
+        </div>
+</div>
+    <footer class="site-footer">
+            <p>
+              Contact Support:
+              <a href="mailto:spbuilder.team@gmail.com">spbuilder.team@gmail.com</a>
+            </p>
+          </footer>
+    <script src="manual.js"></script>
+</body>
+</html>
+  
+
+

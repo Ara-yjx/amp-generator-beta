@@ -6,7 +6,6 @@ import { defaultAmpParams } from '../data/defaultAmpParams';
 import { generateBlob } from '../data/generate';
 import { useBlobUrl } from '../hooks/useBlobUrl';
 import { transformOldValues, transformValuesOnSave } from '../data/backwardCompatibility';
-
 const { Item } = Form;
 
 // Arco form renders Form Item twice but displays the result of first render
