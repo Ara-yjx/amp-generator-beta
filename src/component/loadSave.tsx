@@ -2,7 +2,7 @@
 import { Button, Form, Message, Space } from '@arco-design/web-react';
 import { IconDownload, IconPaste, IconUpload } from '@arco-design/web-react/icon';
 import React, { useRef } from 'react';
-import { defaultAmpParams } from '../data/defaultAmpParams';
+import { getExampleAmpParams } from '../data/defaultAmpParams';
 import { generateBlob } from '../data/generate';
 import { useBlobUrl } from '../hooks/useBlobUrl';
 import { transformOldValues, transformValuesOnSave } from '../data/backwardCompatibility';
@@ -68,7 +68,7 @@ export const LoadSave = () => {
           {values => <SaveSettingsButton values={values} />}
         </Item>
         <Button type='outline' icon={<IconPaste />} onClick={
-          () => window.confirm('⚠️⚠️⚠️ This will overwrite all settings. Continue?') && form.setFieldsValue(defaultAmpParams)
+          () => window.confirm('⚠️⚠️⚠️ This will overwrite all settings. Continue?') && form.setFieldsValue(getExampleAmpParams())
         }>
           Use Example Settings
         </Button>
