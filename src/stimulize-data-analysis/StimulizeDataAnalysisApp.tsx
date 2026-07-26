@@ -1,6 +1,8 @@
+import { Modal } from '@arco-design/web-react';
 import React, { useState, useRef, ChangeEvent } from 'react';
 import Papa from 'papaparse';
 import { saveAs } from 'file-saver';
+import { getMissingRequiredVars, REQUIRED_CSV_VARS } from './constants';
 import DataTab from './components/DataTab';
 import AnalysisTab from './components/AnalysisTab';
 import PlotTab from './components/PlotTab';
@@ -62,6 +64,7 @@ export function StimulizeDataAnalysisApp() {
     type: 't-test',
   });
   const [plotParams, setPlotParams] = useState<PlotParams>(defaultPlotParams);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -118,10 +121,15 @@ export function StimulizeDataAnalysisApp() {
   const handleConfirmVars = () => {
     if (!rawData) return;
 
-    const requiredVars = ['ID', 'Progress', 'Duration..in.seconds.', 'sptResponses',
-                         'shuffleResult', 'sptResponseDurations', 'primeResult'];
-    const availableRequired = requiredVars.filter(var_ => rawData[0]?.hasOwnProperty(var_));
-    const allSelected = [...availableRequired, ...selectedVars];
+    const missingRequired = getMissingRequiredVars(Object.keys(rawData[0] || {}));
+    if (missingRequired.length > 0) {
+      setValidationError(
+        `Your CSV is missing required variable(s):\n\n${missingRequired.join('\n')}\n\nPlease export from Qualtrics with all SP-Builder variables before confirming.`
+      );
+      return;
+    }
+
+    const allSelected = [...REQUIRED_CSV_VARS, ...selectedVars];
 
     const filteredData = rawData.map((row) => {
       const newRow: CsvRow = {};
@@ -214,6 +222,16 @@ export function StimulizeDataAnalysisApp() {
 
   return (
     <div className="stimulize-data-analysis-root">
+      <Modal
+        visible={validationError !== null}
+        title="Missing required variables"
+        okText="OK"
+        hideCancel
+        onOk={() => setValidationError(null)}
+        onCancel={() => setValidationError(null)}
+      >
+        <p style={{ whiteSpace: 'pre-line', margin: 0, textAlign: 'left' }}>{validationError}</p>
+      </Modal>
       <div className="app">
         <div className="tab-container">
           <div className="tabs">

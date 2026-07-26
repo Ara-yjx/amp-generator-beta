@@ -10,6 +10,7 @@ export interface ManualChapter {
 
 export const MANUAL_CHAPTERS: ManualChapter[] = [
   { label: 'Overview', file: 'index.html' },
+  { label: 'Video Tutorial', file: 'tutorial.html' },
   { label: 'Set Your Stimuli Pool', file: 'stimuli.html' },
   { label: 'Priming', file: 'priming.html' },
   { label: 'Design Your Trial Flow', file: 'trial.html' },

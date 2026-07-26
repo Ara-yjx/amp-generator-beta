@@ -1,11 +1,10 @@
-import { Button, Space } from '@arco-design/web-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { MANUAL_BASE_PATH, MANUAL_CHAPTERS } from '../../config/userManual';
 
 const IFRAME_MIN_HEIGHT = 480;
-const IFRAME_TOP_OFFSET = 220;
+const IFRAME_TOP_OFFSET = 160;
 
-/** User manual: chapter hub + iframe of static HTML from `public/manual/`. */
+/** User manual: iframe of static HTML from `public/manual/` (sidebar nav lives inside iframe). */
 export function UserManualPage() {
   const [chapterFile, setChapterFile] = useState(MANUAL_CHAPTERS[0].file);
   const [iframeHeight, setIframeHeight] = useState(
@@ -16,13 +15,14 @@ export function UserManualPage() {
     [chapterFile]
   );
 
-  const onChapterChange = useCallback((file: string) => {
-    setChapterFile(file);
-    setIframeHeight(Math.max(IFRAME_MIN_HEIGHT, window.innerHeight - IFRAME_TOP_OFFSET));
-  }, []);
-
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'spbuilder-manual-navigate' && typeof event.data.file === 'string') {
+        setChapterFile(event.data.file);
+        setIframeHeight(Math.max(IFRAME_MIN_HEIGHT, window.innerHeight - IFRAME_TOP_OFFSET));
+        return;
+      }
+
       if (event.data?.type !== 'spbuilder-manual-resize') return;
       const height = Number(event.data.height);
       if (!Number.isFinite(height) || height <= 0) return;
@@ -40,20 +40,6 @@ export function UserManualPage() {
 
   return (
     <div className="user-manual-page">
-      <div className="user-manual-page__hub">
-        <Space wrap size="small">
-          {MANUAL_CHAPTERS.map((chapter) => (
-            <Button
-              key={chapter.file}
-              type={chapter.file === chapterFile ? 'primary' : 'secondary'}
-              size="small"
-              onClick={() => onChapterChange(chapter.file)}
-            >
-              {chapter.label}
-            </Button>
-          ))}
-        </Space>
-      </div>
       <iframe
         title="SP-Builder user manual"
         className="user-manual-page__frame"

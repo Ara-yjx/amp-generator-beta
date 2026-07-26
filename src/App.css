@@ -36,10 +36,6 @@
   box-sizing: border-box;
 }
 
-.user-manual-page__hub {
-  margin-bottom: 12px;
-}
-
 .user-manual-page__frame {
   display: block;
   width: 100%;

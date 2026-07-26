@@ -1,4 +1,5 @@
 import React, { ChangeEvent, RefObject, useState } from 'react';
+import { REQUIRED_CSV_VARS } from '../constants';
 import type { CleaningOptions, CsvRow, DataFormat } from '../types';
 
 const ROWS_PER_PAGE = 10;
@@ -56,16 +57,15 @@ const DataTab: React.FC<DataTabProps> = ({
   const getVariableLists = () => {
     if (!rawData || rawData.length === 0) return { required: [], optional: [] };
     
-    const requiredVars = ['ID', 'Progress', 'Duration..in.seconds.', 'sptResponses', 
-                         'shuffleResult', 'sptResponseDurations', 'primeResult'];
     const allVars = Object.keys(rawData[0] || {});
-    const availableRequired = requiredVars.filter(var_ => allVars.includes(var_));
-    const optional = allVars.filter(var_ => !requiredVars.includes(var_));
+    const optional = allVars.filter((var_) => !(REQUIRED_CSV_VARS as readonly string[]).includes(var_));
     
-    return { required: availableRequired, optional };
+    return { required: [...REQUIRED_CSV_VARS], optional };
   };
 
   const { required: requiredVars, optional: optionalVars } = getVariableLists();
+  const availableColumns = rawData?.[0] ? Object.keys(rawData[0]) : [];
+  const missingRequiredVars = requiredVars.filter((var_) => !availableColumns.includes(var_));
 
   const handleVarChange = (varName: string, checked: boolean) => {
     if (checked) {
@@ -161,16 +161,25 @@ const DataTab: React.FC<DataTabProps> = ({
               {requiredVars.length > 0 && (
                 <div className="var-group">
                   <strong>Required Variables:</strong>
-                  {requiredVars.map(var_ => (
-                    <label key={var_} className="checkbox-label">
-                      <input
-                        type="checkbox"
-                        checked={true}
-                        disabled={true}
-                      />
-                      {var_}
-                    </label>
-                  ))}
+                  {requiredVars.map(var_ => {
+                    const isMissing = missingRequiredVars.includes(var_);
+                    return (
+                      <label key={var_} className={`checkbox-label${isMissing ? ' var-missing' : ''}`}>
+                        <input
+                          type="checkbox"
+                          checked={!isMissing}
+                          disabled={true}
+                        />
+                        {var_}
+                        {isMissing && <span className="var-missing-tag">missing</span>}
+                      </label>
+                    );
+                  })}
+                  {missingRequiredVars.length > 0 && (
+                    <p className="var-error-text">
+                      {missingRequiredVars.length} required variable(s) missing from your CSV. Confirm will show an error until all are present.
+                    </p>
+                  )}
                 </div>
               )}
               
@@ -280,7 +289,7 @@ const DataTab: React.FC<DataTabProps> = ({
                 />
                 Remove Participants by IQR Method
               </label>
-              <p className="help-text">Removes outliers based on the Interquartile Range method applied to Duration</p>
+              <p className="help-text">Removes participants whose response duration falls outside the IQR range (Q1 − 1.5 × IQR to Q3 + 1.5 × IQR; IQR = Q3 − Q1)</p>
               
               <label className="checkbox-label">
                 <input
@@ -290,7 +299,7 @@ const DataTab: React.FC<DataTabProps> = ({
                 />
                 Remove Participants by Custom Value
               </label>
-              <p className="help-text">Removes participants based on custom Duration thresholds</p>
+              <p className="help-text">Removes participants whose response duration falls outside the lower and/or upper limits you set.</p>
               
               {cleaningOptions.participantCustom && (
                 <div className="threshold-inputs">

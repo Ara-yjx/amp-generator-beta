@@ -1,4 +1,14 @@
-/* App.css */
+/* Scoped under SP Builder; uses Arco theme tokens when available. */
+.stimulize-data-analysis-root {
+  --sda-primary: rgb(var(--primary-6, 22, 93, 255));
+  --sda-primary-weak: rgb(var(--primary-1, 232, 243, 255));
+  --sda-text: var(--color-text-1, #1d2129);
+  --sda-text-secondary: var(--color-text-3, #86909c);
+  --sda-border: var(--color-border-2, #e5e6eb);
+  --sda-bg: var(--color-bg-1, #ffffff);
+  --sda-bg-secondary: var(--color-fill-1, #f7f8fa);
+}
+
 .stimulize-data-analysis-root .app {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -8,7 +18,7 @@
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  background-color: #ffffff;
+  background-color: var(--sda-bg);
 }
 
 .stimulize-data-analysis-root .header {
@@ -59,8 +69,8 @@
 }
 
 .stimulize-data-analysis-root .tab.active {
-  color: #337ab7;
-  border-bottom-color: #337ab7;
+  color: rgb(var(--primary-6, 22, 93, 255));
+  border-bottom-color: rgb(var(--primary-6, 22, 93, 255));
   background-color: #f8f9fa;
 }
 
@@ -71,7 +81,7 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background-color: #337ab7;
+  background-color: rgb(var(--primary-6, 22, 93, 255));
   color: white;
   font-size: 14px;
   font-weight: 600;
@@ -130,7 +140,7 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background-color: #337ab7;
+  background-color: rgb(var(--primary-6, 22, 93, 255));
   color: white;
   font-size: 12px;
   font-weight: bold;
@@ -211,14 +221,14 @@
 
 .stimulize-data-analysis-root input[type="text"]:focus, .stimulize-data-analysis-root input[type="number"]:focus, .stimulize-data-analysis-root select:focus {
   outline: none;
-  border-color: #337ab7;
-  box-shadow: 0 0 0 2px rgba(51, 122, 183, 0.1);
+  border-color: rgb(var(--primary-6, 22, 93, 255));
+  box-shadow: 0 0 0 2px rgba(var(--primary-6, 22, 93, 255), 0.12);
 }
 
 /* Buttons */
 .stimulize-data-analysis-root .btn {
   padding: 8px 16px;
-  border: 2px solid #337ab7;
+  border: 2px solid rgb(var(--primary-6, 22, 93, 255));
   border-radius: 4px;
   font-size: 14px;
   font-weight: 500;
@@ -229,18 +239,18 @@
   margin-bottom: 8px;
   transition: all 0.2s ease;
   background-color: #ffffff;
-  color: #337ab7;
+  color: rgb(var(--primary-6, 22, 93, 255));
 }
 
 .stimulize-data-analysis-root .btn-primary {
   background-color: #ffffff;
-  border-color: #337ab7;
-  color: #337ab7;
+  border-color: rgb(var(--primary-6, 22, 93, 255));
+  color: rgb(var(--primary-6, 22, 93, 255));
 }
 
 .stimulize-data-analysis-root .btn-primary:hover:not(:disabled) {
-  background-color: #337ab7;
-  border-color: #337ab7;
+  background-color: rgb(var(--primary-6, 22, 93, 255));
+  border-color: rgb(var(--primary-6, 22, 93, 255));
   color: white;
 }
 
@@ -500,6 +510,26 @@
   padding: 10px;
   border-radius: 4px;
   margin: 10px 0;
+}
+
+.stimulize-data-analysis-root .var-missing {
+  color: rgb(var(--danger-6, 245, 63, 63));
+}
+
+.stimulize-data-analysis-root .var-missing-tag {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: rgb(var(--danger-6, 245, 63, 63));
+}
+
+.stimulize-data-analysis-root .var-error-text {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: rgb(var(--danger-6, 245, 63, 63));
+  font-style: normal;
+  line-height: 1.45;
 }
 
 /* Responsive design */

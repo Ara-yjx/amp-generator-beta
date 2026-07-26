@@ -14,21 +14,21 @@
     <div class="main-container">
         
         <!-- Left Menu Section -->
-        <div class="menu">
-          <ul>
-              <li><a href="index.html">Overview</a></li>
-              <li><a href="stimuli.html">Set Your Stimuli Pool</a></li>
-              <li><a href="priming.html">Priming</a></li>
-              <li><a href="trial.html">Design Your Trial Flow</a></li>
-              <li><a href="preview.html">Preview Your Trial</a></li>
-              <li><a href="qualtrics.html">Embed into Qualtrics</a></li>
-              <li><a href="analyze.html">Analyze Your Data</a></li>
-              <li><a href="load.html">Load/Save Your Design</a></li>
-              <li><a href="Assets/SP-Builder_FAQ.pdf" target="_blank" rel="noopener noreferrer">Q&amp;A</a></li>
-          </ul>
-      </div>
-
-      <div class="content">
+                <div class="menu" id="manualMenu">
+            <button type="button" class="menu-toggle" id="menuToggleBtn" aria-expanded="true" aria-controls="manualMenuList">Hide menu</button>
+            <ul id="manualMenuList">
+                <li><a href="index.html">Overview</a></li>
+                <li><a href="tutorial.html">Video Tutorial</a></li>
+                <li><a href="stimuli.html">Set Your Stimuli Pool</a></li>
+                <li><a href="priming.html">Priming</a></li>
+                <li><a href="trial.html">Design Your Trial Flow</a></li>
+                <li><a href="preview.html">Preview Your Trial</a></li>
+                <li><a href="qualtrics.html">Embed into Qualtrics</a></li>
+                <li><a href="analyze.html">Analyze Your Data</a></li>
+                <li><a href="load.html">Load/Save Your Design</a></li>
+            </ul>
+        </div>
+<div class="content">
         <h1>Embed Your Design into Qualtrics</h1>
         <div class="expand-collapse-controls">
     <button type="button" id="expandAllBtn">Expand All</button>
@@ -38,7 +38,7 @@
         <b class="expandable-title">Save Your QSF File for Qualtrics</b>
         <div class="expandable-content">
             <div class="picture_container">
-                <img src="Assets/qsf.gif" width="300px" height="100px"/>
+                <img src="Assets/qsf.gif" class="manual-gif" alt="Download QSF file"/>
             </div>
             <p>
                 On the bottom of our website, there is a button for you to click to download a version of the QSF file, which allows you to upload it to embed in Qualtrics design.
@@ -48,7 +48,7 @@
         <b class="expandable-title">Load Your QSF File into Qualtrics</b>
         <div class="expandable-content">
             <div class="picture_container">
-                <img src="Assets/import.gif" width="700px" height="400px"/>
+                <img src="Assets/import.gif" class="manual-gif" alt="Import QSF into Qualtrics"/>
             </div>
             <p>
                 Follow the instructions to load the QSF file into Qualtrics.
@@ -58,7 +58,7 @@
         <b class="expandable-title">Add More Rounds for Your Trial</b>
         <div class="expandable-content">
             <div class="picture_container">
-                <img src="Assets/copy.gif" width="700px" height="400px"/>
+                <img src="Assets/copy.gif" class="manual-gif" alt="Copy Qualtrics blocks for additional rounds"/>
             </div>
             <p>
                 If you have added more rounds in your trials design on SP-Builder, then you need to copy blocks of design as shown in the GIF.

@@ -14,21 +14,21 @@
     <div class="main-container">
         
         <!-- Left Menu Section -->
-        <div class="menu">
-          <ul>
-              <li><a href="index.html">Overview</a></li>
-              <li><a href="stimuli.html">Set Your Stimuli Pool</a></li>
-              <li><a href="priming.html">Priming</a></li>
-              <li><a href="trial.html">Design Your Trial Flow</a></li>
-              <li><a href="preview.html">Preview Your Trial</a></li>
-              <li><a href="qualtrics.html">Embed into Qualtrics</a></li>
-              <li><a href="analyze.html">Analyze Your Data</a></li>
-              <li><a href="load.html">Load/Save Your Design</a></li>
-              <li><a href="Assets/SP-Builder_FAQ.pdf" target="_blank" rel="noopener noreferrer">Q&amp;A</a></li>
-          </ul>
-      </div>
-
-        <!-- Content Section -->
+                <div class="menu" id="manualMenu">
+            <button type="button" class="menu-toggle" id="menuToggleBtn" aria-expanded="true" aria-controls="manualMenuList">Hide menu</button>
+            <ul id="manualMenuList">
+                <li><a href="index.html">Overview</a></li>
+                <li><a href="tutorial.html">Video Tutorial</a></li>
+                <li><a href="stimuli.html">Set Your Stimuli Pool</a></li>
+                <li><a href="priming.html">Priming</a></li>
+                <li><a href="trial.html">Design Your Trial Flow</a></li>
+                <li><a href="preview.html">Preview Your Trial</a></li>
+                <li><a href="qualtrics.html">Embed into Qualtrics</a></li>
+                <li><a href="analyze.html">Analyze Your Data</a></li>
+                <li><a href="load.html">Load/Save Your Design</a></li>
+            </ul>
+        </div>
+<!-- Content Section -->
         <div class="content">
             <h1>Preview Your Trial Design</h1>
             <div class="expand-collapse-controls">
@@ -40,7 +40,7 @@
               <b class="expandable-title">Content width & Content height</b>
               <div class="expandable-content">
                   <div class="picture_container">
-                      <img src="Assets/width_height.gif" width="550px" height="400px"/>
+                      <img src="Assets/width_height.gif" class="manual-gif" alt="Adjust content width and height"/>
                   </div>
                   <p>Here you can adjust the width and height of your picture stimuli by viewing it on Preview.</p>
               </div>
@@ -48,7 +48,7 @@
               <b class="expandable-title">Blank space above content</b>
               <div class="expandable-content">
                   <div class="picture_container">
-                      <img src="Assets/blank_space.gif" width="550px" height="400px"/>
+                      <img src="Assets/blank_space.gif" class="manual-gif" alt="Adjust blank space above content"/>
                   </div>
                   <p>Here you can adjust the blank space above your stimuli by viewing it on Preview.</p>
               </div>
@@ -56,7 +56,7 @@
               <b class="expandable-title">Dark Mode</b>
               <div class="expandable-content">
                   <div class="picture_container">
-                      <img src="Assets/dark mode.gif" width="550px" height="400px"/>
+                      <img src="Assets/dark mode.gif" class="manual-gif" alt="Enable dark mode preview"/>
                   </div>
                   <p>Here you can turn the preview mode into black background.</p>
               </div>
@@ -64,14 +64,14 @@
               <b class="expandable-title">Text Stimuli Style</b>
               <div class="expandable-content">
                   <div class="picture_container">
-                      <img src="Assets/text.gif" width="550px" height="400px"/>
+                      <img src="Assets/text.gif" class="manual-gif" alt="Text stimuli style settings"/>
                   </div>
                   <p>Here you can adjust the size, bold or not, font color, wrap or not for your text stimuli.</p>
               </div>
               <b class="expandable-title">Instruction Text</b>
               <div class="expandable-content">
                   <div class="picture_container">
-                      <img src="Assets/instruction.gif" width="550px" height="400px"/>
+                      <img src="Assets/instruction.gif" class="manual-gif" alt="Instruction text settings"/>
                   </div>
                   <p>Here you can set up your instruction text.</p>
               </div>

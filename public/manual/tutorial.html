@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Video Tutorial - SP-Builder</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="logo-header">
+        <h2 class="logo">SP-Builder</h2>
+    </header>
+
+    <div class="main-container">
+        <div class="menu" id="manualMenu">
+            <button type="button" class="menu-toggle" id="menuToggleBtn" aria-expanded="true" aria-controls="manualMenuList">Hide menu</button>
+            <ul id="manualMenuList">
+                <li><a href="index.html">Overview</a></li>
+                <li><a href="tutorial.html">Video Tutorial</a></li>
+                <li><a href="stimuli.html">Set Your Stimuli Pool</a></li>
+                <li><a href="priming.html">Priming</a></li>
+                <li><a href="trial.html">Design Your Trial Flow</a></li>
+                <li><a href="preview.html">Preview Your Trial</a></li>
+                <li><a href="qualtrics.html">Embed into Qualtrics</a></li>
+                <li><a href="analyze.html">Analyze Your Data</a></li>
+                <li><a href="load.html">Load/Save Your Design</a></li>
+            </ul>
+        </div>
+
+        <div class="content">
+            <h1>Full Video Tutorial</h1>
+            <p>
+                Watch the complete SP-Builder walkthrough from stimuli setup through Qualtrics embedding and data analysis.
+                For step-by-step GIF guides, use the chapters in the left menu.
+            </p>
+
+            <div class="video-tutorial">
+                <video
+                    id="tutorialVideo"
+                    class="tutorial-video"
+                    controls
+                    playsinline
+                    preload="metadata"
+                    poster="Assets/Stimuli.png"
+                >
+                    <source src="Assets/SP-Builder_Tutorial.mp4" type="video/mp4">
+                    Your browser does not support embedded video.
+                </video>
+                <div id="tutorialVideoFallback" class="video-fallback" hidden>
+                    <p>
+                        The full video file is not available yet. You can use the
+                        <a href="../SP-Builder_User_Manual_20240307.pdf" target="_blank" rel="noopener noreferrer">complete user manual (PDF)</a>
+                        or follow the GIF chapters in the left menu.
+                    </p>
+                </div>
+            </div>
+
+            <hr>
+
+            <h2>Related resources</h2>
+            <ul class="tutorial-links">
+                <li><a href="index.html">Overview &amp; chapter index</a></li>
+                <li><a href="analyze.html">Analyze your data (export variables)</a></li>
+                <li><a href="../SP-Builder_User_Manual_20240307.pdf" target="_blank" rel="noopener noreferrer">Download user manual (PDF)</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <p>
+            Contact Support:
+            <a href="mailto:spbuilder.team@gmail.com">spbuilder.team@gmail.com</a>
+        </p>
+    </footer>
+    <script src="manual.js"></script>
+    <script>
+      (function () {
+        var video = document.getElementById('tutorialVideo');
+        var fallback = document.getElementById('tutorialVideoFallback');
+        if (!video || !fallback) return;
+
+        function showFallback() {
+          video.style.display = 'none';
+          fallback.hidden = false;
+        }
+
+        video.addEventListener('error', showFallback);
+        video.addEventListener('loadeddata', function () {
+          if (video.readyState >= 2 && video.videoWidth === 0) {
+            showFallback();
+          }
+        });
+      })();
+    </script>
+</body>
+</html>
