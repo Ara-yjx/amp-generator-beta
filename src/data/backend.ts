@@ -4,11 +4,14 @@ import { Message } from '@arco-design/web-react';
 import { requireLogin } from './loginCoordinator';
 import { Experiment, experimentFromEntity, Project, ProjectEntity, projectFromEntity, ExperimentFileEntity, ExperimentFile, experimentFileFromEntity, ExperimentData, Team, TeamEntity, teamFromEntity, TeamMember, TeamMemberEntity, teamMemberFromEntity } from './apiTypes';
 
-const API_BASE = 'https://q15bwdgudf.execute-api.us-east-2.amazonaws.com/live';
+export const API_BASE = (
+  process.env.REACT_APP_API_BASE
+  || 'https://q15bwdgudf.execute-api.us-east-2.amazonaws.com/live'
+).replace(/\/+$/, '');
 const LS_AUTH_KEY = 'stimulize_auth';
 
 // typing of all request
-interface Response<T> {
+export interface ApiResponse<T> {
   data: T;
   meta?: {
     code?: number;
@@ -103,7 +106,7 @@ function notifyAuthListeners(auth: AuthState | null) {
  * @param useJsonContentType should set to false for Multipart/form-data (file upload)
  * @returns 
  */
-async function apiPost<T>(path: string, data: any = {}, requireAuth: string | boolean = false, useJsonContentType: boolean = true, isFirstTry: boolean = true): Promise<Response<T>> {
+async function apiPost<T>(path: string, data: any = {}, requireAuth: string | boolean = false, useJsonContentType: boolean = true, isFirstTry: boolean = true, apiBase: string = API_BASE): Promise<ApiResponse<T>> {
   const headers: Record<string, string> = useJsonContentType ? { 'Content-Type': 'application/json' } : {};
   if (requireAuth) {
     if (!getAuth()?.token) {
@@ -121,16 +124,16 @@ async function apiPost<T>(path: string, data: any = {}, requireAuth: string | bo
     }
     headers['Authorization'] = token;
   }
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${apiBase}${path}`, {
     method: 'POST',
     headers,
     body: JSON.stringify(data),
   });
 
 
-  let resJson: Response<T> | null = null;
+  let resJson: ApiResponse<T> | null = null;
   try {
-    resJson = await res.json() as Response<T>;
+    resJson = await res.json() as ApiResponse<T>;
   } catch { }
 
   // Prev: 400 means auth expired. Now: meta.code 401 means auth expired. Request login and retry
@@ -141,7 +144,7 @@ async function apiPost<T>(path: string, data: any = {}, requireAuth: string | bo
         Message.info(`${typeof requireAuth === 'string' ? requireAuth : ''}${getAuth() ? 'Your login session has expired. Please login again.' : 'Please login (or re-login) to continue.'}`);
         clearAuth();
         await requireLogin();
-        return apiPost<T>(path, data, requireAuth, useJsonContentType, false);
+        return apiPost<T>(path, data, requireAuth, useJsonContentType, false, apiBase);
       }
       clearAuth();
       throw new Error('Authentication failed after re-login.');
@@ -155,9 +158,13 @@ async function apiPost<T>(path: string, data: any = {}, requireAuth: string | bo
   return resJson;
 }
 
+export function apiPostAt<T>(apiBase: string, path: string, data: unknown = {}, requireAuth: string | boolean = true): Promise<ApiResponse<T>> {
+  return apiPost<T>(path, data, requireAuth, true, true, apiBase.replace(/\/+$/, ''));
+}
+
 
 // Auth APIs
-export async function login({ email, username, password }: { email: string, username: string, password: string }): Promise<{ response: Response<any>, auth: AuthState }> {
+export async function login({ email, username, password }: { email: string, username: string, password: string }): Promise<{ response: ApiResponse<any>, auth: AuthState }> {
   const response = await apiPost<{ access_token: string, user: { email: string, id: number, username: string } }>(
     '/api/login',
     { email, username, password }
@@ -197,17 +204,17 @@ export async function createProject({ name, description }: { name?: string, desc
   }
 }
 
-export async function getProjects(): Promise<{ response: Response<{ projects: ProjectEntity[] }>, projects: Project[] }> {
+export async function getProjects(): Promise<{ response: ApiResponse<{ projects: ProjectEntity[] }>, projects: Project[] }> {
   const response = await apiPost<{ projects: ProjectEntity[] }>('/api/getProjects', {}, true);
   return { response, projects: response.data.projects.map(projectFromEntity) };
 }
 
-export async function getProject(projectId: number): Promise<{ response: Response<{ project: ProjectEntity }>, project: Project }> {
+export async function getProject(projectId: number): Promise<{ response: ApiResponse<{ project: ProjectEntity }>, project: Project }> {
   const response = await apiPost<{ project: ProjectEntity }>(`/api/getProject/${projectId}`, {}, true);
   return { response, project: projectFromEntity(response.data.project) };
 }
 
-export async function updateProject(projectId: number, { name, description }: { name: string, description?: string }): Promise<{ response: Response<{ project: ProjectEntity }>, project: Project }> {
+export async function updateProject(projectId: number, { name, description }: { name: string, description?: string }): Promise<{ response: ApiResponse<{ project: ProjectEntity }>, project: Project }> {
   const response = await apiPost<{ project: ProjectEntity }>(`/api/updateProject/${projectId}`, { name, description }, true);
   return { response, project: projectFromEntity(response.data.project) };
 }
@@ -216,17 +223,17 @@ export async function deleteProject(projectId: number) {
   return await apiPost(`/api/deleteProject/${projectId}`, {}, true);
 }
 
-export async function createExperiment(projectId: number, payload?: { name?: string; description?: string }): Promise<{ response: Response<{ experiment: any }>, experiment: Experiment }> {
+export async function createExperiment(projectId: number, payload?: { name?: string; description?: string }): Promise<{ response: ApiResponse<{ experiment: any }>, experiment: Experiment }> {
   const response = await apiPost<{ experiment: any }>(`/api/createExperiment`, { project_id: projectId, ...(payload || {}) }, true);
   return { response, experiment: experimentFromEntity(response.data.experiment) };
 }
 
-export async function getExperimentsByProjectId(projectId: number): Promise<{ response: Response<{ experiments: any[] }>, experiments: Experiment[] }> {
+export async function getExperimentsByProjectId(projectId: number): Promise<{ response: ApiResponse<{ experiments: any[] }>, experiments: Experiment[] }> {
   const response = await apiPost<{ experiments: any[] }>(`/api/getExperimentsByProjectId`, { project_id: projectId }, true);
   return { response, experiments: (response.data.experiments || []).map(experimentFromEntity) };
 }
 
-export async function getExperiment(experimentId: number): Promise<{ response: Response<{ experiment: any }>, experiment: Experiment }> {
+export async function getExperiment(experimentId: number): Promise<{ response: ApiResponse<{ experiment: any }>, experiment: Experiment }> {
   const response = await apiPost<{ experiment: any }>(`/api/getExperiment/${experimentId}`, {}, true);
   return { response, experiment: experimentFromEntity(response.data.experiment) };
 }
@@ -234,7 +241,7 @@ export async function getExperiment(experimentId: number): Promise<{ response: R
 export async function updateExperimentDescription(
   experimentId: number, { description }: { description?: string }
 ): Promise<{
-  response: Response<{ experiment: any }>, experiment: Experiment
+  response: ApiResponse<{ experiment: any }>, experiment: Experiment
 }> {
   const response = await apiPost<{ experiment: any }>(
     `/api/updateExperiment/${experimentId}`,
@@ -247,7 +254,7 @@ export async function updateExperimentDescription(
 export async function updateExperimentData(
   experimentId: number, { experimentData }: { experimentData?: ExperimentData }
 ): Promise<{
-  response: Response<{ experiment: any }>, experiment: Experiment
+  response: ApiResponse<{ experiment: any }>, experiment: Experiment
 }> {
   const response = await apiPost<{ experiment: any }>(
     `/api/updateExperiment/${experimentId}`,
@@ -262,14 +269,14 @@ export async function deleteExperiment(experimentId: number) {
 }
 
 // File operations for experiments
-export async function uploadExperimentFile(experimentId: number, file: File): Promise<{ response: Response<{ file: ExperimentFileEntity }>, file: ExperimentFile }> {
+export async function uploadExperimentFile(experimentId: number, file: File): Promise<{ response: ApiResponse<{ file: ExperimentFileEntity }>, file: ExperimentFile }> {
   const form = new FormData();
   form.append('files', file);
   const response = await apiPost<{ file: ExperimentFileEntity }>(`/api/uploadFile/${experimentId}`, form as any, true, false);
   return { response, file: experimentFileFromEntity(response.data.file) };
 }
 
-export async function getExperimentFiles(experimentId: number): Promise<{ response: Response<{ experiment_id: number; files: ExperimentFileEntity[]; count: number }>, experimentId: number, files: ExperimentFile[], count: number }> {
+export async function getExperimentFiles(experimentId: number): Promise<{ response: ApiResponse<{ experiment_id: number; files: ExperimentFileEntity[]; count: number }>, experimentId: number, files: ExperimentFile[], count: number }> {
   const response = await apiPost<{ experiment_id: number; files: ExperimentFileEntity[]; count: number }>(`/api/getFiles/${experimentId}`, {}, true);
   return {
     response,
@@ -279,7 +286,7 @@ export async function getExperimentFiles(experimentId: number): Promise<{ respon
   };
 }
 
-export async function shareExperimentFile(experimentId: number, fileId: string): Promise<{ response: Response<{ shared_url: string; expires_at: string; file_info: ExperimentFileEntity }>, sharedUrl: string, expiresAt: string, fileInfo: ExperimentFile }> {
+export async function shareExperimentFile(experimentId: number, fileId: string): Promise<{ response: ApiResponse<{ shared_url: string; expires_at: string; file_info: ExperimentFileEntity }>, sharedUrl: string, expiresAt: string, fileInfo: ExperimentFile }> {
   const response = await apiPost<{ shared_url: string; expires_at: string; file_info: ExperimentFileEntity }>(`/api/experiment/${experimentId}/shareFile/${fileId}`, {}, true);
   return {
     response,
@@ -298,42 +305,42 @@ export async function deleteExperimentFile(experimentId: number, fileId: string)
 // Team APIs
 // =============================
 
-export async function createTeam({ name, description }: { name: string; description?: string }): Promise<{ response: Response<{ team: TeamEntity }>, team: Team }> {
+export async function createTeam({ name, description }: { name: string; description?: string }): Promise<{ response: ApiResponse<{ team: TeamEntity }>, team: Team }> {
   const response = await apiPost<{ team: TeamEntity }>('/api/teams/create', { name, description }, true);
   return { response, team: teamFromEntity(response.data.team) };
 }
 
-export async function getTeams(): Promise<{ response: Response<{ teams: TeamEntity[] }>, teams: Team[] }> {
+export async function getTeams(): Promise<{ response: ApiResponse<{ teams: TeamEntity[] }>, teams: Team[] }> {
   const response = await apiPost<{ teams: TeamEntity[] }>('/api/teams/getTeams', {}, true);
   return { response, teams: (response.data.teams || []).map(teamFromEntity) };
 }
 
-export async function getTeam(teamId: number): Promise<{ response: Response<{ team: TeamEntity }>, team: Team }> {
+export async function getTeam(teamId: number): Promise<{ response: ApiResponse<{ team: TeamEntity }>, team: Team }> {
   const response = await apiPost<{ team: TeamEntity }>(`/api/teams/getTeam/${teamId}`, {}, true);
   return { response, team: teamFromEntity(response.data.team) };
 }
 
-export async function updateTeam(teamId: number, { name, description }: { name: string; description?: string }): Promise<{ response: Response<{ team: TeamEntity }>, team: Team }> {
+export async function updateTeam(teamId: number, { name, description }: { name: string; description?: string }): Promise<{ response: ApiResponse<{ team: TeamEntity }>, team: Team }> {
   const response = await apiPost<{ team: TeamEntity }>(`/api/teams/updateTeam/${teamId}`, { name, description }, true);
   return { response, team: teamFromEntity(response.data.team) };
 }
 
-export async function addTeamMember(teamId: number, userId: number): Promise<{ response: Response<{ team: TeamEntity }>, team: Team }> {
+export async function addTeamMember(teamId: number, userId: number): Promise<{ response: ApiResponse<{ team: TeamEntity }>, team: Team }> {
   const response = await apiPost<{ team: TeamEntity }>(`/api/teams/addMember/${teamId}`, { user_id: userId }, true);
   return { response, team: teamFromEntity(response.data.team) };
 }
 
-export async function removeTeamMember(teamId: number, userId: number): Promise<{ response: Response<{ team: TeamEntity }>, team: Team }> {
+export async function removeTeamMember(teamId: number, userId: number): Promise<{ response: ApiResponse<{ team: TeamEntity }>, team: Team }> {
   const response = await apiPost<{ team: TeamEntity }>(`/api/teams/removeMember/${teamId}`, { user_id: userId }, true);
   return { response, team: teamFromEntity(response.data.team) };
 }
 
-export async function getTeamMembers(teamId: number): Promise<{ response: Response<{ members: TeamMemberEntity[] }>, members: TeamMember[] }> {
+export async function getTeamMembers(teamId: number): Promise<{ response: ApiResponse<{ members: TeamMemberEntity[] }>, members: TeamMember[] }> {
   const response = await apiPost<{ members: TeamMemberEntity[] }>(`/api/teams/getTeamMembers/${teamId}`, {}, true);
   return { response, members: (response.data.members || []).map(teamMemberFromEntity) };
 }
 
-export async function checkTeamAccess(teamId: number): Promise<{ response: Response<{ team_id: number; has_access: boolean; is_owner: boolean; user_role: string }>, teamId: number, hasAccess: boolean, isOwner: boolean, userRole: string }> {
+export async function checkTeamAccess(teamId: number): Promise<{ response: ApiResponse<{ team_id: number; has_access: boolean; is_owner: boolean; user_role: string }>, teamId: number, hasAccess: boolean, isOwner: boolean, userRole: string }> {
   const response = await apiPost<{ team_id: number; has_access: boolean; is_owner: boolean; user_role: string }>(`/api/teams/checkTeamAccess/${teamId}`, {}, true);
   return {
     response,

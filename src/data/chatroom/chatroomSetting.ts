@@ -1,0 +1,343 @@
+/**
+ * Pure logic for chatroom settings: types, validation, and denormalization.
+ *
+ * Kept free of React / Arco / network imports so it can be unit-tested
+ * without a DOM or network. See:
+ * - docs/low-level-design.md "Form validation" / "Mode UX"
+ * - docs/api-management.yml "ChatroomSetting"
+ */
+
+export type DerivedChatroomMode = 'one_on_one' | 'group'
+
+export type AiJoinStrategy = 'fixed_ai_count' | 'total_participant_count'
+
+export interface AiPersonaSetting {
+  /** Analysis-only label written to exported history, not participant-visible. */
+  internal_name: string
+  /** Participant-visible display name. Empty means backend picks one. */
+  nickname: string
+  persona: string
+  /**
+   * Null means "same model as chatroom default".
+   */
+  model_id: string | null
+  /**
+   * Null means "same temperature as chatroom default".
+   */
+  temperature: number | null
+}
+
+export interface ChatroomSetting {
+  /**
+   * Researcher-supplied topic. Just the topic — the human-mimicry speech
+   * scaffold (rules, tool-use mechanics, examples) lives in the backend
+   * and is wrapped around this string at runtime.
+   * E.g. "Anything about your college life."
+   */
+  topic_instruction: string
+  /**
+   * Optional researcher-supplied instruction used to fine-tune this
+   * chatroom's AI behavior on top of the backend prompt scaffold.
+   */
+  additional_prompt: string
+  /**
+   * Pool of researcher-supplied per-AI personas. When the lobby closes,
+   * the backend assigns one entry per AI in round-robin-style batches:
+   * without replacement when the pool has enough entries, otherwise full
+   * shuffled rounds first, then a final partial round.
+   *
+   * Each entry carries the persona text plus an optional per-persona model
+   * override. If ``model_id`` is null, the chatroom-level ``model_id`` is
+   * used for that AI.
+   */
+  ai_personas: AiPersonaSetting[]
+  model_id: string
+  mimic_human: boolean
+  /** Reuse one conversation per case-sensitive participant ID. Beta: 1H1AI assistant only. */
+  resumable: boolean
+  /** Optional room-level AI display-name fallback for the non-mimic 1H1AI preset. */
+  ai_nickname: string
+  show_avatars: boolean
+  temperature: number
+  simulate_pairing_seconds: number
+  timer_min_minutes: number | null
+  timer_max_minutes: number | null
+  /** Cap on total conversation duration (seconds). Applies to both modes. */
+  max_duration_seconds: number
+  /** Editor-facing group fields. */
+  human_count: number
+  ai_count: number
+  replace_human_with_ai: boolean
+  /** Runtime compatibility fields. For one_on_one, these are stored denormalized. */
+  target_human_count: number
+  ai_join_strategy: AiJoinStrategy
+  ai_strategy_value: number
+  max_wait_seconds: number
+}
+
+/** One-on-one denormalized fixed values per low-level design. */
+export const ONE_ON_ONE_FIXED = {
+  target_human_count: 1,
+  ai_join_strategy: 'fixed_ai_count' as const,
+  ai_strategy_value: 1,
+  max_wait_seconds: 0,
+}
+
+/** Validation caps per docs/low-level-design.md "Form validation". */
+export const VALIDATION_LIMITS = {
+  maxWaitSecondsMax: 600,
+  maxDurationSecondsMax: 3600,
+  aiStrategyValueMin: 0,
+  aiStrategyValueMax: 7,
+  targetHumanCountMin: 1,
+  temperatureMin: 0,
+  temperatureMax: 1,
+}
+
+export interface ValidationResult {
+  ok: boolean
+  errors: Record<string, string>
+}
+
+const RESERVED_PARTICIPANT_NICKNAMES = new Set(['you', 'participant'])
+
+export function isReservedParticipantNickname(value: unknown): boolean {
+  return typeof value === 'string' && RESERVED_PARTICIPANT_NICKNAMES.has(value.trim().toLowerCase())
+}
+
+export function normalizeAiPersonas(value: unknown): AiPersonaSetting[] {
+  if (!Array.isArray(value)) return []
+
+  return value.flatMap((entry): AiPersonaSetting[] => {
+    if (typeof entry === 'string') {
+      return [{ internal_name: '', nickname: '', persona: entry, model_id: null, temperature: null }]
+    }
+    if (!entry || typeof entry !== 'object') return []
+    const persona =
+      typeof (entry as { persona?: unknown }).persona === 'string'
+        ? (entry as { persona: string }).persona
+        : ''
+    const modelIdRaw = (entry as { model_id?: unknown }).model_id
+    const internalName =
+      typeof (entry as { internal_name?: unknown }).internal_name === 'string'
+        ? (entry as { internal_name: string }).internal_name
+        : ''
+    const nickname =
+      typeof (entry as { nickname?: unknown }).nickname === 'string'
+        ? (entry as { nickname: string }).nickname
+        : ''
+    const temperatureRaw = (entry as { temperature?: unknown }).temperature
+    return [{
+      internal_name: internalName,
+      nickname,
+      persona,
+      model_id: typeof modelIdRaw === 'string' && modelIdRaw.trim() ? modelIdRaw : null,
+      temperature:
+        typeof temperatureRaw === 'number' && Number.isFinite(temperatureRaw)
+          ? temperatureRaw
+          : null,
+    }]
+  })
+}
+
+export function deriveMaxDurationSeconds(timerMaxMinutes: number | null): number {
+  const effectiveMaxMinutes =
+    typeof timerMaxMinutes === 'number' && Number.isFinite(timerMaxMinutes) && timerMaxMinutes >= 0
+      ? timerMaxMinutes
+      : 0
+  return (effectiveMaxMinutes + 1) * 60
+}
+
+/**
+ * Validate a chatroom setting per the rules in docs/low-level-design.md.
+ *
+ * Rules:
+ * - target_human_count >= 1
+ * - if ai_join_strategy = total_participant_count: ai_strategy_value >= target_human_count
+ * - 0 <= max_wait_seconds <= 600
+ * - 0 <= ai_strategy_value <= 7
+ *
+ * Always enforced (both modes):
+ * - 0 <= max_duration_seconds <= 3600
+ */
+export function validateChatroomSetting(setting: ChatroomSetting): ValidationResult {
+  const errors: Record<string, string> = {}
+
+  if (isReservedParticipantNickname(setting.ai_nickname)) {
+    errors.ai_nickname = 'AI nickname cannot be You or Participant'
+  }
+
+  if (
+    setting.resumable &&
+    (setting.human_count !== 1 || setting.ai_count !== 1 || setting.mimic_human)
+  ) {
+    errors.resumable = 'Resumable conversations require one human, one AI, and Mimic human off'
+  }
+
+  // Always validate max_duration_seconds (applies to both modes).
+  if (
+    !Number.isFinite(setting.max_duration_seconds) ||
+    !Number.isInteger(setting.max_duration_seconds) ||
+    setting.max_duration_seconds <= 0 ||
+    setting.max_duration_seconds > VALIDATION_LIMITS.maxDurationSecondsMax
+  ) {
+    errors.max_duration_seconds = `max_duration_seconds must be an integer between 1 and ${VALIDATION_LIMITS.maxDurationSecondsMax}`
+  }
+
+  if (
+    !Number.isFinite(setting.temperature) ||
+    setting.temperature < VALIDATION_LIMITS.temperatureMin ||
+    setting.temperature > VALIDATION_LIMITS.temperatureMax
+  ) {
+    errors.temperature = `temperature must be between ${VALIDATION_LIMITS.temperatureMin} and ${VALIDATION_LIMITS.temperatureMax}`
+  }
+
+  const internalNames = new Set<string>()
+  for (const [index, persona] of setting.ai_personas.entries()) {
+    const path = `ai_personas[${index}]`
+    if (
+      persona.temperature !== null &&
+      (!Number.isFinite(persona.temperature) ||
+        persona.temperature < VALIDATION_LIMITS.temperatureMin ||
+        persona.temperature > VALIDATION_LIMITS.temperatureMax)
+    ) {
+      errors[path] = `persona temperature must be between ${VALIDATION_LIMITS.temperatureMin} and ${VALIDATION_LIMITS.temperatureMax}`
+    }
+    const internalName = persona.internal_name.trim()
+    if (isReservedParticipantNickname(persona.nickname)) {
+      errors.ai_personas = 'AI persona display names cannot be You or Participant'
+    }
+    if (internalName) {
+      if (internalNames.has(internalName)) {
+        errors[path] = 'internal_name must be unique within a chatroom'
+      }
+      internalNames.add(internalName)
+    }
+  }
+
+  if (
+    !Number.isFinite(setting.human_count) ||
+    !Number.isInteger(setting.human_count) ||
+    setting.human_count < VALIDATION_LIMITS.targetHumanCountMin
+  ) {
+    errors.human_count = `human_count must be an integer >= ${VALIDATION_LIMITS.targetHumanCountMin}`
+  }
+
+  if (
+    !Number.isFinite(setting.ai_count) ||
+    !Number.isInteger(setting.ai_count) ||
+    setting.ai_count < VALIDATION_LIMITS.aiStrategyValueMin ||
+    setting.ai_count > VALIDATION_LIMITS.aiStrategyValueMax
+  ) {
+    errors.ai_count = `ai_count must be an integer between ${VALIDATION_LIMITS.aiStrategyValueMin} and ${VALIDATION_LIMITS.aiStrategyValueMax}`
+  }
+
+  if (
+    !Number.isFinite(setting.max_wait_seconds) ||
+    !Number.isInteger(setting.max_wait_seconds) ||
+    setting.max_wait_seconds < 0 ||
+    setting.max_wait_seconds > VALIDATION_LIMITS.maxWaitSecondsMax
+  ) {
+    errors.max_wait_seconds = `max_wait_seconds must be an integer between 0 and ${VALIDATION_LIMITS.maxWaitSecondsMax}`
+  }
+
+  if (!Number.isInteger(setting.simulate_pairing_seconds) || setting.simulate_pairing_seconds < 0) {
+    errors.simulate_pairing_seconds = 'simulate_pairing_seconds must be a non-negative integer'
+  }
+
+  for (const field of ['timer_min_minutes', 'timer_max_minutes'] as const) {
+    const value = setting[field]
+    if (value !== null && (!Number.isInteger(value) || value < 0)) {
+      errors[field] = `${field} must be a non-negative integer or null`
+    }
+  }
+
+  return { ok: Object.keys(errors).length === 0, errors }
+}
+
+/**
+ * Compute the on-save setting. `mode` is intentionally not persisted; it is
+ * a derived UI/runtime concept based on participant counts.
+ */
+export function denormalizeForSave(values: ChatroomSetting): ChatroomSetting {
+  const targetHumanCount = values.human_count
+  const replaceHumanWithAi = values.human_count > 1 && values.replace_human_with_ai
+  const aiStrategyValue = replaceHumanWithAi
+    ? values.human_count + values.ai_count
+    : values.ai_count
+  const shouldUseSimulatedLobby =
+    values.human_count === 1 &&
+    values.mimic_human &&
+    values.simulate_pairing_seconds > 0
+  return {
+    ...values,
+    replace_human_with_ai: replaceHumanWithAi,
+    target_human_count: targetHumanCount,
+    ai_join_strategy: replaceHumanWithAi ? 'total_participant_count' : 'fixed_ai_count',
+    ai_strategy_value: aiStrategyValue,
+    simulate_pairing_seconds: shouldUseSimulatedLobby
+      ? values.simulate_pairing_seconds
+      : 0,
+    max_wait_seconds: shouldUseSimulatedLobby
+      ? values.simulate_pairing_seconds
+      : values.human_count === 1
+        ? 0
+        : values.max_wait_seconds,
+  }
+}
+
+/**
+ * Derive the UI/runtime preset from participant counts. The setting does not
+ * persist a `mode` field.
+ */
+export function deriveChatroomMode(setting: Pick<ChatroomSetting, 'human_count' | 'ai_count'>): DerivedChatroomMode {
+  return setting.human_count === 1 && setting.ai_count === 1 ? 'one_on_one' : 'group'
+}
+
+/**
+ * Default setting for a freshly-created chatroom. Used by the create-chatroom
+ * modal.
+ */
+export function defaultChatroomSetting(): ChatroomSetting {
+  const base: Omit<
+    ChatroomSetting,
+    'human_count' | 'ai_count' | 'replace_human_with_ai' |
+    'target_human_count' | 'ai_join_strategy' | 'ai_strategy_value' | 'max_wait_seconds'
+  > = {
+    topic_instruction: 'Anything about your college life.',
+    additional_prompt: '',
+    ai_personas: [],
+    model_id: 'global.anthropic.claude-sonnet-4-6',
+    mimic_human: true,
+    resumable: false,
+    ai_nickname: '',
+    show_avatars: true,
+    temperature: 0.7,
+    simulate_pairing_seconds: 15,
+    timer_min_minutes: 1,
+    timer_max_minutes: 5,
+    max_duration_seconds: deriveMaxDurationSeconds(5),
+  }
+
+  return {
+    ...base,
+    human_count: 1,
+    ai_count: 1,
+    replace_human_with_ai: false,
+    ...ONE_ON_ONE_FIXED,
+  }
+}
+
+export function defaultSettingForMode(mode: DerivedChatroomMode): ChatroomSetting {
+  const base = defaultChatroomSetting()
+  if (mode === 'one_on_one') return base
+  return {
+    ...base,
+    human_count: 2,
+    ai_count: 1,
+    target_human_count: 2,
+    ai_join_strategy: 'fixed_ai_count',
+    ai_strategy_value: 1,
+    max_wait_seconds: 60,
+  }
+}

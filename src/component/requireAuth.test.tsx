@@ -24,6 +24,21 @@ describe('RequireAuth', () => {
 
     expect(screen.getByText('/login?returnTo=%2Fmy%3Fview%3Drecent')).toBeInTheDocument();
   });
+
+  it('preserves a chatroom usage deep link as returnTo', () => {
+    render(
+      <AuthContext.Provider value={{ authState: null, setAuthState: jest.fn() }}>
+        <MemoryRouter initialEntries={['/chatroom/scid_123/usage']}>
+          <Routes>
+            <Route path='/chatroom/:id/usage' element={<RequireAuth><span>private</span></RequireAuth>} />
+            <Route path='/login' element={<CurrentLocation />} />
+          </Routes>
+        </MemoryRouter>
+      </AuthContext.Provider>
+    );
+
+    expect(screen.getByText('/login?returnTo=%2Fchatroom%2Fscid_123%2Fusage')).toBeInTheDocument();
+  });
 });
 
 describe('safeReturnTo', () => {
