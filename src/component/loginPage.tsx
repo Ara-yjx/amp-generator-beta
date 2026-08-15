@@ -1,9 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react';
 import LoginForm from './loginForm';
 import { Button, Divider, Space } from '@arco-design/web-react';
-import { BubblyButton } from './bubblyButton';
 import { AuthContext } from '../context/AuthContext';
-import { useHref, useNavigate } from 'react-router';
+import { useHref, useNavigate, useSearchParams } from 'react-router';
 import { IconEdit } from '@arco-design/web-react/icon';
 
 const LoginPage: React.FC = () => {
@@ -14,11 +13,13 @@ const LoginPage: React.FC = () => {
   // if already logged in, redirect to /my/
   const { authState } = useContext(AuthContext);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = safeReturnTo(searchParams.get('returnTo'));
   useEffect(() => {
     if (authState) {
-      navigate('/my');
+      navigate(returnTo, { replace: true });
     }
-  }, [authState]);
+  }, [authState, navigate, returnTo]);
   
   const localEditorHref = useHref('/exp');
 
@@ -34,7 +35,7 @@ const LoginPage: React.FC = () => {
           setActiveTab={setActiveTab}
           loading={loading}
           setLoading={setLoading}
-          onLoginSuccess={() => { navigate('/my'); }}
+          onLoginSuccess={() => { navigate(returnTo, { replace: true }); }}
         />
       </div>
 
@@ -46,5 +47,21 @@ const LoginPage: React.FC = () => {
     </Space>
   );
 };
+
+export function safeReturnTo(value: string | null): string {
+  if (!value || !value.startsWith('/') || value.startsWith('//') || value.includes('\\')) {
+    return '/my';
+  }
+
+  try {
+    const parsed = new URL(value, window.location.origin);
+    if (parsed.origin !== window.location.origin || parsed.pathname === '/login') {
+      return '/my';
+    }
+    return `${parsed.pathname}${parsed.search}`;
+  } catch {
+    return '/my';
+  }
+}
 
 export default LoginPage;

@@ -1,7 +1,7 @@
 // Backend API client for Stimulize-backend
 
 import { Message } from '@arco-design/web-react';
-import { requireLogin } from '../component/loginModal';
+import { requireLogin } from './loginCoordinator';
 import { Experiment, experimentFromEntity, Project, ProjectEntity, projectFromEntity, ExperimentFileEntity, ExperimentFile, experimentFileFromEntity, ExperimentData, Team, TeamEntity, teamFromEntity, TeamMember, TeamMemberEntity, teamMemberFromEntity } from './apiTypes';
 
 const API_BASE = 'https://q15bwdgudf.execute-api.us-east-2.amazonaws.com/live';
@@ -23,6 +23,8 @@ export type AuthState = {
   id: number;
 };
 
+const authListeners = new Set<(auth: AuthState | null) => void>();
+
 /** internal type in localStorage */
 type AuthStateInternal = AuthState & {
   tokenCreatedAt: number;
@@ -37,11 +39,7 @@ const TOKEN_TTL = 12 * 60 * 60 * 1000; // 12 hours in ms
  */
 export function getAuth(): AuthState | null {
   try {
-    const authString = localStorage.getItem(LS_AUTH_KEY);
-    const auth = authString ? JSON.parse(authString) : null;
-    if (auth && auth.tokenExpiresAt && Date.now() < auth.tokenExpiresAt) {
-      return auth;
-    }
+    return parseStoredAuth(localStorage.getItem(LS_AUTH_KEY));
   } catch {}
   return null;
 }
@@ -55,6 +53,7 @@ export function setAuth(auth: AuthState) {
       tokenExpiresAt: now + TOKEN_TTL 
     };
     localStorage.setItem(LS_AUTH_KEY, JSON.stringify(authInternal));
+    notifyAuthListeners(authInternal);
   } catch { }
 }
 
@@ -62,17 +61,42 @@ export function clearAuth() {
   try {
     localStorage.removeItem(LS_AUTH_KEY);
   } catch { }
+  notifyAuthListeners(null);
 }
 
 export function addAuthListener(callback: (auth: AuthState | null) => void) {
+  authListeners.add(callback);
   const listener = (event: StorageEvent) => {
     if (event.key === LS_AUTH_KEY) {
-      const auth = event.newValue ? JSON.parse(event.newValue) : null;
-      callback(auth);
+      callback(parseStoredAuth(event.newValue));
     }
   };
   window.addEventListener('storage', listener);
-  return () => window.removeEventListener('storage', listener);
+  return () => {
+    authListeners.delete(callback);
+    window.removeEventListener('storage', listener);
+  };
+}
+
+function parseStoredAuth(value: string | null): AuthState | null {
+  try {
+    const auth = value ? JSON.parse(value) as AuthStateInternal : null;
+    if (
+      auth
+      && typeof auth.token === 'string'
+      && typeof auth.username === 'string'
+      && typeof auth.id === 'number'
+      && typeof auth.tokenExpiresAt === 'number'
+      && Date.now() < auth.tokenExpiresAt
+    ) {
+      return auth;
+    }
+  } catch { }
+  return null;
+}
+
+function notifyAuthListeners(auth: AuthState | null) {
+  authListeners.forEach(listener => listener(auth));
 }
 
 /**
@@ -80,7 +104,6 @@ export function addAuthListener(callback: (auth: AuthState | null) => void) {
  * @returns 
  */
 async function apiPost<T>(path: string, data: any = {}, requireAuth: string | boolean = false, useJsonContentType: boolean = true, isFirstTry: boolean = true): Promise<Response<T>> {
-  console.debug('apiPost', path, data, requireAuth);
   const headers: Record<string, string> = useJsonContentType ? { 'Content-Type': 'application/json' } : {};
   if (requireAuth) {
     if (!getAuth()?.token) {
@@ -114,8 +137,14 @@ async function apiPost<T>(path: string, data: any = {}, requireAuth: string | bo
   // Now now: 200 & {error: "Invalid, expired, or missing authentication token."} <- should let backend fix this
   if (res.status === 401 || resJson?.meta?.code === 401 || resJson?.error === 'Invalid, expired, or missing authentication token.') {
     if (requireAuth) {
-      Message.info('Please login (or re-login) to continue.');
-      return await loginAndRetry();
+      if (isFirstTry) {
+        Message.info(`${typeof requireAuth === 'string' ? requireAuth : ''}${getAuth() ? 'Your login session has expired. Please login again.' : 'Please login (or re-login) to continue.'}`);
+        clearAuth();
+        await requireLogin();
+        return apiPost<T>(path, data, requireAuth, useJsonContentType, false);
+      }
+      clearAuth();
+      throw new Error('Authentication failed after re-login.');
     }
   }
 
@@ -124,16 +153,6 @@ async function apiPost<T>(path: string, data: any = {}, requireAuth: string | bo
   }
 
   return resJson;
-
-
-  async function loginAndRetry() {
-    if (isFirstTry) {
-      Message.info(`${typeof requireAuth === 'string' ? requireAuth : ''}${getAuth() ? 'Your login session has expired. Please login again.' : ''}`);
-    }
-    clearAuth();
-    await requireLogin();
-    return apiPost<T>(path, data, requireAuth, useJsonContentType, false);
-  }
 }
 
 
@@ -324,4 +343,3 @@ export async function checkTeamAccess(teamId: number): Promise<{ response: Respo
     userRole: response.data.user_role,
   };
 }
-

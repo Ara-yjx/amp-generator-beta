@@ -1,16 +1,15 @@
 import { ConfigProvider, Layout } from '@arco-design/web-react';
 import '@arco-design/web-react/dist/css/arco.css';
 import enUS from '@arco-design/web-react/es/locale/en-US';
-import { useContext } from 'react';
-import { HashRouter, Navigate, Route, Routes } from 'react-router';
+import { HashRouter, Route, Routes } from 'react-router';
 import './App.css';
 import Dashboard from './component/dashboard';
 import Header from './component/header';
 import HomePage from './component/homePage';
 import LoginPage from './component/loginPage';
 import { MainForm } from './component/mainForm';
+import RequireAuth from './component/requireAuth';
 import Teams from './component/teams';
-import { AuthContext } from './context/AuthContext';
 
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <Layout>
@@ -24,9 +23,6 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 );
 
 function App() {
-
-  const { authState } = useContext(AuthContext);
-
   return (
     <ConfigProvider locale={enUS}>
       <HashRouter>
@@ -35,8 +31,8 @@ function App() {
             <Route path='/' element={<HomePage />} />
             <Route path='/exp' element={<AppLayout><MainForm /></AppLayout>} />
             <Route path='/exp/:expId?/edit' element={<AppLayout><MainForm /></AppLayout>} />
-            <Route path='/my' element={authState ? <AppLayout><Dashboard /></AppLayout> : <Navigate to='/login' />} />
-            <Route path='/team' element={authState ? <AppLayout><Teams /></AppLayout> : <Navigate to='/login' />} />
+            <Route path='/my' element={<RequireAuth><AppLayout><Dashboard /></AppLayout></RequireAuth>} />
+            <Route path='/team' element={<RequireAuth><AppLayout><Teams /></AppLayout></RequireAuth>} />
             <Route path='/login' element={<AppLayout><LoginPage /></AppLayout>} />
           </Routes>
         </div>
