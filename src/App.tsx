@@ -19,12 +19,12 @@ const AppLayout: React.FC<{ children: React.ReactNode; showWorkspaceMenu?: boole
   children,
   showWorkspaceMenu = true,
 }) => (
-  <Layout>
+  <Layout className="app-layout">
     <Layout.Header>
       <Header />
     </Layout.Header>
     {showWorkspaceMenu && <WorkspaceMenu />}
-    <Layout.Content>
+    <Layout.Content className="app-layout-content">
       {children}
     </Layout.Content>
   </Layout>
