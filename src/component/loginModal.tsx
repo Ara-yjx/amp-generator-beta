@@ -3,6 +3,7 @@ import { IconUser } from '@arco-design/web-react/icon';
 import { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { addAuthListener, getAuth, logout } from '../data/backend';
+import { clearChatbotStorage } from '../data/chatbot/chatbotStorage';
 import { LoginForm } from './loginForm';
 import { useHref, useLocation } from 'react-router';
 
@@ -63,6 +64,7 @@ export default function LoginModal() {
   };
 
   const onClickLogOut = () => {
+    clearChatbotStorage();
     setAuthState(null);
     logout().catch(() => { /* noop */ });
     Message.success('Logged out.');
