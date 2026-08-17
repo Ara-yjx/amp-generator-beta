@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Set Your Stimuli Pool - SP-Builder</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Logo Section -->
+    <header class="logo-header">
+        <h2 class="logo">SP-Builder</h2>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="main-container">
+        
+        <!-- Left Menu Section -->
+                <div class="menu" id="manualMenu">
+            <button type="button" class="menu-toggle" id="menuToggleBtn" aria-expanded="true" aria-controls="manualMenuList">Hide menu</button>
+            <ul id="manualMenuList">
+                <li><a href="index.html">Overview</a></li>
+                <li><a href="tutorial.html">Video Tutorial</a></li>
+                <li><a href="stimuli.html">Set Your Stimuli Pool</a></li>
+                <li><a href="priming.html">Priming</a></li>
+                <li><a href="trial.html">Design Your Trial Flow</a></li>
+                <li><a href="preview.html">Preview Your Trial</a></li>
+                <li><a href="qualtrics.html">Embed into Qualtrics</a></li>
+                <li><a href="analyze.html">Analyze Your Data</a></li>
+                <li><a href="load.html">Load/Save Your Design</a></li>
+            </ul>
+        </div>
+<!-- Content Section -->
+
+        <div class="content">
+          <h1>Stimuli Pool Setup</h1>
+          <div class="expand-collapse-controls">
+    <button type="button" id="expandAllBtn">Expand All</button>
+    <button type="button" id="collapseAllBtn">Collapse All</button>
+</div>
+
+      
+          <b class="expandable-title">Overview of Stimuli Pool</b>
+          <div class="expandable-content">
+              <div class="picture_container">
+                  <img src="Assets/add_item.gif" id="small_picture"/>
+              </div>
+              <p>
+                  This is where you put the same type of stimuli in. You can click <b>"Add Item"</b> to populate each of your stimuli pool. 
+                  You can also click the little <b>"+"</b> on the top of the stimuli pool box to add more stimuli pools. 
+                  <br>
+                  <b>Q: How to decide which pool I should put the stimulus into?</b> 
+                  <br>
+                  <b>A:</b> For example, in IAT, we have negative words and positive words, which stand for two categories. 
+                  Therefore, they should be put into two stimuli pools.
+              </p>
+          </div>
+      
+          <b class="expandable-title">Type / Image URL or Text Context / Count</b>
+          <div class="expandable-content">
+              <div class="picture_container">
+                  <img src="Assets/image_text.gif" id="small_picture"/>
+              </div>
+              <p>
+                  This is where you need to select the type of your stimuli, whether it is an image or text.
+                  If it is text, just copy and paste the text stimuli. 
+                  If it is an image, load your image to an online library and paste its URL here. 
+                  Put in the counts for each stimulus, i.e., how many times you want the stimulus to appear in your study.
+                  <br>
+                  <b>Q: How to decide the amount of counts for stimuli?</b> 
+                  <br>
+                  <b>A:</b> For example, in IAT, we want the same word to repeat twice during one round. We just put "2" for its count.
+              </p>
+          </div>
+      
+          <b class="expandable-title">Shuffle / Restrict Max Repeat</b>
+          <div class="expandable-content">
+              <div class="picture_container">
+                  <img src="Assets/shuffle.gif" id="small_picture"/>
+              </div>
+              <p>
+                  Here, the SP-Builder has a function called <b>“Shuffle”</b> that helps you randomize the order of all the items in your stimuli. 
+                  Once you activate the “Shuffle” function, the SP-Builder will embed JavaScript in your survey to generate a unique randomized order of items for each stimulus for each participant. 
+                  Each stimulus has its own “Shuffle” function and needs to be activated separately.   
+                  <br><br>
+                  <b>Restrict max repeat:</b> In some cases, researchers want to prevent the same item from being repeated multiple times in succession, so they need to activate the “Restrict Max Repeat” function and indicate the number of times they allow the item to be repeatedly presented. 
+                  For example, if you put “2,” then the aforementioned stimuli cannot appear more than twice in succession.
+                  <br><br>
+                  <b>Q: What if I don't click shuffle?</b> 
+                  <br>
+                  <b>A:</b> Our website will play the stimuli from the first one until the last one and repeat the same sequence.
+              </p>
+          </div>
+      </div>
+</div>
+    <footer class="site-footer">
+            <p>
+              Contact Support:
+              <a href="mailto:spbuilder.team@gmail.com">spbuilder.team@gmail.com</a>
+            </p>
+          </footer>
+    <script src="manual.js"></script>
+</body>
+</html>

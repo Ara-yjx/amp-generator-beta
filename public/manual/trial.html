@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Logo Section -->
+    <header class="logo-header">
+        <h2 class="logo">SP-Builder</h2>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="main-container">
+        
+        <!-- Left Menu Section -->
+                <div class="menu" id="manualMenu">
+            <button type="button" class="menu-toggle" id="menuToggleBtn" aria-expanded="true" aria-controls="manualMenuList">Hide menu</button>
+            <ul id="manualMenuList">
+                <li><a href="index.html">Overview</a></li>
+                <li><a href="tutorial.html">Video Tutorial</a></li>
+                <li><a href="stimuli.html">Set Your Stimuli Pool</a></li>
+                <li><a href="priming.html">Priming</a></li>
+                <li><a href="trial.html">Design Your Trial Flow</a></li>
+                <li><a href="preview.html">Preview Your Trial</a></li>
+                <li><a href="qualtrics.html">Embed into Qualtrics</a></li>
+                <li><a href="analyze.html">Analyze Your Data</a></li>
+                <li><a href="load.html">Load/Save Your Design</a></li>
+            </ul>
+        </div>
+<!-- Content Section -->
+        <div class="content">
+            <h1>Design Your Trial Flow</h1>
+            <div class="expand-collapse-controls">
+    <button type="button" id="expandAllBtn">Expand All</button>
+    <button type="button" id="collapseAllBtn">Collapse All</button>
+</div>
+
+        
+            <b class="expandable-title">Trial Timeline</b>
+            <div class="expandable-content">
+                <div class="picture_container">
+                    <img src="Assets/timeline_1.gif" id="small_picture"/>
+                </div>
+                <p>You can set the time you want each stimulus to show. 
+                   For Stimulus 3, it's typically the page awaiting participants to respond. You can set both Delay before keyboard and Delay after keyboard.</p>
+            </div>   
+            
+            <b class="expandable-title">Concurrent stimuli display</b>
+            <div class="expandable-content">
+                <div class="picture_container">
+                    <img src="Assets/concurrent_display.gif" id="small_picture_2"/>
+                </div>
+                <p>By enabling this function, you can set how you want to display several stimuli pools whether horizontally or vertically. </p>
+            </div>   
+        
+            <b class="expandable-title">Allowed Input Keys</b>
+            <div class="expandable-content">
+                <div class="picture_container">
+                    <img src="Assets/key_input.gif" width = 430px; height= 215px/>
+                </div>
+                <p>You can set the key inputs allowed for participants (e.g., in IAT, let K = "pleasant", D="unpleasant").</p>
+            </div>
+        
+            <b class="expandable-title">Auto Proceed to Next Trial After Timeout</b>
+            <div class="expandable-content">
+                <div class="picture_container">
+                    <img src="Assets/auto_proceed.gif" id="small_picture_2"/>
+                </div>
+                <p>When you enable this button, it will not wait for participants' key responses and will move to the next trial automatically.</p>
+            </div>
+        
+            <b class="expandable-title">Set Number of Trials and Rounds</b>
+            <div class="expandable-content">
+                <div class="picture_container">
+                    <img src="Assets/rounds.gif" id="small_picture"/>
+                </div>
+                <p>
+                    After designing one trial, it's time to decide how many trials you want in total and how many rounds you want. <br><br>
+                    <b>Number of total trials:</b> Make sure the number of total trials doesn’t exceed any of your stimuli counts in one stimuli pool. <br>
+                    For instance, if you have four stimuli with five counts each in Stimuli Pool 1, your total trial count can’t exceed 20. <br><br>
+                    <b>Add more rounds:</b> If you want another copy of one round, just enable this button. <br>
+                    <b>Note:</b> When embedding this survey into Qualtrics, you need to add another copy of our design block to include another round.
+                </p>
+            </div>
+
+        </div>
+</div>
+    <footer class="site-footer">
+            <p>
+              Contact Support:
+              <a href="mailto:spbuilder.team@gmail.com">spbuilder.team@gmail.com</a>
+            </p>
+          </footer>
+    <script src="manual.js"></script>
+</body>
+</html>

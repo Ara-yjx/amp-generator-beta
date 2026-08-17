@@ -18,7 +18,6 @@ import { TrialHtml } from './trialHtml';
 import { WarnTotalTrials } from './warnTotalTrials';
 import { IconCloudDownload, IconQuestionCircle } from '@arco-design/web-react/icon';
 import { Debugger } from './debugger';
-
 const { Item } = Form;
 
 

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Logo Section -->
+    <header class="logo-header">
+        <h2 class="logo">SP-Builder</h2>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="main-container">
+        
+        <!-- Left Menu Section -->
+                <div class="menu" id="manualMenu">
+            <button type="button" class="menu-toggle" id="menuToggleBtn" aria-expanded="true" aria-controls="manualMenuList">Hide menu</button>
+            <ul id="manualMenuList">
+                <li><a href="index.html">Overview</a></li>
+                <li><a href="tutorial.html">Video Tutorial</a></li>
+                <li><a href="stimuli.html">Set Your Stimuli Pool</a></li>
+                <li><a href="priming.html">Priming</a></li>
+                <li><a href="trial.html">Design Your Trial Flow</a></li>
+                <li><a href="preview.html">Preview Your Trial</a></li>
+                <li><a href="qualtrics.html">Embed into Qualtrics</a></li>
+                <li><a href="analyze.html">Analyze Your Data</a></li>
+                <li><a href="load.html">Load/Save Your Design</a></li>
+            </ul>
+        </div>
+<!-- Content Section -->
+        <div class="content">
+          <h1>Prime Your Stimuli</h1>
+          <div class="expand-collapse-controls">
+    <button type="button" id="expandAllBtn">Expand All</button>
+    <button type="button" id="collapseAllBtn">Collapse All</button>
+</div>
+
+      
+          <b class="expandable-title">Overview of Priming</b>
+          <div class="expandable-content">
+              <div class="picture_container">
+                  <img src="Assets/priming.gif" class="manual-gif" alt="Priming overview demonstration"/>
+              </div>
+              <p>
+                  The “Priming” function is a powerful function of the SP-Builder designated for researchers who need to set up a selected item (e.g., target or control item). 
+                  For example, as a common practice in psychology research, researchers in many sequential priming paradigms need a target item to compare with a control stimulus for their research purpose.
+              </p>
+          </div>
+      
+          <b class="expandable-title">Set Up Your Target/Control Stimuli</b>
+          <div class="expandable-content">
+              <p>You need to first click Add Priming Stimulus.</p>
+              <p>Give the name for your target stimuli in "Name", and add the stimuli pool to choose from in "Included items".</p>
+              <p>Then click Add Priming Stimulus again to set your control stimuli, where you can exclude target stimuli in "Excluded items".</p>
+          </div>
+      
+          <b class="expandable-title">Override Stimuli Count</b>
+          <div class="expandable-content">
+              <p>
+                  In some studies, researchers want to present the selected item (e.g., Target_1) more frequently than the other items. 
+                  They can use the “Override stimuli count” function to adjust the number of counts they wish for their selected item.
+              </p>
+          </div>
+      </div>
+</div>
+    <footer class="site-footer">
+            <p>
+              Contact Support:
+              <a href="mailto:spbuilder.team@gmail.com">spbuilder.team@gmail.com</a>
+            </p>
+          </footer>
+    <script src="manual.js"></script>
+</body>
+</html>
