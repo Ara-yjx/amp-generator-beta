@@ -7,6 +7,7 @@ const NavButtonDropdown = () => {
 
   const homeHref = useHref('/my');
   const teamHref = useHref('/team');
+  const billingHref = useHref('/billing');
   const rootHref = useHref('/');
 
   // Decide whether to open page in new tab. A little bit hack here by self-checking location
@@ -28,6 +29,11 @@ const NavButtonDropdown = () => {
           <Menu.Item key='/team'>
             <Link href={teamHref} target={target}>
               <IconUserGroup /> &nbsp; Teams
+            </Link>
+          </Menu.Item>
+          <Menu.Item key='/billing'>
+            <Link href={billingHref} target={target}>
+              $ &nbsp; Plans &amp; billing
             </Link>
           </Menu.Item>
           <Menu.Item key='/'>

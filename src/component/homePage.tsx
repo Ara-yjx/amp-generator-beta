@@ -1,10 +1,11 @@
 import React, { useContext, useLayoutEffect, useRef, useState } from 'react';
-import { Button, Divider } from '@arco-design/web-react';
+import { Button, Divider, Space } from '@arco-design/web-react';
 import { IconEdit } from '@arco-design/web-react/icon';
 import { useHref, useNavigate } from 'react-router';
 import { AuthContext } from '../context/AuthContext';
 import LoginForm from './loginForm';
 import LoginModal from './loginModal';
+import BillingNavLink from './payment/billingNavLink';
 import NavigationLinks from './navigationLinks';
 
 // Should use `import stimulizeLogo from` but seems `react-scripts build` does not support it`  
@@ -98,7 +99,10 @@ const HomePage: React.FC = () => {
         zIndex: 10
       }}>
         <img src={stimulizeLogo} alt="STIMULIZE Logo" style={{ height: 50 }} />
-        <NavigationLinks />
+        <Space split={<Divider type='vertical' />}>
+          <NavigationLinks showDividers={false} />
+          <BillingNavLink />
+        </Space>
         <LoginModal />
       </div>
 
