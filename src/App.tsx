@@ -10,6 +10,7 @@ import HomePage from './component/homePage';
 import LoginPage from './component/loginPage';
 import { MainForm } from './component/mainForm';
 import Teams from './component/teams';
+import WebAgentChatbot from './component/chatbot/webAgentChatbot';
 import { AuthContext } from './context/AuthContext';
 
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -31,6 +32,7 @@ function App() {
     <ConfigProvider locale={enUS}>
       <HashRouter>
         <div className="App">
+          {authState && <WebAgentChatbot />}
           <Routes>
             <Route path='/' element={<HomePage />} />
             <Route path='/exp' element={<AppLayout><MainForm /></AppLayout>} />
