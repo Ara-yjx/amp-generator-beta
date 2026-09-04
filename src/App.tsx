@@ -10,6 +10,7 @@ import HomePage from './component/homePage';
 import LoginPage from './component/loginPage';
 import { MainForm } from './component/mainForm';
 import Teams from './component/teams';
+import PaymentPage from './component/payment/PaymentPage';
 import { AuthContext } from './context/AuthContext';
 
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -37,6 +38,7 @@ function App() {
             <Route path='/exp/:expId?/edit' element={<AppLayout><MainForm /></AppLayout>} />
             <Route path='/my' element={authState ? <AppLayout><Dashboard /></AppLayout> : <Navigate to='/login' />} />
             <Route path='/team' element={authState ? <AppLayout><Teams /></AppLayout> : <Navigate to='/login' />} />
+            <Route path='/billing' element={authState ? <AppLayout><PaymentPage /></AppLayout> : <Navigate to='/login' />} />
             <Route path='/login' element={<AppLayout><LoginPage /></AppLayout>} />
           </Routes>
         </div>

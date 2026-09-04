@@ -1,6 +1,8 @@
 import LoginModal from './loginModal';
+import BillingNavLink from './payment/billingNavLink';
 import NavButtonDropdown from './navButtonDropdown';
 import NavigationLinks from './navigationLinks';
+import { Divider, Space } from '@arco-design/web-react';
 
 function Header() {
   return (
@@ -11,7 +13,10 @@ function Header() {
 
       <h1 style={{ color: '#3491FA', letterSpacing: 1 }}>STIMULIZE</h1>
       <div style={{ marginBottom: 30 }}>
-        <NavigationLinks />
+        <Space split={<Divider type='vertical' />}>
+          <NavigationLinks showDividers={false} />
+          <BillingNavLink />
+        </Space>
       </div>
 
       <div style={{ position: 'absolute', top: 20, right: 20 }}>
