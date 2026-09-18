@@ -7,11 +7,12 @@
  * - docs/api-management.yml "ChatroomSetting"
  */
 
-export type DerivedChatroomMode = 'one_on_one' | 'group'
+export type DerivedChatroomMode = 'one_on_one' | 'group' | 'ai_only'
 
 export type AiJoinStrategy = 'fixed_ai_count' | 'total_participant_count'
 
 export interface AiPersonaSetting {
+  prompt_attachment_ids?: string[]
   /** Analysis-only label written to exported history, not participant-visible. */
   internal_name: string
   /** Participant-visible display name. Empty means backend picks one. */
@@ -28,6 +29,7 @@ export interface AiPersonaSetting {
 }
 
 export interface ChatroomSetting {
+  prompt_attachment_ids?: string[]
   /**
    * Researcher-supplied topic. Just the topic — the human-mimicry speech
    * scaffold (rules, tool-use mechanics, examples) lives in the backend
@@ -73,6 +75,9 @@ export interface ChatroomSetting {
   ai_join_strategy: AiJoinStrategy
   ai_strategy_value: number
   max_wait_seconds: number
+  max_message_chars: number
+  max_total_chars: number
+  max_turns: number
 }
 
 /** One-on-one denormalized fixed values per low-level design. */
@@ -90,6 +95,13 @@ export const VALIDATION_LIMITS = {
   aiStrategyValueMin: 0,
   aiStrategyValueMax: 7,
   targetHumanCountMin: 1,
+  aiOnlyCountMin: 2,
+  maxMessageCharsMin: 1,
+  maxMessageCharsMax: 4000,
+  maxTotalCharsMin: 1,
+  maxTotalCharsMax: 200000,
+  maxTurnsMin: 1,
+  maxTurnsMax: 200,
   temperatureMin: 0,
   temperatureMax: 1,
 }
@@ -128,6 +140,8 @@ export function normalizeAiPersonas(value: unknown): AiPersonaSetting[] {
         : ''
     const temperatureRaw = (entry as { temperature?: unknown }).temperature
     return [{
+      ...(Array.isArray((entry as AiPersonaSetting).prompt_attachment_ids)
+        ? { prompt_attachment_ids: [...(entry as AiPersonaSetting).prompt_attachment_ids!] } : {}),
       internal_name: internalName,
       nickname,
       persona,
@@ -218,9 +232,25 @@ export function validateChatroomSetting(setting: ChatroomSetting): ValidationRes
   if (
     !Number.isFinite(setting.human_count) ||
     !Number.isInteger(setting.human_count) ||
-    setting.human_count < VALIDATION_LIMITS.targetHumanCountMin
+    setting.human_count < 0
   ) {
-    errors.human_count = `human_count must be an integer >= ${VALIDATION_LIMITS.targetHumanCountMin}`
+    errors.human_count = 'human_count must be a non-negative integer'
+  }
+
+  if (setting.human_count === 0 && setting.ai_count < VALIDATION_LIMITS.aiOnlyCountMin) {
+    errors.ai_count = 'AI-only chatrooms require at least 2 AIs'
+  }
+  if (setting.human_count === 0 && setting.resumable) {
+    errors.resumable = 'AI-only chatrooms cannot be resumable'
+  }
+  for (const [field, max] of [
+    ['max_message_chars', VALIDATION_LIMITS.maxMessageCharsMax],
+    ['max_total_chars', VALIDATION_LIMITS.maxTotalCharsMax],
+    ['max_turns', VALIDATION_LIMITS.maxTurnsMax],
+  ] as const) {
+    if (!Number.isInteger(setting[field]) || setting[field] < 1 || setting[field] > max) {
+      errors[field] = `${field} must be an integer between 1 and ${max}`
+    }
   }
 
   if (
@@ -261,6 +291,18 @@ export function validateChatroomSetting(setting: ChatroomSetting): ValidationRes
  */
 export function denormalizeForSave(values: ChatroomSetting): ChatroomSetting {
   const targetHumanCount = values.human_count
+  if (targetHumanCount === 0) {
+    return {
+      ...values,
+      resumable: false,
+      replace_human_with_ai: false,
+      target_human_count: 0,
+      ai_join_strategy: 'fixed_ai_count',
+      ai_strategy_value: values.ai_count,
+      simulate_pairing_seconds: 0,
+      max_wait_seconds: 0,
+    }
+  }
   const replaceHumanWithAi = values.human_count > 1 && values.replace_human_with_ai
   const aiStrategyValue = replaceHumanWithAi
     ? values.human_count + values.ai_count
@@ -291,6 +333,7 @@ export function denormalizeForSave(values: ChatroomSetting): ChatroomSetting {
  * persist a `mode` field.
  */
 export function deriveChatroomMode(setting: Pick<ChatroomSetting, 'human_count' | 'ai_count'>): DerivedChatroomMode {
+  if (setting.human_count === 0) return 'ai_only'
   return setting.human_count === 1 && setting.ai_count === 1 ? 'one_on_one' : 'group'
 }
 
@@ -317,6 +360,9 @@ export function defaultChatroomSetting(): ChatroomSetting {
     timer_min_minutes: 1,
     timer_max_minutes: 5,
     max_duration_seconds: deriveMaxDurationSeconds(5),
+    max_message_chars: 400,
+    max_total_chars: 20000,
+    max_turns: 100,
   }
 
   return {
@@ -331,6 +377,20 @@ export function defaultChatroomSetting(): ChatroomSetting {
 export function defaultSettingForMode(mode: DerivedChatroomMode): ChatroomSetting {
   const base = defaultChatroomSetting()
   if (mode === 'one_on_one') return base
+  if (mode === 'ai_only') {
+    return {
+      ...base,
+      human_count: 0,
+      ai_count: 2,
+      replace_human_with_ai: false,
+      target_human_count: 0,
+      ai_join_strategy: 'fixed_ai_count',
+      ai_strategy_value: 2,
+      max_wait_seconds: 0,
+      simulate_pairing_seconds: 0,
+      resumable: false,
+    }
+  }
   return {
     ...base,
     human_count: 2,

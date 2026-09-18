@@ -29,6 +29,10 @@ describe('chatroom management adapter', () => {
   });
 
   it('unwraps single objects and plain data payloads', () => {
+    expect(unwrapChatroomPayload({ data: { batch: { batch_job_id: 'aib_1' } } }))
+      .toEqual({ batch_job_id: 'aib_1' });
+    expect(unwrapChatroomPayload({ data: { events: [], has_more: false } }))
+      .toEqual({ events: [], has_more: false });
     expect(unwrapChatroomPayload({ data: { chatroom: { id: 'scid_1' } } }))
       .toEqual({ id: 'scid_1' });
     expect(unwrapChatroomPayload({ data: { usage: { totals: {} } } }))

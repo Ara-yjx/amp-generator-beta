@@ -127,7 +127,7 @@ async function apiPost<T>(path: string, data: any = {}, requireAuth: string | bo
   const res = await fetch(`${apiBase}${path}`, {
     method: 'POST',
     headers,
-    body: JSON.stringify(data),
+    body: useJsonContentType ? JSON.stringify(data) : data,
   });
 
 
@@ -160,6 +160,10 @@ async function apiPost<T>(path: string, data: any = {}, requireAuth: string | bo
 
 export function apiPostAt<T>(apiBase: string, path: string, data: unknown = {}, requireAuth: string | boolean = true): Promise<ApiResponse<T>> {
   return apiPost<T>(path, data, requireAuth, true, true, apiBase.replace(/\/+$/, ''));
+}
+
+export function apiUploadAt<T>(apiBase: string, path: string, data: FormData): Promise<ApiResponse<T>> {
+  return apiPost<T>(path, data, true, false, true, apiBase.replace(/\/+$/, ''));
 }
 
 

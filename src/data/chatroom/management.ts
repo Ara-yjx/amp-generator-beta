@@ -11,6 +11,7 @@ export function unwrapChatroomPayload<T>(payload: unknown): T {
 
   if ('chatrooms' in maybeData) return (maybeData as { chatrooms: T }).chatrooms;
   if ('chatroom' in maybeData) return (maybeData as { chatroom: T }).chatroom;
+  if ('batch' in maybeData) return (maybeData as { batch: T }).batch;
   return maybeData as T;
 }
 

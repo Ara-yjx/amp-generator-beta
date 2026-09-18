@@ -5,6 +5,7 @@ import { HashRouter, Route, Routes } from 'react-router';
 import './App.css';
 import Dashboard from './component/dashboard';
 import ChatroomEditor from './component/chatroom/ChatroomEditor';
+import AiConversationBatch from './component/chatroom/AiConversationBatch';
 import ChatroomList from './component/chatroom/ChatroomList';
 import ChatroomUsage from './component/chatroom/ChatroomUsage';
 import Header from './component/header';
@@ -44,6 +45,7 @@ function App() {
             <Route path='/chatroom' element={<RequireAuth><AppLayout><ChatroomList /></AppLayout></RequireAuth>} />
             <Route path='/chatroom/:id/usage' element={<RequireAuth><AppLayout><ChatroomUsage /></AppLayout></RequireAuth>} />
             <Route path='/chatroom/:id' element={<RequireAuth><AppLayout><ChatroomEditor /></AppLayout></RequireAuth>} />
+            <Route path='/chatroom/:id/ai-batches/:batchId' element={<RequireAuth><AppLayout><AiConversationBatch /></AppLayout></RequireAuth>} />
             <Route path='/login' element={<AppLayout showWorkspaceMenu={false}><LoginPage /></AppLayout>} />
           </Routes>
         </div>

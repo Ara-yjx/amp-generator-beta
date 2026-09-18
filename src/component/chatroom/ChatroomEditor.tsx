@@ -5,6 +5,7 @@ import {
 } from '@arco-design/web-react'
 import { IconDelete, IconPlus, IconQuestionCircle } from '@arco-design/web-react/icon'
 import { Chatroom, getChatroom, updateChatroom } from '../../data/chatroom/api'
+import { chatroomApiPost } from '../../data/chatroom/management'
 import {
   ChatroomSetting,
   AiPersonaSetting,
@@ -17,15 +18,18 @@ import {
   validateChatroomSetting,
   VALIDATION_LIMITS,
 } from '../../data/chatroom/chatroomSetting'
-import { chatroomUsageRoute } from '../../data/chatroom/routes'
+import { aiConversationBatchRoute, chatroomUsageRoute } from '../../data/chatroom/routes'
 import ScriptGenerator from './ScriptGenerator'
 import WidgetPreview from './WidgetPreview'
+import AttachmentList, { AttachmentLibrary, useAttachmentLibrary, attachmentModelError } from './AttachmentList'
+import BatchCostEstimate from './BatchCostEstimate'
 
 const TextArea = Input.TextArea
 const FormItem = Form.Item
 const Option = Select.Option
 const OptGroup = Select.OptGroup
 const SAME_MODEL_AS_DEFAULT = '__CHATROOM_DEFAULT__'
+const MAX_AI_BATCH_COUNT = 10
 
 type ModelOption = {
   label: string
@@ -82,9 +86,15 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 function PersonaListEditor({
   value,
   onChange,
+  library,
+  modelError,
+  defaultModel,
 }: {
   value?: AiPersonaSetting[]
   onChange?: (next: AiPersonaSetting[]) => void
+  library: AttachmentLibrary
+  modelError: string
+  defaultModel: string
 }) {
   const personas = value ?? []
   const update = (next: AiPersonaSetting[]) => onChange?.(next)
@@ -146,7 +156,7 @@ function PersonaListEditor({
                       )),
                     )}
                     placeholder="Select model"
-                    style={{ width: '100%' }}
+                    style={{ width: 360, maxWidth: '100%' }}
                   >
                     <Option value={SAME_MODEL_AS_DEFAULT}>(same model as chatroom default)</Option>
                     {MODEL_GROUPS.map((group) => (
@@ -162,6 +172,7 @@ function PersonaListEditor({
                   <FieldLabel>🌡️ Temperature</FieldLabel>
                   <InputNumber
                     value={p.temperature ?? undefined}
+                    disabled={(p.model_id || defaultModel).includes('claude-opus-4-7')}
                     min={VALIDATION_LIMITS.temperatureMin}
                     max={VALIDATION_LIMITS.temperatureMax}
                     step={0.1}
@@ -187,6 +198,8 @@ function PersonaListEditor({
                   placeholder={`Instruction to persona ${i + 1}`}
                   style={{ flex: 1 }}
                 />
+                <AttachmentList value={p.prompt_attachment_ids} library={library} modelError={modelError}
+                  onChange={ids => update(personas.map((x, j) => j === i ? { ...x, prompt_attachment_ids: ids } : x))} />
               </div>
             </div>
             <Button
@@ -322,9 +335,13 @@ function normalizeLoadedSetting(setting: Partial<ChatroomSetting> | undefined): 
 
 export default function ChatroomEditor() {
   const { id } = useParams<{ id: string }>()
+  const attachmentLibrary = useAttachmentLibrary(id)
   const [chatroom, setChatroom] = useState<Chatroom | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [startingBatch, setStartingBatch] = useState(false)
+  const [batchCount, setBatchCount] = useState(10)
+  const [estimateDirty, setEstimateDirty] = useState(false)
   // Arco 2.66's useWatch typing is incompatible with a narrowed FormInstance
   // under this app's TypeScript version, so keep the instance generic and
   // validate the resulting values through FormValues below.
@@ -335,6 +352,11 @@ export default function ChatroomEditor() {
   const watchedResumable = Form.useWatch('resumable', form) as boolean | undefined
   const watchedAiNickname = Form.useWatch('ai_nickname', form) as string | undefined
   const watchedTimerMaxMinutes = Form.useWatch('timer_max_minutes', form) as number | null | undefined
+  const watchedAiPersonas = Form.useWatch('ai_personas', form) as AiPersonaSetting[] | undefined
+  const watchedModel = Form.useWatch('model_id', form) as string | undefined
+  const attachmentError = attachmentModelError(watchedModel || '', watchedAiPersonas || [], attachmentLibrary.caps)
+  const watchedMaxTurns = Form.useWatch('max_turns', form) as number | undefined
+  const isAiOnly = (watchedHumanCount ?? 1) === 0
 
   useEffect(() => {
     if (typeof watchedTimerMaxMinutes === 'undefined') return
@@ -383,13 +405,22 @@ export default function ChatroomEditor() {
   useEffect(() => { fetchChatroom() }, [fetchChatroom])
 
   const handleSave = async (options: SaveOptions = {}) => {
-    const values = await form.validate() as FormValues
+    const formValues = await form.validate() as FormValues
+    // Arco omits unmounted fields when switching between human and AI-only UI.
+    const retainedValues = Object.fromEntries(
+      Object.entries(formValues).filter(([, value]) => value !== undefined),
+    )
+    const values = {
+      ...formValues,
+      ...normalizeLoadedSetting({ ...chatroom?.setting, ...retainedValues }),
+    } as FormValues
     const nextStatus = options.activate ? 'active' : values.status ? 'active' : 'inactive'
 
     // Layer custom validation on top of Form's built-in rules.
-    const settingToValidate: ChatroomSetting = {
+    const settingToValidate: ChatroomSetting = denormalizeForSave({
       topic_instruction: values.topic_instruction,
       additional_prompt: values.additional_prompt,
+      ...(values.prompt_attachment_ids ? { prompt_attachment_ids: values.prompt_attachment_ids } : {}),
       ai_personas: normalizeAiPersonas(values.ai_personas),
       model_id: values.model_id,
       mimic_human: values.mimic_human,
@@ -408,8 +439,16 @@ export default function ChatroomEditor() {
       ai_join_strategy: values.ai_join_strategy,
       ai_strategy_value: values.ai_strategy_value,
       max_wait_seconds: values.max_wait_seconds,
-    }
+      max_message_chars: values.max_message_chars,
+      max_total_chars: values.max_total_chars,
+      max_turns: values.max_turns,
+    })
     const result = validateChatroomSetting(settingToValidate)
+    if ((values.prompt_attachment_ids?.length || values.ai_personas.some(p => p.prompt_attachment_ids?.length)) && attachmentLibrary.visible) {
+      if (attachmentLibrary.error) throw new Error(attachmentLibrary.error)
+      if (attachmentLibrary.loading || !attachmentLibrary.caps) throw new Error('Please wait for attachments to finish loading.')
+      if (attachmentError) throw new Error(attachmentError)
+    }
     if (!result.ok) {
       const fields: Record<string, { value: unknown; errors: string[] }> = {}
       for (const [field, msg] of Object.entries(result.errors)) {
@@ -434,6 +473,7 @@ export default function ChatroomEditor() {
         setting: finalSetting,
       })
       setChatroom(updated)
+      setEstimateDirty(false)
       if (options.activate) {
         form.setFieldValue('status', true)
       }
@@ -462,6 +502,48 @@ export default function ChatroomEditor() {
     const url = new URL(window.location.href)
     url.hash = chatroomUsageRoute(id ?? '')
     window.open(url.toString(), '_blank', 'noopener,noreferrer')
+  }
+
+  const setAiOnly = (enabled: boolean) => {
+    if (enabled) {
+      const currentAiCount = Number(form.getFieldValue('ai_count') ?? 2)
+      form.setFieldsValue({
+        human_count: 0,
+        ai_count: Math.max(2, currentAiCount),
+        resumable: false,
+        replace_human_with_ai: false,
+        simulate_pairing_seconds: 0,
+        max_wait_seconds: 0,
+      })
+      return
+    }
+    form.setFieldValue('human_count', 1)
+  }
+
+  const startAiBatch = async (count: number) => {
+    const target = window.open('about:blank', '_blank')
+    setStartingBatch(true)
+    try {
+      await handleSave({ activate: true })
+      const clientRequestId = typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(16).slice(2)}`
+      const created = await chatroomApiPost<{ batch_job_id: string }>('/api/createAiConversationBatch', {
+        chatroom_id: id,
+        batch_count: count,
+        client_request_id: clientRequestId,
+      })
+      const route = aiConversationBatchRoute(id ?? '', created.batch_job_id)
+      const url = new URL(window.location.href)
+      url.hash = route
+      if (target) target.location.href = url.toString()
+      else window.location.href = url.toString()
+    } catch (error: unknown) {
+      target?.close()
+      Message.error(error instanceof Error ? error.message : 'Failed to start AI conversation')
+    } finally {
+      setStartingBatch(false)
+    }
   }
 
   if (loading) return <Spin style={{ display: 'block', margin: '80px auto' }} />
@@ -507,7 +589,7 @@ export default function ChatroomEditor() {
           ID: {chatroom.id}
         </div>
 
-        <Form form={form} layout="vertical">
+        <Form form={form} layout="vertical" onValuesChange={() => setEstimateDirty(true)}>
           {/* ─── Basics ─────────────────────────────────────────────── */}
           <SectionHeader>📋 Basics</SectionHeader>
 
@@ -523,11 +605,24 @@ export default function ChatroomEditor() {
           {/* ─── Participants ─────────────────────────────────────── */}
           <SectionHeader>👥 Participants</SectionHeader>
 
+          <FormItem
+            label="AI-only mode"
+            extra="Generate asynchronous conversations between AIs without a human participant."
+          >
+            <Switch
+              checked={isAiOnly}
+              checkedText="On"
+              uncheckedText="Off"
+              onChange={setAiOnly}
+            />
+          </FormItem>
+
           <Row>
             <FormItem
               label="Human Count"
               field="human_count"
-              rules={[{ required: true, type: 'number', min: VALIDATION_LIMITS.targetHumanCountMin }]}
+              hidden={isAiOnly}
+              rules={[{ required: true, type: 'number', min: 0 }]}
               style={{ flex: 1, minWidth: 200 }}
             >
               <InputNumber min={VALIDATION_LIMITS.targetHumanCountMin} precision={0} style={{ width: '100%' }} />
@@ -544,7 +639,7 @@ export default function ChatroomEditor() {
               style={{ flex: 1, minWidth: 200 }}
             >
               <InputNumber
-                min={VALIDATION_LIMITS.aiStrategyValueMin}
+                min={isAiOnly ? VALIDATION_LIMITS.aiOnlyCountMin : VALIDATION_LIMITS.aiStrategyValueMin}
                 max={VALIDATION_LIMITS.aiStrategyValueMax}
                 precision={0}
                 style={{ width: '100%' }}
@@ -552,7 +647,7 @@ export default function ChatroomEditor() {
             </FormItem>
           </Row>
 
-          <Row>
+          {!isAiOnly && <Row>
             <FormItem
               label="Max wait time (sec)"
               field="max_wait_seconds"
@@ -590,20 +685,21 @@ export default function ChatroomEditor() {
                 disabled={(watchedHumanCount ?? 1) <= 1}
               />
             </FormItem>
-          </Row>
+          </Row>}
 
-          <FormItem
+          {!isAiOnly && <FormItem
             label="Show avatars"
             field="show_avatars"
             triggerPropName="checked"
             extra="When off, participant names remain visible but avatar emoji are hidden."
           >
             <Switch checkedText="On" uncheckedText="Off" />
-          </FormItem>
+          </FormItem>}
 
           <FormItem
             label="Resume conversation"
             field="resumable"
+            hidden={isAiOnly}
             triggerPropName="checked"
             extra={enableResumable
               ? 'Use one persistent conversation per case-sensitive participant ID. Settings are locked when that conversation is first created.'
@@ -626,7 +722,8 @@ export default function ChatroomEditor() {
               extra="Models marked 'supports caching' can save about 80% of repeated input prompt tokens after the first tick."
               style={{ flex: 2, minWidth: 280 }}
             >
-              <Select showSearch placeholder="Select a model">
+              {/* Explicit width prevents Arco popup sizing from triggering a ResizeObserver loop. */}
+              <Select showSearch placeholder="Select a model" style={{ width: 360, maxWidth: '100%' }}>
                 {MODEL_GROUPS.map((group) => (
                   <OptGroup key={group.label} label={group.label}>
                     {group.options.map((opt) => (
@@ -646,10 +743,11 @@ export default function ChatroomEditor() {
                 min: VALIDATION_LIMITS.temperatureMin,
                 max: VALIDATION_LIMITS.temperatureMax,
               }]}
-              extra="Bedrock beta range is 0.0-1.0. OpenAI and Anthropic direct API limits may differ later."
+              extra={watchedModel?.includes('claude-opus-4-7') ? 'Opus 4.7 does not accept temperature overrides.' : 'Bedrock beta range is 0.0-1.0. OpenAI and Anthropic direct API limits may differ later.'}
               style={{ flex: 1, minWidth: 180 }}
             >
               <InputNumber
+                disabled={watchedModel?.includes('claude-opus-4-7')}
                 min={VALIDATION_LIMITS.temperatureMin}
                 max={VALIDATION_LIMITS.temperatureMax}
                 step={0.1}
@@ -699,6 +797,9 @@ export default function ChatroomEditor() {
           </FormItem>
 
           {/* ─── AI Personas ───────────────────────────────────────── */}
+          <FormItem field="prompt_attachment_ids">
+            <AttachmentList library={attachmentLibrary} modelError={attachmentError} />
+          </FormItem>
           <SectionHeader>
             <Space size={4}>
               AI Personas
@@ -749,13 +850,64 @@ avoid talking about politics; keep messages under 12 words.
           </SectionHeader>
 
           <FormItem field="ai_personas">
-            <PersonaListEditor />
+            <PersonaListEditor library={attachmentLibrary} modelError={attachmentError} defaultModel={watchedModel || ''} />
           </FormItem>
+          {isAiOnly && (watchedAiPersonas?.length ?? 0) > 0 && (watchedAiPersonas?.length ?? 0) < (watchedAiCount ?? 0) && (
+            <div style={{ color: '#ff7d00', fontSize: 13, marginTop: -8, marginBottom: 16 }}>
+              Fewer personas than AIs. Some personas will be reused across distinct AI participants.
+            </div>
+          )}
 
           {/* ─── Misc ──────────────────────────────────────────────── */}
           <SectionHeader>Misc</SectionHeader>
 
-          <Row>
+          {isAiOnly ? (
+            <>
+              <Row>
+                <FormItem
+                  label="Max message length"
+                  field="max_message_chars"
+                  extra="Maximum characters in each generated message."
+                  rules={[{
+                    required: true,
+                    type: 'number',
+                    min: VALIDATION_LIMITS.maxMessageCharsMin,
+                    max: VALIDATION_LIMITS.maxMessageCharsMax,
+                  }]}
+                  style={{ flex: 1, minWidth: 180 }}
+                >
+                  <InputNumber min={1} max={VALIDATION_LIMITS.maxMessageCharsMax} suffix="characters" style={{ width: '100%' }} />
+                </FormItem>
+                <FormItem
+                  label="Conversation length"
+                  field="max_total_chars"
+                  extra="Target total characters. The final message may exceed it."
+                  rules={[{
+                    required: true,
+                    type: 'number',
+                    min: VALIDATION_LIMITS.maxTotalCharsMin,
+                    max: VALIDATION_LIMITS.maxTotalCharsMax,
+                  }]}
+                  style={{ flex: 1, minWidth: 180 }}
+                >
+                  <InputNumber min={1} max={VALIDATION_LIMITS.maxTotalCharsMax} suffix="characters" style={{ width: '100%' }} />
+                </FormItem>
+              </Row>
+              <FormItem
+                label="Max turns"
+                field="max_turns"
+                extra="Maximum accepted messages in each generated conversation."
+                rules={[{
+                  required: true,
+                  type: 'number',
+                  min: VALIDATION_LIMITS.maxTurnsMin,
+                  max: VALIDATION_LIMITS.maxTurnsMax,
+                }]}
+              >
+                <InputNumber min={1} max={VALIDATION_LIMITS.maxTurnsMax} style={{ width: '100%' }} />
+              </FormItem>
+            </>
+          ) : <Row>
             <FormItem
               label="🕒 Timer Min"
               field="timer_min_minutes"
@@ -772,28 +924,75 @@ avoid talking about politics; keep messages under 12 words.
             >
               <InputNumber min={0} precision={0} suffix="minutes" style={{ width: '100%' }} />
             </FormItem>
-          </Row>
+          </Row>}
 
-          <FormItem
+          {!isAiOnly && <FormItem
             label="⏱️ Simulate Pairing (sec)"
             field="simulate_pairing_seconds"
             hidden={!enableSimulatePairing}
             extra="Server-managed lobby duration before a one-human mimic-human chat starts."
           >
             <InputNumber min={0} precision={0} style={{ width: '100%' }} />
-          </FormItem>
+          </FormItem>}
         </Form>
 
-        <div style={{ borderTop: '1px solid #e5e6eb', margin: '24px 0' }} />
-        <ScriptGenerator chatroomId={chatroom.id} resumable={Boolean(watchedResumable)} />
+        {isAiOnly ? (
+          <>
+            <SectionHeader>Start Conversation</SectionHeader>
+            <div style={{ color: '#4e5969', fontSize: 13, marginBottom: 12 }}>
+              The job runs asynchronously. This configuration allows up to{' '}
+              <strong>{batchCount * (watchedAiCount === 2 ? 1 : (watchedAiCount ?? 2)) * (watchedMaxTurns ?? 100)}</strong>{' '}
+              model calls. At the initial concurrency, a typical run is roughly{' '}
+              <strong>{Math.max(1, Math.ceil(batchCount * (watchedMaxTurns ?? 100) * 6 / 10 / 60))} minutes</strong>;
+              actual calls are usually lower when 3+ AIs speak before every candidate is tried.
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <Button
+                type="primary"
+                loading={startingBatch}
+                onClick={() => void startAiBatch(1)}
+              >
+                Save &amp; start once
+              </Button>
+            </div>
+            <Space align="end" wrap>
+              <div>
+                <FieldLabel>Batch size</FieldLabel>
+                <InputNumber
+                  min={1}
+                  max={MAX_AI_BATCH_COUNT}
+                  value={batchCount}
+                  onChange={(value) => setBatchCount(typeof value === 'number' ? value : 1)}
+                  style={{ width: 140 }}
+                />
+              </div>
+              <Button
+                loading={startingBatch}
+                onClick={() => void startAiBatch(batchCount)}
+              >
+                Save &amp; start batch
+              </Button>
+            </Space>
+            <BatchCostEstimate roomId={chatroom.id} count={batchCount} dirty={estimateDirty} />
+          </>
+        ) : (
+          <>
+            <div style={{ borderTop: '1px solid #e5e6eb', margin: '24px 0' }} />
+            <ScriptGenerator chatroomId={chatroom.id} resumable={Boolean(watchedResumable)} />
+          </>
+        )}
       </div>
 
-      <div style={{ borderTop: '1px solid #e5e6eb', margin: '24px 0' }} />
-      <WidgetPreview
-        chatroomId={chatroom.id}
-        resumable={Boolean(watchedResumable)}
-        onSaveBeforeLaunch={handleSaveAndActivate}
-      />
+      {!isAiOnly && (
+        <>
+          <div style={{ borderTop: '1px solid #e5e6eb', margin: '24px 0' }} />
+          <WidgetPreview
+            chatroomId={chatroom.id}
+            resumable={Boolean(watchedResumable)}
+            onSaveBeforeLaunch={handleSaveAndActivate}
+          />
+        </>
+      )}
     </div>
   )
 }

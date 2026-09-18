@@ -47,12 +47,37 @@ describe('validateChatroomSetting', () => {
     expect(result.ok).toBe(true)
   })
 
-  it('rejects human_count = 0', () => {
+  it('rejects AI-only rooms with fewer than two AIs', () => {
     const setting = { ...baseGroupSetting(), human_count: 0 }
     const result = validateChatroomSetting(setting)
     expect(result.ok).toBe(false)
-    expect(result.errors.human_count).toBeDefined()
+    expect(result.errors.ai_count).toBeDefined()
   })
+
+  it('accepts AI-only defaults and clears human lifecycle fields on save', () => {
+    const setting = defaultSettingForMode('ai_only')
+    expect(validateChatroomSetting(setting).ok).toBe(true)
+    expect(deriveChatroomMode(setting)).toBe('ai_only')
+    const saved = denormalizeForSave({
+      ...setting, resumable: true, replace_human_with_ai: true,
+      simulate_pairing_seconds: 15, max_wait_seconds: 30,
+    })
+    expect(saved).toMatchObject({
+      human_count: 0, ai_count: 2, resumable: false,
+      replace_human_with_ai: false, simulate_pairing_seconds: 0,
+      max_wait_seconds: 0, target_human_count: 0, ai_strategy_value: 2,
+    })
+  })
+
+  it.each(['max_message_chars', 'max_total_chars', 'max_turns'] as const)(
+    'rejects invalid batch limit %s',
+    (field) => {
+      const setting = defaultSettingForMode('ai_only')
+      for (const value of [0, -1, 1.5, NaN, Infinity, 200001]) {
+        expect(validateChatroomSetting({ ...setting, [field]: value }).errors[field]).toBeDefined()
+      }
+    },
+  )
 
   it('accepts replace_human_with_ai because total participants are derived from human_count + ai_count', () => {
     const setting: ChatroomSetting = {
