@@ -27,10 +27,6 @@ function formInput(page, label) {
   return page.locator('.arco-form-item').filter({ hasText: label }).locator('input').first();
 }
 
-function formSwitch(page, label) {
-  return page.locator('.arco-form-item').filter({ hasText: label }).getByRole('switch').first();
-}
-
 async function main() {
   const editorUrl = process.argv[2] || 'http://127.0.0.1:3017/#/chatroom';
   const managementUrl = process.argv[3] || 'https://9wr63is7x6.execute-api.us-east-2.amazonaws.com/live';
@@ -94,16 +90,19 @@ async function main() {
     await topicItem.locator('textarea').fill('Discuss one small way to improve a study routine.');
     await page.screenshot({ path: screenshotPath, fullPage: true });
 
-    await page.getByRole('button', { name: 'Save & start once' }).click();
-    batchPage = page;
-    await page.waitForTimeout(1000);
-    if (batchPage.isClosed()) {
-      const formErrors = await page.locator('.arco-form-message').allInnerTexts();
-      const notices = await page.locator('.arco-message').allInnerTexts();
-      throw new Error(
-        `Start once closed before launch; formErrors=${JSON.stringify(formErrors)} notices=${JSON.stringify(notices)}`,
-      );
-    }
+    const editorRoomUrl = page.url();
+    const createdResponse = page.waitForResponse((response) => response.url().includes('/api/createAiConversationBatch')
+      && response.request().method() === 'POST');
+    await page.getByRole('button', { name: 'Save & test once' }).click();
+    const response = await createdResponse;
+    if (!response.ok()) throw new Error('Creating test batch failed');
+    const created = (await response.json()).data.batch;
+    const detailLink = page.locator(`a[href$="/ai-batches/${created.batch_job_id}"]`);
+    await detailLink.waitFor();
+    if (page.url() !== editorRoomUrl) throw new Error('Creating a batch unexpectedly navigated away');
+    const openedPage = context.waitForEvent('page');
+    await detailLink.click();
+    batchPage = await openedPage;
     batchPage.on('pageerror', (error) => browserErrors.push(error.message));
     batchPage.on('console', (message) => {
       if (message.type() === 'error') browserErrors.push(message.text());

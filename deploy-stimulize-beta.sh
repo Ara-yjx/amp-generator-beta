@@ -9,6 +9,7 @@ REACT_APP_CHATROOM_MANAGEMENT_API_BASE=https://9wr63is7x6.execute-api.us-east-2.
 REACT_APP_CHATROOM_RUNTIME_API_BASE=https://pmvb4orly5.execute-api.us-east-2.amazonaws.com/prod \
 REACT_APP_CHATROOM_WIDGET_URL=https://ara-yjx.github.io/stimulize-chatroom-proto/chatroom.min.js \
 REACT_APP_CHATROOM_ATTACHMENTS_ENABLED=true \
+REACT_APP_BILLING_ENABLED=false \
 npm run build
 
 hash=$(git rev-parse HEAD)

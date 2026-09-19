@@ -13,6 +13,6 @@ export const CHATROOM_RUNTIME_API_BASE = normalizeUrl(
 );
 
 export const CHATROOM_WIDGET_URL = process.env.REACT_APP_CHATROOM_WIDGET_URL
-  || 'https://ara-yjx.github.io/stimulize-chatroom-proto-resume/chatroom.min.js';
+  || 'https://ara-yjx.github.io/stimulize-chatroom-proto/chatroom.min.js';
 
 export const IS_LOCAL_DEVELOPMENT = process.env.NODE_ENV === 'development';

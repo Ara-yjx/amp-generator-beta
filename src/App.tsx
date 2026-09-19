@@ -1,7 +1,7 @@
 import { ConfigProvider, Layout } from '@arco-design/web-react';
 import '@arco-design/web-react/dist/css/arco.css';
 import enUS from '@arco-design/web-react/es/locale/en-US';
-import { HashRouter, Route, Routes } from 'react-router';
+import { HashRouter, Navigate, Route, Routes } from 'react-router';
 import './App.css';
 import Dashboard from './component/dashboard';
 import ChatroomEditor from './component/chatroom/ChatroomEditor';
@@ -48,7 +48,9 @@ function App() {
             <Route path='/chatroom/:id' element={<RequireAuth><AppLayout><ChatroomEditor /></AppLayout></RequireAuth>} />
             <Route path='/chatroom/:id/ai-batches/:batchId' element={<RequireAuth><AppLayout><AiConversationBatch /></AppLayout></RequireAuth>} />
             <Route path='/login' element={<AppLayout showWorkspaceMenu={false}><LoginPage /></AppLayout>} />
-            <Route path='/billing' element={<RequireAuth><AppLayout><PaymentPage /></AppLayout></RequireAuth>} />
+            <Route path='/billing' element={process.env.REACT_APP_BILLING_ENABLED === 'false'
+              ? <Navigate to='/my' replace />
+              : <RequireAuth><AppLayout><PaymentPage /></AppLayout></RequireAuth>} />
           </Routes>
         </div>
       </HashRouter>
