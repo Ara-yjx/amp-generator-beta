@@ -80,7 +80,7 @@ async function main() {
     const saveResponse = page.waitForResponse((response) => response.url().includes('/api/updateChatroom/') && response.request().method() === 'POST');
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     if (!(await saveResponse).ok()) throw new Error('Human chatroom save failed');
-    await page.getByRole('radio', { name: /AI\+AI/ }).check();
+    await page.locator('label').filter({ has: page.getByRole('radio', { name: /AI\+AI/ }) }).click();
     await page.getByText('Start Conversation', { exact: true }).waitFor();
 
     await formInput(page, 'Max message length').fill('80');
