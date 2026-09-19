@@ -1,6 +1,7 @@
 import { ConfigProvider, Layout } from '@arco-design/web-react';
 import '@arco-design/web-react/dist/css/arco.css';
 import enUS from '@arco-design/web-react/es/locale/en-US';
+import { lazy, Suspense } from 'react';
 import { HashRouter, Navigate, Route, Routes } from 'react-router';
 import './App.css';
 import Dashboard from './component/dashboard';
@@ -15,7 +16,10 @@ import { MainForm } from './component/mainForm';
 import RequireAuth from './component/requireAuth';
 import Teams from './component/teams';
 import WorkspaceMenu from './component/workspaceMenu';
-import PaymentPage from './component/payment/PaymentPage';
+
+// Importing the Stripe SDK starts network requests even without rendering it.
+// Keep it out of participant-only builds and non-billing routes.
+const PaymentPage = lazy(() => import('./component/payment/PaymentPage'));
 
 const AppLayout: React.FC<{ children: React.ReactNode; showWorkspaceMenu?: boolean }> = ({
   children,
@@ -50,7 +54,7 @@ function App() {
             <Route path='/login' element={<AppLayout showWorkspaceMenu={false}><LoginPage /></AppLayout>} />
             <Route path='/billing' element={process.env.REACT_APP_BILLING_ENABLED === 'false'
               ? <Navigate to='/my' replace />
-              : <RequireAuth><AppLayout><PaymentPage /></AppLayout></RequireAuth>} />
+              : <RequireAuth><AppLayout><Suspense fallback={null}><PaymentPage /></Suspense></AppLayout></RequireAuth>} />
           </Routes>
         </div>
       </HashRouter>
