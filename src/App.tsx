@@ -15,6 +15,7 @@ import { MainForm } from './component/mainForm';
 import RequireAuth from './component/requireAuth';
 import Teams from './component/teams';
 import WorkspaceMenu from './component/workspaceMenu';
+import PaymentPage from './component/payment/PaymentPage';
 
 const AppLayout: React.FC<{ children: React.ReactNode; showWorkspaceMenu?: boolean }> = ({
   children,
@@ -47,6 +48,7 @@ function App() {
             <Route path='/chatroom/:id' element={<RequireAuth><AppLayout><ChatroomEditor /></AppLayout></RequireAuth>} />
             <Route path='/chatroom/:id/ai-batches/:batchId' element={<RequireAuth><AppLayout><AiConversationBatch /></AppLayout></RequireAuth>} />
             <Route path='/login' element={<AppLayout showWorkspaceMenu={false}><LoginPage /></AppLayout>} />
+            <Route path='/billing' element={<RequireAuth><AppLayout><PaymentPage /></AppLayout></RequireAuth>} />
           </Routes>
         </div>
       </HashRouter>

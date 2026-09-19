@@ -1,0 +1,161 @@
+.payment-page {
+  box-sizing: border-box;
+  max-width: 1180px;
+  min-height: calc(100vh - 150px);
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+  text-align: left;
+}
+
+.payment-hero {
+  margin-bottom: 28px;
+  text-align: center;
+}
+
+.payment-hero h2 {
+  margin-bottom: 8px;
+}
+
+.payment-alert,
+.payment-section {
+  margin-bottom: 24px;
+}
+
+.payment-section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.payment-section-heading h4,
+.payment-section-heading p {
+  margin: 0;
+}
+
+.payment-plan-card {
+  height: 100%;
+  border: 1px solid var(--color-neutral-3);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.payment-plan-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(29, 33, 41, 0.1);
+}
+
+.payment-plan-card.is-current {
+  border-color: rgb(var(--primary-6));
+  box-shadow: 0 0 0 1px rgb(var(--primary-6));
+}
+
+.payment-price {
+  margin: 10px 0 20px;
+}
+
+.payment-price span {
+  color: var(--color-text-1);
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.payment-price small {
+  color: var(--color-text-3);
+}
+
+.payment-features {
+  min-height: 96px;
+  margin: 0 0 20px;
+  padding-left: 20px;
+  color: var(--color-text-2);
+  line-height: 2;
+}
+
+.payment-current-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.credit-balance-card {
+  overflow: hidden;
+  border-color: rgb(var(--primary-5));
+  background:
+    linear-gradient(120deg, rgba(var(--primary-1), 0.8), transparent 60%),
+    var(--color-bg-2);
+}
+
+.credit-balance-value {
+  margin: 6px 0;
+  color: rgb(var(--primary-6));
+  font-size: 38px;
+  font-weight: 700;
+  letter-spacing: -1px;
+}
+
+.payment-promo {
+  width: min(100%, 480px);
+}
+
+.payment-promo .arco-input-wrapper {
+  min-width: 280px;
+}
+
+.payment-loading {
+  display: grid;
+  min-height: 60vh;
+  place-items: center;
+}
+
+.payment-card-element {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid var(--color-neutral-4);
+  border-radius: 4px;
+  background: var(--color-bg-2);
+}
+
+.payment-card-element:focus-within {
+  border-color: rgb(var(--primary-6));
+  box-shadow: 0 0 0 2px rgba(var(--primary-6), 0.15);
+}
+
+.payment-checkout-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.topup-presets {
+  display: flex;
+  margin: 12px 0 8px;
+}
+
+.topup-presets .arco-input-number {
+  width: 140px;
+}
+
+@media (max-width: 767px) {
+  .payment-page {
+    padding: 20px 14px 40px;
+  }
+
+  .payment-section-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .payment-current-actions {
+    justify-content: flex-start;
+    margin-top: 16px;
+  }
+
+  .payment-promo {
+    display: flex;
+    width: 100%;
+  }
+
+  .payment-promo .arco-input-wrapper {
+    min-width: 0;
+  }
+}
