@@ -20,7 +20,7 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <Layout>
+    <Layout style={{ minHeight: 0 }}>
       <Sider width={300} style={{ background: '#fff', borderRight: '1px solid #eee', padding: 24 }}>
         <ProjectList 
           focusedProject={focusedProject} 
@@ -29,7 +29,7 @@ export const Dashboard: React.FC = () => {
           setProjects={setProjects}
         />
       </Sider>
-      <Content style={{ padding: 24, minHeight: '100vh', background: '#f9f9f9' }}>
+      <Content style={{ padding: 24, minHeight: 0, background: '#f9f9f9' }}>
         {focusedProject ? (
           <ProjectDetail 
             project={focusedProject} 

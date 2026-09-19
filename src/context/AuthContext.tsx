@@ -1,4 +1,4 @@
-import React, { createContext, useMemo, useState } from 'react';
+import React, { createContext, useEffect, useMemo, useState } from 'react';
 import { addAuthListener, AuthState, getAuth } from '../data/backend';
 
 export type TAuthContext = {
@@ -15,7 +15,7 @@ const AuthContext = createContext<TAuthContext>({ authState: null, setAuthState:
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [authState, setAuthState] = useState<AuthState | null>(() => getAuth());
   const value = useMemo(() => ({ authState, setAuthState }), [authState, setAuthState]);
-  addAuthListener(setAuthState);
+  useEffect(() => addAuthListener(setAuthState), [setAuthState]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 

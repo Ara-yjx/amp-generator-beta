@@ -1,33 +1,38 @@
 import { ConfigProvider, Layout } from '@arco-design/web-react';
 import '@arco-design/web-react/dist/css/arco.css';
 import enUS from '@arco-design/web-react/es/locale/en-US';
-import { useContext } from 'react';
 import { HashRouter, Navigate, Route, Routes } from 'react-router';
 import './App.css';
 import Dashboard from './component/dashboard';
+import ChatroomEditor from './component/chatroom/ChatroomEditor';
+import AiConversationBatch from './component/chatroom/AiConversationBatch';
+import ChatroomList from './component/chatroom/ChatroomList';
+import ChatroomUsage from './component/chatroom/ChatroomUsage';
 import Header from './component/header';
 import HomePage from './component/homePage';
 import LoginPage from './component/loginPage';
 import { MainForm } from './component/mainForm';
+import RequireAuth from './component/requireAuth';
 import Teams from './component/teams';
+import WorkspaceMenu from './component/workspaceMenu';
 import PaymentPage from './component/payment/PaymentPage';
-import { AuthContext } from './context/AuthContext';
 
-const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <Layout>
+const AppLayout: React.FC<{ children: React.ReactNode; showWorkspaceMenu?: boolean }> = ({
+  children,
+  showWorkspaceMenu = true,
+}) => (
+  <Layout className="app-layout">
     <Layout.Header>
       <Header />
     </Layout.Header>
-    <Layout.Content>
+    {showWorkspaceMenu && <WorkspaceMenu />}
+    <Layout.Content className="app-layout-content">
       {children}
     </Layout.Content>
   </Layout>
 );
 
 function App() {
-
-  const { authState } = useContext(AuthContext);
-
   return (
     <ConfigProvider locale={enUS}>
       <HashRouter>
@@ -36,10 +41,16 @@ function App() {
             <Route path='/' element={<HomePage />} />
             <Route path='/exp' element={<AppLayout><MainForm /></AppLayout>} />
             <Route path='/exp/:expId?/edit' element={<AppLayout><MainForm /></AppLayout>} />
-            <Route path='/my' element={authState ? <AppLayout><Dashboard /></AppLayout> : <Navigate to='/login' />} />
-            <Route path='/team' element={authState ? <AppLayout><Teams /></AppLayout> : <Navigate to='/login' />} />
-            <Route path='/billing' element={authState ? <AppLayout><PaymentPage /></AppLayout> : <Navigate to='/login' />} />
-            <Route path='/login' element={<AppLayout><LoginPage /></AppLayout>} />
+            <Route path='/my' element={<RequireAuth><AppLayout><Dashboard /></AppLayout></RequireAuth>} />
+            <Route path='/team' element={<RequireAuth><AppLayout><Teams /></AppLayout></RequireAuth>} />
+            <Route path='/chatroom' element={<RequireAuth><AppLayout><ChatroomList /></AppLayout></RequireAuth>} />
+            <Route path='/chatroom/:id/usage' element={<RequireAuth><AppLayout><ChatroomUsage /></AppLayout></RequireAuth>} />
+            <Route path='/chatroom/:id' element={<RequireAuth><AppLayout><ChatroomEditor /></AppLayout></RequireAuth>} />
+            <Route path='/chatroom/:id/ai-batches/:batchId' element={<RequireAuth><AppLayout><AiConversationBatch /></AppLayout></RequireAuth>} />
+            <Route path='/login' element={<AppLayout showWorkspaceMenu={false}><LoginPage /></AppLayout>} />
+            <Route path='/billing' element={process.env.REACT_APP_BILLING_ENABLED === 'false'
+              ? <Navigate to='/my' replace />
+              : <RequireAuth><AppLayout><PaymentPage /></AppLayout></RequireAuth>} />
           </Routes>
         </div>
       </HashRouter>

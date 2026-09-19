@@ -1,7 +1,6 @@
 import { Button, Form, Input, Message, Tabs, Typography } from '@arco-design/web-react';
 import { IconCheckCircle, IconCloseCircle } from '@arco-design/web-react/icon';
-import React, { useContext, useState } from 'react';
-import { AuthContext } from '../context/AuthContext';
+import React, { useState } from 'react';
 import { login, register } from '../data/backend';
 
 const { TabPane } = Tabs;
@@ -40,14 +39,10 @@ export const LoginForm: React.FC<{
   const [registerForm] = Form.useForm();
   const [regPassword, setRegPassword] = useState('');
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
-  const { authState, setAuthState } = useContext(AuthContext);
-
   const onLoginSubmit = async (values: { email: string, username: string, password: string }) => {
-    console.log('LoginForm onloginSubmit', values);
     setLoading(true);
     try {
-      const res = await login(values);
-      setAuthState(res.auth);
+      await login(values);
       Message.success(`Logged in`);
       onLoginSuccess();
     } catch (err: any) {
@@ -59,7 +54,6 @@ export const LoginForm: React.FC<{
 
   const onRegisterSubmit = async (values: { email: string, username: string, password: string, confirmPassword: string }) => {
     const { confirmPassword: _, ...submitValues } = values;
-    console.log('LoginForm onRegisterSubmit', submitValues);
     setLoading(true);
     try {
       const regRes = await register(submitValues);

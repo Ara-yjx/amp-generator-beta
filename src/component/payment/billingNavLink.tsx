@@ -9,7 +9,7 @@ export default function BillingNavLink() {
   const isCloudEditorPage = useMatch('/exp/:expId?/edit');
   const target = isCloudEditorPage ? '_self' : '_blank';
 
-  if (!authState) {
+  if (!authState || process.env.REACT_APP_BILLING_ENABLED === 'false') {
     return null;
   }
 

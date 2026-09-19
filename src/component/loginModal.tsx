@@ -2,76 +2,41 @@ import { Button, Message, Modal } from '@arco-design/web-react';
 import { IconUser } from '@arco-design/web-react/icon';
 import { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { addAuthListener, getAuth, logout } from '../data/backend';
+import { addAuthListener, logout } from '../data/backend';
+import { cancelLogin, requireLogin, resolveLogin, setLoginOpener } from '../data/loginCoordinator';
 import { LoginForm } from './loginForm';
 import { useHref, useLocation } from 'react-router';
 
-// Promise-based API for requiring user login from anywhere
-type LoginWaiter = { resolve: () => void; reject: (err: any) => void };
-let loginWaiters: LoginWaiter[] = [];
-let openLoginModal: (() => void) | null = null;
-
-export function requireLogin(): Promise<void> {
-  return new Promise<void>((resolve, reject) => {
-    loginWaiters.push({ resolve, reject });
-    openLoginModal?.();
-  });
-}
-
-function resolveAllLoginWaiters() {
-  const waiters = loginWaiters;
-  loginWaiters = [];
-  waiters.forEach(w => {
-    try { w.resolve(); } catch { /* noop */ }
-  });
-}
-
-function rejectOneLoginWaiter(err: any) {
-  const w = loginWaiters.pop();
-  try { w?.reject(err); } catch { /* noop */ }
-}
+export { requireLogin };
 
 export default function LoginModal() {
   const [visible, setVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   const [loading, setLoading] = useState(false);
-  const { authState, setAuthState } = useContext(AuthContext);
+  const { authState } = useContext(AuthContext);
 
   // Bridge for global requireLogin() to open this modal
   useEffect(() => {
-    openLoginModal = () => {
+    const openThisLoginModal = () => {
       setActiveTab('login');
       setVisible(true);
     };
-    return () => {
-      // Reset on unmount only if this instance set it
-      if (openLoginModal) {
-        openLoginModal = null;
-      }
-    };
+    return setLoginOpener(openThisLoginModal);
   }, []);
 
-  // // Auto-login on mount if both token and username exist in localStorage
-  // useEffect(() => {
-  //   const auth = getAuth();
-  //   auth && setAuthState(auth);
-  // }, [setAuthState]);
-
   const onLoginSuccess = () => {
-    resolveAllLoginWaiters();
+    resolveLogin();
     setVisible(false);
   };
 
   const onClickLogOut = () => {
-    setAuthState(null);
     logout().catch(() => { /* noop */ });
     Message.success('Logged out.');
   };
 
   const onCancel = () => {
-    // Will add this back when we have better handling for cancel login
-    // rejectOneLoginWaiter(new Error('Login cancelled'));
-    Message.warning('Login canceled. You might have to retry your previous action.');
+    cancelLogin();
+    Message.warning('Login cancelled.');
     setVisible(false);
   };
 

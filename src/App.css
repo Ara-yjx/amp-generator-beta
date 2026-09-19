@@ -2,6 +2,20 @@
   text-align: center;
 }
 
+.chatroom-page {
+  text-align: left;
+}
+
+.app-layout {
+  min-height: 100vh;
+}
+
+.app-layout-content {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+}
+
 .App-logo {
   height: 40vmin;
   pointer-events: none;
