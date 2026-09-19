@@ -564,11 +564,11 @@ export default function ChatroomEditor() {
     watchedMimicHuman === false
 
   return (
-    <div className="chatroom-page" style={{ padding: 24 }}>
+    <div className="chatroom-page" style={{ padding: 24, width: '100%', maxWidth: 1280, margin: '0 auto', boxSizing: 'border-box' }}>
       {/* Form area is intentionally narrow — long lines on a 1600px display
           look bad in a vertical form layout. The widget preview below
           breaks out to full width so multiple iframes can sit side-by-side. */}
-      <div style={{ maxWidth: 800 }}>
+      <div style={{ maxWidth: 800, margin: '0 auto' }}>
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',

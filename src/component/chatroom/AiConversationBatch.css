@@ -1,0 +1,33 @@
+.batch-summary {
+  margin-top: 24px;
+  border-top: 1px solid var(--color-border-2);
+}
+
+.batch-metrics {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--color-border-2);
+}
+
+.batch-metrics-progress { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.batch-metrics-usage { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.batch-metrics-dates { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 12px; }
+.batch-metrics dt { color: var(--color-text-3); font-size: 13px; }
+.batch-metrics dd { margin: 8px 0 0; font-size: 20px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.batch-metrics-dates dd { font-size: 14px; }
+
+.chatroom-page .arco-table .arco-table-tr.batch-conversation-selected > td,
+.chatroom-page .arco-table .arco-table-tr.batch-conversation-selected:hover > td {
+  background: var(--color-primary-light-1);
+}
+.arco-table-tr.batch-conversation-selected > td:first-child {
+  box-shadow: inset 3px 0 0 rgb(var(--primary-6));
+}
+
+@media (max-width: 767px) {
+  .batch-metrics-progress { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .batch-metrics-usage { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .batch-metrics-progress dt { min-height: 40px; }
+}
