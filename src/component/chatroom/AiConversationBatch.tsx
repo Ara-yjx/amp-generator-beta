@@ -1,14 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router'
 import {
-  Alert, Button, Descriptions, Message, Space, Spin, Table, Tag, Typography,
+  Alert, Button, Descriptions, Message, Space, Spin, Table, Tag, Typography, Tooltip,
 } from '@arco-design/web-react'
-import { IconDownload, IconRefresh } from '@arco-design/web-react/icon'
+import { IconArrowLeft, IconDownload, IconRefresh } from '@arco-design/web-react/icon'
+import { chatroomDetailRoute } from '../../data/chatroom/routes'
 import type { ColumnProps } from '@arco-design/web-react/es/Table'
 import { chatroomApiPost } from '../../data/chatroom/management'
+import { waitForBatchDownload } from '../../data/chatroom/downloadBatch'
 
 const { Paragraph, Text } = Typography
-const TERMINAL = new Set(['completed', 'partial_failure', 'failed', 'timed_out'])
+const TERMINAL = new Set(['completed', 'partial_failure', 'failed', 'timed_out', 'validation_failed'])
 
 interface ConversationSummary {
   conversation_id: string
@@ -21,6 +23,8 @@ interface ConversationSummary {
 }
 
 interface BatchDetail {
+  usage?: { input_tokens: number; output_tokens: number; estimated_cost_usd: string; inference_count: number }
+  last_error?: string
   batch_job_id: string
   chatroom_id: string
   status: string
@@ -34,7 +38,6 @@ interface BatchDetail {
   created_at: string
   deadline_at: number
   export_status: string
-  export_url?: string
   conversations: ConversationSummary[]
   reconciliation_pending?: boolean
 }
@@ -56,7 +59,7 @@ interface HistoryResponse {
 
 function statusColor(status: string): string {
   if (status === 'completed') return 'green'
-  if (status === 'failed' || status === 'timed_out') return 'red'
+  if (status === 'failed' || status === 'timed_out' || status === 'validation_failed') return 'red'
   if (status === 'partial_failure') return 'orange'
   return 'blue'
 }
@@ -66,6 +69,11 @@ export default function AiConversationBatch() {
   const [batch, setBatch] = useState<BatchDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
+  const downloadRequest = useRef<AbortController | null>(null)
+  useEffect(() => {
+    setExporting(false)
+    return () => { downloadRequest.current?.abort(); downloadRequest.current = null }
+  }, [batchId])
   const [selectedConversationId, setSelectedConversationId] = useState('')
   const [events, setEvents] = useState<HistoryEvent[]>([])
   const [loadError, setLoadError] = useState('')
@@ -104,7 +112,7 @@ export default function AiConversationBatch() {
     }
     void poll()
     return () => { cancelled = true; window.clearTimeout(timeout) }
-  }, [fetchBatch, batch?.export_status])
+  }, [fetchBatch])
 
   useEffect(() => {
     setEvents([])
@@ -147,15 +155,26 @@ export default function AiConversationBatch() {
   }, [selectedConversationId])
 
   const requestExport = async () => {
+    if (downloadRequest.current) return
+    const request = new AbortController()
+    downloadRequest.current = request
     setExporting(true)
     try {
-      await chatroomApiPost(`/api/exportAiConversationBatch/${batchId}`)
-      Message.success('Export requested')
-      await fetchBatch()
+      const url = await waitForBatchDownload(batchId, request.signal)
+      if (request.signal.aborted) return
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'conversation-data.zip'
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
     } catch (error: unknown) {
-      Message.error(error instanceof Error ? error.message : 'Failed to request export')
+      if (!request.signal.aborted) Message.error(error instanceof Error ? error.message : 'Failed to download conversation data. Please try again.')
     } finally {
-      setExporting(false)
+      if (downloadRequest.current === request) {
+        downloadRequest.current = null
+        setExporting(false)
+      }
     }
   }
 
@@ -175,34 +194,32 @@ export default function AiConversationBatch() {
   if (loading && !batch) return <Spin style={{ display: 'block', margin: '80px auto' }} />
   if (!batch) return <div style={{ padding: 24 }}>
     <Alert type="error" content={loadError || 'Batch not found'} />
-    <Button icon={<IconRefresh />} onClick={() => void fetchBatch().catch(() => undefined)}>Refresh</Button>
+    <Tooltip content="Refresh"><Button aria-label="Refresh" icon={<IconRefresh />} onClick={() => void fetchBatch().catch(() => undefined)} /></Tooltip>
   </div>
 
   return (
     <div className="chatroom-page" style={{ padding: 24, maxWidth: 1120, margin: '0 auto', textAlign: 'left' }}>
+      <Button icon={<IconArrowLeft />} href={`#${chatroomDetailRoute(batch.chatroom_id)}`} style={{ marginBottom: 16 }}>
+        Back to chatroom
+      </Button>
       {loadError && <Alert type="error" content={loadError} style={{ marginBottom: 16 }} />}
+      {batch.status === 'validation_failed' && <Alert type="error" content={batch.last_error || 'Batch validation failed; no conversations were created.'} style={{ marginBottom: 16 }} />}
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 16, alignItems: 'center' }}>
         <div>
           <h2 style={{ margin: 0 }}>AI Conversation Batch</h2>
           <Text type="secondary">{batch.batch_job_id}</Text>
         </div>
         <Space>
-          <Button icon={<IconRefresh />} onClick={() => void fetchBatch().catch(() => undefined)}>Refresh</Button>
-          {batch.export_url ? (
-            <Button type="primary" icon={<IconDownload />} href={batch.export_url}>Download ZIP</Button>
-          ) : (
+          <Tooltip content="Refresh"><Button aria-label="Refresh" icon={<IconRefresh />} onClick={() => void fetchBatch().catch(() => undefined)} /></Tooltip>
             <Button
               type="primary"
               icon={<IconDownload />}
               loading={exporting}
-              disabled={!TERMINAL.has(batch.status) || batch.reconciliation_pending}
+              disabled={!TERMINAL.has(batch.status) || batch.status === 'validation_failed' || batch.reconciliation_pending}
               onClick={() => void requestExport()}
             >
-              {batch.export_status === 'building' || batch.export_status === 'requested'
-                ? 'Preparing export'
-                : 'Export completed conversations'}
+              Download conversation data
             </Button>
-          )}
         </Space>
       </div>
 
@@ -210,7 +227,7 @@ export default function AiConversationBatch() {
         style={{ marginTop: 24 }}
         column={{ xs: 1, sm: 2, md: 4 }}
         data={[
-          { label: 'Status', value: <Tag color={statusColor(batch.status)}>{batch.status}</Tag> },
+          { label: 'Status', value: <Tag color={statusColor(batch.status)}>{batch.status.replace(/_/g, ' ')}</Tag> },
           { label: 'Total', value: batch.batch_count },
           { label: 'Completed', value: batch.completed_count },
           { label: 'Failed', value: batch.failed_count + batch.timed_out_count },
@@ -218,8 +235,14 @@ export default function AiConversationBatch() {
           { label: 'Queued', value: batch.queued_count },
           { label: 'Started', value: new Date(batch.created_at).toLocaleString() },
           { label: 'Deadline', value: new Date(batch.deadline_at).toLocaleString() },
+          { label: 'Input tokens', value: batch.usage?.input_tokens.toLocaleString() ?? 'Unavailable' },
+          { label: 'Output tokens', value: batch.usage?.output_tokens.toLocaleString() ?? 'Unavailable' },
+          { label: 'Approx. cost (USD)', value: batch.usage ? `$${Number(batch.usage.estimated_cost_usd).toFixed(6)}` : 'Unavailable' },
+          { label: 'Recorded inferences', value: batch.usage?.inference_count.toLocaleString() ?? 'Unavailable' },
         ]}
       />
+
+      <Text type="secondary">Recorded usage includes silent and discarded responses. Estimated provider cost, not the final bill; recently completed inferences may take time to appear.</Text>
 
       <h3 style={{ marginTop: 32 }}>Conversations</h3>
       <Table
@@ -237,7 +260,7 @@ export default function AiConversationBatch() {
 
       <h3 style={{ marginTop: 32 }}>Conversation History</h3>
       {events.length === 0 ? (
-        <Text type="secondary">Waiting for messages...</Text>
+        <Text type="secondary">{batch.status === 'validation_failed' ? 'No conversations were created.' : 'Waiting for messages...'}</Text>
       ) : events.map((event) => (
         <div key={event.event_key} style={{ padding: '8px 0', borderBottom: '1px solid #f0f0f0' }}>
           <Text bold>{event.type === 'message' ? event.sender : 'System'}</Text>

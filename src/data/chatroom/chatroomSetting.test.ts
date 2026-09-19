@@ -6,7 +6,31 @@ import {
   denormalizeForSave,
   ONE_ON_ONE_FIXED,
   validateChatroomSetting,
+  aiBatchPersonaError,
+  isBlankPersona,
 } from './chatroomSetting'
+
+test('blank persona detection matches run validation, including whitespace and overrides only', () => {
+  const blank = { persona: '  ', internal_name: '', nickname: '', model_id: null, temperature: null }
+  expect(isBlankPersona(blank)).toBe(true)
+  expect(isBlankPersona({ ...blank, model_id: 'model', temperature: 0.5 })).toBe(true)
+  expect(isBlankPersona({ ...blank, persona: 'Discuss' })).toBe(false)
+  expect(isBlankPersona({ ...blank, internal_name: 'planner' })).toBe(false)
+  expect(isBlankPersona({ ...blank, nickname: 'Alex' })).toBe(false)
+  expect(isBlankPersona({ ...blank, prompt_attachment_ids: ['asset'] })).toBe(false)
+})
+
+test('persona count blocks AI-only runs but not saving drafts', () => {
+  const setting = defaultSettingForMode('ai_only')
+  const persona = { persona: 'Discuss trade-offs', internal_name: '', nickname: '', model_id: null, temperature: null }
+  expect(aiBatchPersonaError(0, 3, [])).toBe('')
+  expect(aiBatchPersonaError(0, 3, [persona])).toContain('3 AI participants but only 1 non-empty persona.')
+  expect(aiBatchPersonaError(0, 3, [persona, persona, persona])).toBe('')
+  expect(aiBatchPersonaError(0, 2, [persona, persona, persona])).toBe('')
+  expect(aiBatchPersonaError(1, 3, [persona])).toBe('')
+  expect(aiBatchPersonaError(0, 2, [persona, { ...persona, persona: '' }])).toContain('only 1 non-empty persona.')
+  expect(validateChatroomSetting({ ...setting, ai_count: 3, ai_personas: [persona] }).ok).toBe(true)
+})
 
 const baseGroupSetting = (): ChatroomSetting => ({
   ...defaultSettingForMode('group'),
@@ -16,6 +40,13 @@ const baseGroupSetting = (): ChatroomSetting => ({
   replace_human_with_ai: false,
   max_wait_seconds: 60,
   max_duration_seconds: 600,
+})
+
+test('AI-only settings accept new hard caps and reject values above them', () => {
+  const setting = { ...defaultSettingForMode('ai_only'), max_turns: 1000, max_total_chars: 500000 }
+  expect(validateChatroomSetting(setting).ok).toBe(true)
+  expect(validateChatroomSetting({ ...setting, max_turns: 1001 }).ok).toBe(false)
+  expect(validateChatroomSetting({ ...setting, max_total_chars: 500001 }).ok).toBe(false)
 })
 
 describe('validateChatroomSetting', () => {
@@ -69,11 +100,18 @@ describe('validateChatroomSetting', () => {
     })
   })
 
+  it('allows absent message-length guidance while retaining real limits', () => {
+    const setting = defaultSettingForMode('ai_only')
+    expect(setting.max_message_chars).toBeNull()
+    expect(validateChatroomSetting(setting).errors.max_message_chars).toBeUndefined()
+    expect(denormalizeForSave(setting).max_message_chars).toBeNull()
+  })
+
   it.each(['max_message_chars', 'max_total_chars', 'max_turns'] as const)(
     'rejects invalid batch limit %s',
     (field) => {
       const setting = defaultSettingForMode('ai_only')
-      for (const value of [0, -1, 1.5, NaN, Infinity, 200001]) {
+      for (const value of [0, -1, 1.5, NaN, Infinity, 500001]) {
         expect(validateChatroomSetting({ ...setting, [field]: value }).errors[field]).toBeDefined()
       }
     },

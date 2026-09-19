@@ -15,7 +15,7 @@ export function unwrapChatroomPayload<T>(payload: unknown): T {
   return maybeData as T;
 }
 
-export async function chatroomApiPost<T>(path: string, data: unknown = {}): Promise<T> {
-  const response = await apiPostAt<unknown>(CHATROOM_MANAGEMENT_API_BASE, path, data, true);
+export async function chatroomApiPost<T>(path: string, data: unknown = {}, signal?: AbortSignal): Promise<T> {
+  const response = await apiPostAt<unknown>(CHATROOM_MANAGEMENT_API_BASE, path, data, true, signal);
   return unwrapChatroomPayload<T>(response);
 }

@@ -21,6 +21,12 @@ AI-only mode supports Start once, batches of 1-10 conversations, progress,
 history, and ZIP export containing TXT/JSON. Normal human chatrooms retain
 their embed script and widget preview.
 
+The editor now lists the current room's batch history (newest first) with refresh,
+cursor-based Load more, and detail links. It recommends a single quality/cost
+preview before a batch, without requiring one. Attachment badges come from
+management capabilities, and limits apply to common + each persona's unique
+files: five files, 10 MB and ten PDF pages. Backend validation remains authoritative.
+
 Beta management shares the live RDS. Use a test name and deactivate test
 chatrooms afterwards. For inexpensive tests use one conversation, max_turns=2,
 max_message_chars=80, max_total_chars=200.

@@ -75,7 +75,7 @@ export interface ChatroomSetting {
   ai_join_strategy: AiJoinStrategy
   ai_strategy_value: number
   max_wait_seconds: number
-  max_message_chars: number
+  max_message_chars: number | null
   max_total_chars: number
   max_turns: number
 }
@@ -99,9 +99,9 @@ export const VALIDATION_LIMITS = {
   maxMessageCharsMin: 1,
   maxMessageCharsMax: 4000,
   maxTotalCharsMin: 1,
-  maxTotalCharsMax: 200000,
+  maxTotalCharsMax: 500000,
   maxTurnsMin: 1,
-  maxTurnsMax: 200,
+  maxTurnsMax: 1000,
   temperatureMin: 0,
   temperatureMax: 1,
 }
@@ -112,6 +112,19 @@ export interface ValidationResult {
 }
 
 const RESERVED_PARTICIPANT_NICKNAMES = new Set(['you', 'participant'])
+
+export function isBlankPersona(p: AiPersonaSetting): boolean {
+  // Match runtime normalization: empty persona cards are not assigned.
+  return !(p.persona?.trim() || p.internal_name?.trim()
+    || p.nickname?.trim() || p.prompt_attachment_ids?.length)
+}
+
+export function aiBatchPersonaError(humanCount: number, aiCount: number, personas: AiPersonaSetting[]): string {
+  if (humanCount !== 0) return ''
+  const count = personas.filter(p => !isBlankPersona(p)).length
+  return count > 0 && count < aiCount
+    ? `If AI personas are configured, the number of non-empty personas must be at least the number of AI participants. Currently, there are ${aiCount} AI participants but only ${count} non-empty ${count === 1 ? 'persona' : 'personas'}.` : ''
+}
 
 export function isReservedParticipantNickname(value: unknown): boolean {
   return typeof value === 'string' && RESERVED_PARTICIPANT_NICKNAMES.has(value.trim().toLowerCase())
@@ -248,7 +261,9 @@ export function validateChatroomSetting(setting: ChatroomSetting): ValidationRes
     ['max_total_chars', VALIDATION_LIMITS.maxTotalCharsMax],
     ['max_turns', VALIDATION_LIMITS.maxTurnsMax],
   ] as const) {
-    if (!Number.isInteger(setting[field]) || setting[field] < 1 || setting[field] > max) {
+    const value = setting[field]
+    if (field === 'max_message_chars' && value == null) continue
+    if (value == null || !Number.isInteger(value) || value < 1 || value > max) {
       errors[field] = `${field} must be an integer between 1 and ${max}`
     }
   }
@@ -360,7 +375,7 @@ export function defaultChatroomSetting(): ChatroomSetting {
     timer_min_minutes: 1,
     timer_max_minutes: 5,
     max_duration_seconds: deriveMaxDurationSeconds(5),
-    max_message_chars: 400,
+    max_message_chars: null,
     max_total_chars: 20000,
     max_turns: 100,
   }

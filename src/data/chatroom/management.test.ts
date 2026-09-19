@@ -25,6 +25,7 @@ describe('chatroom management adapter', () => {
       '/api/getChatrooms',
       {},
       true,
+      undefined,
     );
   });
 

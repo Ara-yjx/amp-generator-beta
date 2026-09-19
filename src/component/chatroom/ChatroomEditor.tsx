@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'react-router'
 import {
-  Form, Input, InputNumber, Switch, Select, Button, Message, Spin, Space, Popover, Card,
+  Form, Input, InputNumber, Switch, Select, Button, Message, Spin, Space, Popover, Card, Radio,
 } from '@arco-design/web-react'
 import { IconDelete, IconPlus, IconQuestionCircle } from '@arco-design/web-react/icon'
 import { Chatroom, getChatroom, updateChatroom } from '../../data/chatroom/api'
@@ -17,30 +17,26 @@ import {
   normalizeAiPersonas,
   validateChatroomSetting,
   VALIDATION_LIMITS,
+  aiBatchPersonaError,
+  isBlankPersona,
 } from '../../data/chatroom/chatroomSetting'
-import { aiConversationBatchRoute, chatroomUsageRoute } from '../../data/chatroom/routes'
+import { chatroomUsageRoute } from '../../data/chatroom/routes'
 import ScriptGenerator from './ScriptGenerator'
 import WidgetPreview from './WidgetPreview'
-import AttachmentList, { AttachmentLibrary, useAttachmentLibrary, attachmentModelError } from './AttachmentList'
-import BatchCostEstimate from './BatchCostEstimate'
+import AttachmentList, { AttachmentLibrary, useAttachmentLibrary, attachmentModelError, attachmentSettingError, formatModelOptionLabel, exclusivePersonaAttachments } from './AttachmentList'
+import BatchHistory from './BatchHistory'
 
 const TextArea = Input.TextArea
 const FormItem = Form.Item
 const Option = Select.Option
 const OptGroup = Select.OptGroup
 const SAME_MODEL_AS_DEFAULT = '__CHATROOM_DEFAULT__'
-const MAX_AI_BATCH_COUNT = 10
+const MAX_AI_BATCH_COUNT = 50
 
 type ModelOption = {
   label: string
   value: string
   supportsPromptCaching?: boolean
-}
-
-function formatModelOptionLabel(option: ModelOption): string {
-  return option.supportsPromptCaching
-    ? `${option.label} (supports caching)`
-    : option.label
 }
 
 
@@ -89,12 +85,14 @@ function PersonaListEditor({
   library,
   modelError,
   defaultModel,
+  commonAttachmentIds,
 }: {
   value?: AiPersonaSetting[]
   onChange?: (next: AiPersonaSetting[]) => void
   library: AttachmentLibrary
   modelError: string
   defaultModel: string
+  commonAttachmentIds: string[]
 }) {
   const personas = value ?? []
   const update = (next: AiPersonaSetting[]) => onChange?.(next)
@@ -162,7 +160,7 @@ function PersonaListEditor({
                     {MODEL_GROUPS.map((group) => (
                       <OptGroup key={group.label} label={group.label}>
                         {group.options.map((opt) => (
-                          <Option key={opt.value} value={opt.value}>{formatModelOptionLabel(opt)}</Option>
+                          <Option key={opt.value} value={opt.value}>{formatModelOptionLabel(opt, library.caps)}</Option>
                         ))}
                       </OptGroup>
                     ))}
@@ -190,7 +188,7 @@ function PersonaListEditor({
                 </div>
               </Row>
               <div style={{ marginTop: 8 }}>
-                <FieldLabel>Additional prompt</FieldLabel>
+                <FieldLabel>AI Behavior Prompt</FieldLabel>
                 <TextArea
                   value={p.persona}
                   onChange={(v) => update(personas.map((x, j) => (j === i ? { ...x, persona: v } : x)))}
@@ -198,7 +196,7 @@ function PersonaListEditor({
                   placeholder={`Instruction to persona ${i + 1}`}
                   style={{ flex: 1 }}
                 />
-                <AttachmentList value={p.prompt_attachment_ids} library={library} modelError={modelError}
+                <AttachmentList value={p.prompt_attachment_ids} library={library} modelError={modelError} otherScopes={[commonAttachmentIds]} inheritedIds={commonAttachmentIds}
                   onChange={ids => update(personas.map((x, j) => j === i ? { ...x, prompt_attachment_ids: ids } : x))} />
               </div>
             </div>
@@ -209,6 +207,9 @@ function PersonaListEditor({
               onClick={() => update(personas.filter((_, j) => j !== i))}
               aria-label="Remove persona"
             />
+          </div>
+          <div style={{ marginTop: 12, fontSize: 12, color: '#86909c' }}>
+            The common prompt and attachments also apply to this persona.
           </div>
         </Card>
       ))}
@@ -238,19 +239,19 @@ function PersonaListEditor({
 
 const MODEL_GROUPS: { label: string; options: ModelOption[] }[] = [
   { label: 'Anthropic', options: [
-    { label: 'Claude Sonnet 4.6', value: 'global.anthropic.claude-sonnet-4-6', supportsPromptCaching: true },
-    { label: 'Claude Sonnet 4.5', value: 'global.anthropic.claude-sonnet-4-5-20250929-v1:0', supportsPromptCaching: true },
-    { label: 'Claude Sonnet 4', value: 'global.anthropic.claude-sonnet-4-20250514-v1:0', supportsPromptCaching: true },
-    { label: 'Claude Haiku 4.5', value: 'global.anthropic.claude-haiku-4-5-20251001-v1:0', supportsPromptCaching: true },
     { label: 'Claude Opus 4.7', value: 'global.anthropic.claude-opus-4-7', supportsPromptCaching: true },
     { label: 'Claude Opus 4.6', value: 'global.anthropic.claude-opus-4-6-v1', supportsPromptCaching: true },
+    { label: 'Claude Sonnet 4.6', value: 'global.anthropic.claude-sonnet-4-6', supportsPromptCaching: true },
+    { label: 'Claude Sonnet 4.5', value: 'global.anthropic.claude-sonnet-4-5-20250929-v1:0', supportsPromptCaching: true },
+    { label: 'Claude Haiku 4.5', value: 'global.anthropic.claude-haiku-4-5-20251001-v1:0', supportsPromptCaching: true },
+    { label: 'Claude Sonnet 4', value: 'global.anthropic.claude-sonnet-4-20250514-v1:0', supportsPromptCaching: true },
   ]},
   { label: 'Amazon Nova', options: [
+    { label: 'Nova 2 Lite', value: 'global.amazon.nova-2-lite-v1:0', supportsPromptCaching: true },
+    { label: 'Nova Premier', value: 'us.amazon.nova-premier-v1:0', supportsPromptCaching: true },
     { label: 'Nova Pro', value: 'us.amazon.nova-pro-v1:0', supportsPromptCaching: true },
     { label: 'Nova Lite', value: 'us.amazon.nova-lite-v1:0', supportsPromptCaching: true },
     { label: 'Nova Micro', value: 'us.amazon.nova-micro-v1:0', supportsPromptCaching: true },
-    { label: 'Nova Premier', value: 'us.amazon.nova-premier-v1:0', supportsPromptCaching: true },
-    { label: 'Nova 2 Lite', value: 'global.amazon.nova-2-lite-v1:0', supportsPromptCaching: true },
   ]},
   { label: 'Meta Llama', options: [
     { label: 'Llama 4 Maverick 17B', value: 'us.meta.llama4-maverick-17b-instruct-v1:0' },
@@ -260,14 +261,14 @@ const MODEL_GROUPS: { label: string; options: ModelOption[] }[] = [
     { label: 'Llama 3.1 8B', value: 'us.meta.llama3-1-8b-instruct-v1:0' },
   ]},
   { label: 'DeepSeek', options: [
+    { label: 'DeepSeek V3.2', value: 'deepseek.v3.2' },
     { label: 'DeepSeek R1', value: 'us.deepseek.r1-v1:0' },
     { label: 'DeepSeek V3', value: 'deepseek.v3-v1:0' },
-    { label: 'DeepSeek V3.2', value: 'deepseek.v3.2' },
   ]},
   { label: 'Qwen', options: [
+    { label: 'Qwen3 Next 80B', value: 'qwen.qwen3-next-80b-a3b' },
     { label: 'Qwen3 235B', value: 'qwen.qwen3-235b-a22b-2507-v1:0' },
     { label: 'Qwen3 32B', value: 'qwen.qwen3-32b-v1:0' },
-    { label: 'Qwen3 Next 80B', value: 'qwen.qwen3-next-80b-a3b' },
   ]},
   { label: 'Google', options: [
     { label: 'Gemma 3 27B', value: 'google.gemma-3-27b-it' },
@@ -341,7 +342,7 @@ export default function ChatroomEditor() {
   const [saving, setSaving] = useState(false)
   const [startingBatch, setStartingBatch] = useState(false)
   const [batchCount, setBatchCount] = useState(10)
-  const [estimateDirty, setEstimateDirty] = useState(false)
+  const [batchHistoryRevision, setBatchHistoryRevision] = useState(0)
   // Arco 2.66's useWatch typing is incompatible with a narrowed FormInstance
   // under this app's TypeScript version, so keep the instance generic and
   // validate the resulting values through FormValues below.
@@ -354,9 +355,16 @@ export default function ChatroomEditor() {
   const watchedTimerMaxMinutes = Form.useWatch('timer_max_minutes', form) as number | null | undefined
   const watchedAiPersonas = Form.useWatch('ai_personas', form) as AiPersonaSetting[] | undefined
   const watchedModel = Form.useWatch('model_id', form) as string | undefined
+  const watchedAttachmentIds = Form.useWatch('prompt_attachment_ids', form) as string[] | undefined
   const attachmentError = attachmentModelError(watchedModel || '', watchedAiPersonas || [], attachmentLibrary.caps)
-  const watchedMaxTurns = Form.useWatch('max_turns', form) as number | undefined
   const isAiOnly = (watchedHumanCount ?? 1) === 0
+  const personaRunError = aiBatchPersonaError(watchedHumanCount ?? 1, watchedAiCount ?? 0, watchedAiPersonas ?? [])
+
+  useEffect(() => {
+    if (!watchedAiPersonas || !watchedAttachmentIds) return
+    const personas = exclusivePersonaAttachments(watchedAiPersonas, watchedAttachmentIds)
+    if (personas.some((p, i) => p !== watchedAiPersonas[i])) form.setFieldValue('ai_personas', personas)
+  }, [form, watchedAiPersonas, watchedAttachmentIds])
 
   useEffect(() => {
     if (typeof watchedTimerMaxMinutes === 'undefined') return
@@ -421,12 +429,12 @@ export default function ChatroomEditor() {
       topic_instruction: values.topic_instruction,
       additional_prompt: values.additional_prompt,
       ...(values.prompt_attachment_ids ? { prompt_attachment_ids: values.prompt_attachment_ids } : {}),
-      ai_personas: normalizeAiPersonas(values.ai_personas),
+      ai_personas: exclusivePersonaAttachments(normalizeAiPersonas(values.ai_personas), values.prompt_attachment_ids ?? []),
       model_id: values.model_id,
       mimic_human: values.mimic_human,
       resumable: values.resumable,
       ai_nickname: values.ai_nickname,
-      show_avatars: values.show_avatars,
+      show_avatars: values.human_count === 0 ? false : values.show_avatars,
       temperature: values.temperature,
       simulate_pairing_seconds: values.simulate_pairing_seconds,
       timer_min_minutes: values.timer_min_minutes ?? null,
@@ -439,7 +447,7 @@ export default function ChatroomEditor() {
       ai_join_strategy: values.ai_join_strategy,
       ai_strategy_value: values.ai_strategy_value,
       max_wait_seconds: values.max_wait_seconds,
-      max_message_chars: values.max_message_chars,
+      max_message_chars: values.max_message_chars ?? null,
       max_total_chars: values.max_total_chars,
       max_turns: values.max_turns,
     })
@@ -448,6 +456,8 @@ export default function ChatroomEditor() {
       if (attachmentLibrary.error) throw new Error(attachmentLibrary.error)
       if (attachmentLibrary.loading || !attachmentLibrary.caps) throw new Error('Please wait for attachments to finish loading.')
       if (attachmentError) throw new Error(attachmentError)
+      const selectionError = attachmentSettingError(values.prompt_attachment_ids ?? [], values.ai_personas, attachmentLibrary)
+      if (selectionError) throw new Error(selectionError)
     }
     if (!result.ok) {
       const fields: Record<string, { value: unknown; errors: string[] }> = {}
@@ -473,7 +483,6 @@ export default function ChatroomEditor() {
         setting: finalSetting,
       })
       setChatroom(updated)
-      setEstimateDirty(false)
       if (options.activate) {
         form.setFieldValue('status', true)
       }
@@ -521,25 +530,24 @@ export default function ChatroomEditor() {
   }
 
   const startAiBatch = async (count: number) => {
-    const target = window.open('about:blank', '_blank')
+    if (!Number.isInteger(count) || count < 1 || count > MAX_AI_BATCH_COUNT) {
+      Message.error(`Batch size must be an integer between 1 and ${MAX_AI_BATCH_COUNT}`)
+      return
+    }
+    if (personaRunError) { Message.error(personaRunError); return }
     setStartingBatch(true)
     try {
       await handleSave({ activate: true })
       const clientRequestId = typeof crypto.randomUUID === 'function'
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(16).slice(2)}`
-      const created = await chatroomApiPost<{ batch_job_id: string }>('/api/createAiConversationBatch', {
+      await chatroomApiPost<{ batch_job_id: string }>('/api/createAiConversationBatch', {
         chatroom_id: id,
         batch_count: count,
         client_request_id: clientRequestId,
       })
-      const route = aiConversationBatchRoute(id ?? '', created.batch_job_id)
-      const url = new URL(window.location.href)
-      url.hash = route
-      if (target) target.location.href = url.toString()
-      else window.location.href = url.toString()
+      setBatchHistoryRevision(revision => revision + 1)
     } catch (error: unknown) {
-      target?.close()
       Message.error(error instanceof Error ? error.message : 'Failed to start AI conversation')
     } finally {
       setStartingBatch(false)
@@ -589,7 +597,7 @@ export default function ChatroomEditor() {
           ID: {chatroom.id}
         </div>
 
-        <Form form={form} layout="vertical" onValuesChange={() => setEstimateDirty(true)}>
+        <Form form={form} layout="vertical">
           {/* ─── Basics ─────────────────────────────────────────────── */}
           <SectionHeader>📋 Basics</SectionHeader>
 
@@ -602,20 +610,16 @@ export default function ChatroomEditor() {
             </FormItem>
           </Row>
 
+          <FormItem label="Mode">
+            <Radio.Group aria-label="Mode" value={isAiOnly ? 'ai-ai' : 'ai-human'}
+              onChange={value => setAiOnly(value === 'ai-ai')}>
+              <Radio value="ai-human">AI+Human 🤖😃</Radio>
+              <Radio value="ai-ai">AI+AI 🤖🤖</Radio>
+            </Radio.Group>
+          </FormItem>
+
           {/* ─── Participants ─────────────────────────────────────── */}
           <SectionHeader>👥 Participants</SectionHeader>
-
-          <FormItem
-            label="AI-only mode"
-            extra="Generate asynchronous conversations between AIs without a human participant."
-          >
-            <Switch
-              checked={isAiOnly}
-              checkedText="On"
-              uncheckedText="Off"
-              onChange={setAiOnly}
-            />
-          </FormItem>
 
           <Row>
             <FormItem
@@ -719,7 +723,7 @@ export default function ChatroomEditor() {
             <FormItem
               label="🤖 Model"
               field="model_id"
-              extra="Models marked 'supports caching' can save about 80% of repeated input prompt tokens after the first tick."
+              extra={<>Cache✅ models can reduce repeated prompt input costs.<br/>Attachment✅ means you can uploaded images and documents in prompt.</>}
               style={{ flex: 2, minWidth: 280 }}
             >
               {/* Explicit width prevents Arco popup sizing from triggering a ResizeObserver loop. */}
@@ -727,7 +731,7 @@ export default function ChatroomEditor() {
                 {MODEL_GROUPS.map((group) => (
                   <OptGroup key={group.label} label={group.label}>
                     {group.options.map((opt) => (
-                      <Option key={opt.value} value={opt.value}>{formatModelOptionLabel(opt)}</Option>
+                      <Option key={opt.value} value={opt.value}>{formatModelOptionLabel(opt, attachmentLibrary.caps)}</Option>
                     ))}
                   </OptGroup>
                 ))}
@@ -743,7 +747,7 @@ export default function ChatroomEditor() {
                 min: VALIDATION_LIMITS.temperatureMin,
                 max: VALIDATION_LIMITS.temperatureMax,
               }]}
-              extra={watchedModel?.includes('claude-opus-4-7') ? 'Opus 4.7 does not accept temperature overrides.' : 'Bedrock beta range is 0.0-1.0. OpenAI and Anthropic direct API limits may differ later.'}
+              extra={watchedModel?.includes('claude-opus-4-7') ? 'Opus 4.7 does not accept temperature overrides.' : 'Temperature range is 0.0-1.0. The influence of temperature might differ between models.'}
               style={{ flex: 1, minWidth: 180 }}
             >
               <InputNumber
@@ -759,6 +763,7 @@ export default function ChatroomEditor() {
 
           <FormItem
             label="Mimic human"
+            hidden={isAiOnly}
             field="mimic_human"
             triggerPropName="checked"
             extra="When off, the backend uses a generic AI-assistant prompt instead of human-mimic instructions and examples."
@@ -789,7 +794,7 @@ export default function ChatroomEditor() {
           </FormItem>
 
           <FormItem
-            label="📝 Additional Prompt"
+            label="📝 AI Behavior Prompt"
             field="additional_prompt"
             extra="The backend already provides general instructions for online conversation and, when enabled, human mimicry. Use this optional prompt to fine-tune this chatroom's AI behavior."
           >
@@ -798,7 +803,8 @@ export default function ChatroomEditor() {
 
           {/* ─── AI Personas ───────────────────────────────────────── */}
           <FormItem field="prompt_attachment_ids">
-            <AttachmentList library={attachmentLibrary} modelError={attachmentError} />
+            <AttachmentList library={attachmentLibrary} modelError={attachmentError}
+              otherScopes={(watchedAiPersonas ?? []).map(p => p.prompt_attachment_ids ?? [])} />
           </FormItem>
           <SectionHeader>
             <Space size={4}>
@@ -850,13 +856,13 @@ avoid talking about politics; keep messages under 12 words.
           </SectionHeader>
 
           <FormItem field="ai_personas">
-            <PersonaListEditor library={attachmentLibrary} modelError={attachmentError} defaultModel={watchedModel || ''} />
+            <PersonaListEditor library={attachmentLibrary} modelError={attachmentError} defaultModel={watchedModel || ''}
+              commonAttachmentIds={watchedAttachmentIds ?? []} />
           </FormItem>
-          {isAiOnly && (watchedAiPersonas?.length ?? 0) > 0 && (watchedAiPersonas?.length ?? 0) < (watchedAiCount ?? 0) && (
-            <div style={{ color: '#ff7d00', fontSize: 13, marginTop: -8, marginBottom: 16 }}>
-              Fewer personas than AIs. Some personas will be reused across distinct AI participants.
-            </div>
+          {(watchedAiPersonas ?? []).some(isBlankPersona) && (
+            <div role="status" style={{ color: '#b86e00', marginBottom: 16 }}>Blank personas will be ignored.</div>
           )}
+          {personaRunError && <div role="alert" style={{ color: '#f53f3f', marginBottom: 16 }}>{personaRunError}</div>}
 
           {/* ─── Misc ──────────────────────────────────────────────── */}
           <SectionHeader>Misc</SectionHeader>
@@ -865,21 +871,21 @@ avoid talking about politics; keep messages under 12 words.
             <>
               <Row>
                 <FormItem
-                  label="Max message length"
-                  field="max_message_chars"
-                  extra="Maximum characters in each generated message."
+                  label="Max messages"
+                  field="max_turns"
+                  extra="Maximum accepted AI messages per conversation."
                   rules={[{
                     required: true,
                     type: 'number',
-                    min: VALIDATION_LIMITS.maxMessageCharsMin,
-                    max: VALIDATION_LIMITS.maxMessageCharsMax,
+                    min: VALIDATION_LIMITS.maxTurnsMin,
+                    max: VALIDATION_LIMITS.maxTurnsMax,
                   }]}
                   style={{ flex: 1, minWidth: 180 }}
                 >
-                  <InputNumber min={1} max={VALIDATION_LIMITS.maxMessageCharsMax} suffix="characters" style={{ width: '100%' }} />
+                  <InputNumber min={1} max={VALIDATION_LIMITS.maxTurnsMax} precision={0} style={{ width: '100%' }} />
                 </FormItem>
                 <FormItem
-                  label="Conversation length"
+                  label="Max characters"
                   field="max_total_chars"
                   extra="Target total characters. The final message may exceed it."
                   rules={[{
@@ -894,17 +900,16 @@ avoid talking about politics; keep messages under 12 words.
                 </FormItem>
               </Row>
               <FormItem
-                label="Max turns"
-                field="max_turns"
-                extra="Maximum accepted messages in each generated conversation."
+                label="Max message length"
+                field="max_message_chars"
+                extra="Optional prompt guidance, not a hard limit. Leave blank to let the model or your prompt decide."
                 rules={[{
-                  required: true,
                   type: 'number',
-                  min: VALIDATION_LIMITS.maxTurnsMin,
-                  max: VALIDATION_LIMITS.maxTurnsMax,
+                  min: VALIDATION_LIMITS.maxMessageCharsMin,
+                  max: VALIDATION_LIMITS.maxMessageCharsMax,
                 }]}
               >
-                <InputNumber min={1} max={VALIDATION_LIMITS.maxTurnsMax} style={{ width: '100%' }} />
+                <InputNumber min={1} max={VALIDATION_LIMITS.maxMessageCharsMax} precision={0} suffix="characters" placeholder="Optional" style={{ width: '100%' }} />
               </FormItem>
             </>
           ) : <Row>
@@ -939,20 +944,14 @@ avoid talking about politics; keep messages under 12 words.
         {isAiOnly ? (
           <>
             <SectionHeader>Start Conversation</SectionHeader>
-            <div style={{ color: '#4e5969', fontSize: 13, marginBottom: 12 }}>
-              The job runs asynchronously. This configuration allows up to{' '}
-              <strong>{batchCount * (watchedAiCount === 2 ? 1 : (watchedAiCount ?? 2)) * (watchedMaxTurns ?? 100)}</strong>{' '}
-              model calls. At the initial concurrency, a typical run is roughly{' '}
-              <strong>{Math.max(1, Math.ceil(batchCount * (watchedMaxTurns ?? 100) * 6 / 10 / 60))} minutes</strong>;
-              actual calls are usually lower when 3+ AIs speak before every candidate is tried.
-            </div>
+            <p style={{ color: '#4e5969' }}>We recommend running one conversation to assess quality and cost before starting a batch.</p>
             <div style={{ marginBottom: 12 }}>
               <Button
-                type="primary"
                 loading={startingBatch}
                 onClick={() => void startAiBatch(1)}
+                disabled={!!personaRunError}
               >
-                Save &amp; start once
+                Save &amp; test once
               </Button>
             </div>
             <Space align="end" wrap>
@@ -967,13 +966,15 @@ avoid talking about politics; keep messages under 12 words.
                 />
               </div>
               <Button
+                type="primary"
                 loading={startingBatch}
                 onClick={() => void startAiBatch(batchCount)}
+                disabled={!!personaRunError}
               >
                 Save &amp; start batch
               </Button>
             </Space>
-            <BatchCostEstimate roomId={chatroom.id} count={batchCount} dirty={estimateDirty} />
+            <BatchHistory roomId={chatroom.id} revision={batchHistoryRevision} />
           </>
         ) : (
           <>

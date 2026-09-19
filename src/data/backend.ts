@@ -106,7 +106,7 @@ function notifyAuthListeners(auth: AuthState | null) {
  * @param useJsonContentType should set to false for Multipart/form-data (file upload)
  * @returns 
  */
-async function apiPost<T>(path: string, data: any = {}, requireAuth: string | boolean = false, useJsonContentType: boolean = true, isFirstTry: boolean = true, apiBase: string = API_BASE): Promise<ApiResponse<T>> {
+async function apiPost<T>(path: string, data: any = {}, requireAuth: string | boolean = false, useJsonContentType: boolean = true, isFirstTry: boolean = true, apiBase: string = API_BASE, signal?: AbortSignal): Promise<ApiResponse<T>> {
   const headers: Record<string, string> = useJsonContentType ? { 'Content-Type': 'application/json' } : {};
   if (requireAuth) {
     if (!getAuth()?.token) {
@@ -125,6 +125,7 @@ async function apiPost<T>(path: string, data: any = {}, requireAuth: string | bo
     headers['Authorization'] = token;
   }
   const res = await fetch(`${apiBase}${path}`, {
+    signal,
     method: 'POST',
     headers,
     body: useJsonContentType ? JSON.stringify(data) : data,
@@ -144,7 +145,7 @@ async function apiPost<T>(path: string, data: any = {}, requireAuth: string | bo
         Message.info(`${typeof requireAuth === 'string' ? requireAuth : ''}${getAuth() ? 'Your login session has expired. Please login again.' : 'Please login (or re-login) to continue.'}`);
         clearAuth();
         await requireLogin();
-        return apiPost<T>(path, data, requireAuth, useJsonContentType, false, apiBase);
+        return apiPost<T>(path, data, requireAuth, useJsonContentType, false, apiBase, signal);
       }
       clearAuth();
       throw new Error('Authentication failed after re-login.');
@@ -158,8 +159,8 @@ async function apiPost<T>(path: string, data: any = {}, requireAuth: string | bo
   return resJson;
 }
 
-export function apiPostAt<T>(apiBase: string, path: string, data: unknown = {}, requireAuth: string | boolean = true): Promise<ApiResponse<T>> {
-  return apiPost<T>(path, data, requireAuth, true, true, apiBase.replace(/\/+$/, ''));
+export function apiPostAt<T>(apiBase: string, path: string, data: unknown = {}, requireAuth: string | boolean = true, signal?: AbortSignal): Promise<ApiResponse<T>> {
+  return apiPost<T>(path, data, requireAuth, true, true, apiBase.replace(/\/+$/, ''), signal);
 }
 
 export function apiUploadAt<T>(apiBase: string, path: string, data: FormData): Promise<ApiResponse<T>> {

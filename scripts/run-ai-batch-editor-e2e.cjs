@@ -84,19 +84,18 @@ async function main() {
     const saveResponse = page.waitForResponse((response) => response.url().includes('/api/updateChatroom/') && response.request().method() === 'POST');
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     if (!(await saveResponse).ok()) throw new Error('Human chatroom save failed');
-    await formSwitch(page, 'AI-only mode').click();
+    await page.getByText('AI+AI', { exact: true }).click();
     await page.getByText('Start Conversation', { exact: true }).waitFor();
 
     await formInput(page, 'Max message length').fill('80');
-    await formInput(page, 'Conversation length').fill('200');
-    await formInput(page, 'Max turns').fill('2');
+    await formInput(page, 'Max characters').fill('200');
+    await formInput(page, 'Max messages').fill('2');
     const topicItem = page.locator('.arco-form-item').filter({ hasText: 'Chatroom topic' });
     await topicItem.locator('textarea').fill('Discuss one small way to improve a study routine.');
     await page.screenshot({ path: screenshotPath, fullPage: true });
 
-    const popupPromise = context.waitForEvent('page');
-    await page.getByRole('button', { name: 'Start once' }).click();
-    batchPage = await popupPromise;
+    await page.getByRole('button', { name: 'Save & start once' }).click();
+    batchPage = page;
     await page.waitForTimeout(1000);
     if (batchPage.isClosed()) {
       const formErrors = await page.locator('.arco-form-message').allInnerTexts();
@@ -139,11 +138,8 @@ async function main() {
     }
     await batchPage.screenshot({ path: screenshotPath, fullPage: true });
 
-    await batchPage.getByRole('button', { name: 'Export completed conversations' }).click();
-    const downloadLink = batchPage.getByRole('link', { name: 'Download ZIP' });
-    await downloadLink.waitFor({ timeout: 60000 });
-    const downloadPromise = batchPage.waitForEvent('download');
-    await downloadLink.click();
+    const downloadPromise = batchPage.waitForEvent('download', { timeout: 190000 });
+    await batchPage.getByRole('button', { name: 'Download conversation data' }).click();
     const download = await downloadPromise;
     await download.saveAs(`${resultFile}.zip`);
     await batchPage.screenshot({ path: screenshotPath, fullPage: true });
