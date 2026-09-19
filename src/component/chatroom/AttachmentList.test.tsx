@@ -1,6 +1,7 @@
 import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react'
 import AttachmentList, { attachmentModelError, attachmentSelectionError, formatModelOptionLabel, useAttachmentLibrary, exclusivePersonaAttachments } from './AttachmentList'
 import { useState } from 'react'
+import { Message } from '@arco-design/web-react'
 import { apiUploadAt } from '../../data/backend'
 import { chatroomApiPost } from '../../data/chatroom/management'
 import { defaultChatroomSetting, denormalizeForSave } from '../../data/chatroom/chatroomSetting'
@@ -103,6 +104,43 @@ test('all persona effective models must support files, even unselected ones', ()
   expect(attachmentModelError('supported', [], undefined)).toBe('')
   expect(attachmentModelError('', [], caps)).toBe('')
   expect(attachmentModelError('supported', [], { ...caps, enabled: false })).toContain('unavailable')
+})
+
+test('multi-upload preserves selections, skips invalid files and continues after a failed request', async () => {
+  const error = jest.spyOn(Message, 'error').mockImplementation(() => () => {})
+  const library = { assets: [], caps, error: '', loading: false, roomId: 'room', visible: true, refresh: jest.fn() }
+  const onChange = jest.fn()
+  ;(apiUploadAt as jest.Mock).mockReset().mockImplementation(async (_base, _path, body: FormData) => {
+    const file = body.get('file') as File
+    if (file.name === 'failed.txt') throw new Error('Upload failed')
+    return { data: { asset: { id: file.name, original_name: file.name, byte_size: 4, format: 'txt' } } }
+  })
+  render(<ControlledAttachments value={['existing']} inheritedIds={['common']} onChange={onChange} library={library} modelError="" />)
+  fireEvent.click(screen.getByRole('button', { name: 'Manage attachments' }))
+  const input = document.querySelector('input[type="file"]') as HTMLInputElement
+  expect(input.multiple).toBe(true)
+  fireEvent.change(input, { target: { files: ['first.txt', 'bad.exe', 'failed.txt', 'last.txt'].map(name => new File(['text'], name)) } })
+  await waitFor(() => expect(screen.getByRole('checkbox', { name: 'last.txt' })).toBeChecked())
+  expect(screen.getByRole('checkbox', { name: 'first.txt' })).toBeChecked()
+  expect(onChange).toHaveBeenLastCalledWith(['existing', 'first.txt', 'last.txt'])
+  expect(apiUploadAt).toHaveBeenCalledTimes(3)
+  expect(error).toHaveBeenCalledWith(expect.stringContaining('bad.exe'))
+  expect(error).toHaveBeenCalledWith('failed.txt: Upload failed')
+  error.mockRestore()
+})
+
+test('switching rooms stops queued uploads and ignores the old response', async () => {
+  let resolve!: (value: unknown) => void
+  ;(apiUploadAt as jest.Mock).mockReset().mockReturnValue(new Promise(r => { resolve = r }))
+  const library = { assets: [], caps, error: '', loading: false, roomId: 'old', visible: true, refresh: jest.fn() }
+  const onChange = jest.fn()
+  const { rerender } = render(<AttachmentList library={library} onChange={onChange} modelError="" />)
+  fireEvent.click(screen.getByRole('button', { name: 'Manage attachments' }))
+  fireEvent.change(document.querySelector('input[type="file"]')!, { target: { files: [new File(['a'], 'a.txt'), new File(['b'], 'b.txt')] } })
+  rerender(<AttachmentList library={{ ...library, roomId: 'new' }} onChange={onChange} modelError="" />)
+  await act(async () => { resolve({ data: { asset: { id: 'a', original_name: 'a.txt' } } }) })
+  expect(apiUploadAt).toHaveBeenCalledTimes(1)
+  expect(onChange).not.toHaveBeenCalled()
 })
 
 test('pending capabilities do not show an error or enable upload/confirmation', () => {

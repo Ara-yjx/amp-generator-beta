@@ -95,6 +95,7 @@ export default function AttachmentList({ value = [], onChange, library, modelErr
   const [open, setOpen] = useState(false)
   const [uploadedAssets, setUploadedAssets] = useState<Asset[]>([])
   const [uploading, setUploading] = useState(false)
+  const uploadInFlight = useRef(false)
   const fileInput = useRef<HTMLInputElement>(null)
   const latest = useRef({ value, onChange, inheritedIds, roomId: library.roomId })
   latest.current = { value, onChange, inheritedIds, roomId: library.roomId }
@@ -119,27 +120,39 @@ export default function AttachmentList({ value = [], onChange, library, modelErr
       else Message.error('Allow popups to download the attachment.')
     } catch (e) { tab?.close(); Message.error((e as Error).message) }
   }
-  const upload = async (file?: File) => {
-    if (!file || !library.roomId || blocked) return
-    const ext = file.name.split('.').pop()?.toLowerCase() || ''
-    const limit = library.caps?.file_limits[ext === 'jpg' ? 'jpeg' : ext]
-    if (!limit || file.size > limit || file.size === 0) {
-      Message.error('Supported limits: TXT 100 KB, PDF 4.5 MB, PNG/JPEG 3.75 MB. Compress or split oversized files.'); return
-    }
+  const upload = async (files: File[]) => {
+    if (!files.length || !library.roomId || blocked || uploadInFlight.current) return
+    uploadInFlight.current = true
     setUploading(true)
-    const body = new FormData()
-    body.append('file', file); body.append('chatroom_id', library.roomId)
-    body.append('request_id', crypto.randomUUID())
+    const added: string[] = []
     try {
-      const result = await apiUploadAt<{ asset: Asset }>(CHATROOM_MANAGEMENT_API_BASE, '/api/uploadPromptAsset', body)
-      if (latest.current.roomId !== library.roomId) return
-      const asset = result.data.asset
-      setUploadedAssets(current => [...current.filter(a => a.id !== asset.id), asset])
-      const current = latest.current
-      current.onChange?.([...new Set([...current.value, asset.id])].filter(id => !current.inheritedIds.includes(id)))
-      await library.refresh()
-    } catch (e) { Message.error((e as Error).message) }
-    finally { setUploading(false) }
+      // Keep each request within the existing single-file endpoint's size limit.
+      for (const file of files) {
+        if (latest.current.roomId !== library.roomId) return
+        const ext = file.name.split('.').pop()?.toLowerCase() || ''
+        const limit = library.caps?.file_limits[ext === 'jpg' ? 'jpeg' : ext]
+        if (!limit || file.size > limit || file.size === 0) {
+          Message.error(`${file.name}: use a non-empty TXT (up to 100 KB), PDF (4.5 MB), or PNG/JPEG (3.75 MB). Compress or split larger files.`)
+          continue
+        }
+        const body = new FormData()
+        body.append('file', file); body.append('chatroom_id', library.roomId)
+        body.append('request_id', crypto.randomUUID())
+        try {
+          const result = await apiUploadAt<{ asset: Asset }>(CHATROOM_MANAGEMENT_API_BASE, '/api/uploadPromptAsset', body)
+          if (latest.current.roomId !== library.roomId) return
+          const asset = result.data.asset
+          added.push(asset.id)
+          setUploadedAssets(current => [...current.filter(a => a.id !== asset.id), asset])
+          const current = latest.current
+          current.onChange?.([...new Set([...current.value, ...added])].filter(id => !current.inheritedIds.includes(id)))
+        } catch (e) {
+          if (latest.current.roomId !== library.roomId) return
+          Message.error(`${file.name}: ${(e as Error).message}`)
+        }
+      }
+      if (added.length) await library.refresh()
+    } finally { uploadInFlight.current = false; setUploading(false) }
   }
   return <div style={{ marginTop: 8, minWidth: 0 }}>
     <div style={{ marginBottom: 8, fontWeight: 500 }}>Attachments</div>
@@ -171,12 +184,14 @@ export default function AttachmentList({ value = [], onChange, library, modelErr
         </div>
       </Spin>
       <Button style={{ marginTop: 16 }} icon={<IconUpload />} loading={uploading} disabled={blocked} onClick={() => fileInput.current?.click()}>Upload new</Button>
-      <input ref={fileInput} type="file" accept=".txt,.pdf,.png,.jpg,.jpeg" style={{ display: 'none' }}
-        onChange={e => { const file = e.target.files?.[0]; e.target.value = ''; void upload(file) }} />
+      <input ref={fileInput} type="file" multiple accept=".txt,.pdf,.png,.jpg,.jpeg" style={{ display: 'none' }}
+        onChange={e => { const files = Array.from(e.target.files ?? []); e.target.value = ''; void upload(files) }} />
       <div style={{ color: '#86909c', fontSize: 12, marginTop: 12 }}>
-        Per AI: common + its persona attachments, up to {library.caps?.max_effective_files ?? 5} files,
-        {' '}10 MB total and {library.caps?.max_pdf_pages ?? 10} PDF pages. The same library file counts once.
-        {' '}Per file: TXT 100 KB, PDF 4.5 MB, PNG/JPEG 3.75 MB. Compress or split larger files.
+        <p>Per file: TXT up to 100 KB, PDF up to 4.5 MB, PNG/JPEG up to 3.75 MB. Compress or split larger files before uploading.</p>
+        <p>Each AI can receive up to {library.caps?.max_effective_files ?? 5} selected files,
+          {' '}{(library.caps?.max_effective_bytes ?? 10000000) / 1000000} MB combined,
+          and {library.caps?.max_pdf_pages ?? 10} PDF pages in total across those files.</p>
+        <p>These totals include the common attachments plus that AI's persona attachments. A file selected in both counts only once. Unselected library files do not count toward these limits.</p>
       </div>
       {error && <div role="alert" style={{ color: '#c02338', marginTop: 8, overflowWrap: 'anywhere' }}>{error}</div>}
       {selectionError && <div role="alert" style={{ color: '#c02338', marginTop: 8 }}>{selectionError}</div>}

@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router'
 import {
-  Alert, Button, Descriptions, Message, Space, Spin, Table, Tag, Typography, Tooltip,
+  Alert, Button, Message, Space, Spin, Table, Tag, Typography, Tooltip,
 } from '@arco-design/web-react'
 import { IconArrowLeft, IconDownload, IconRefresh } from '@arco-design/web-react/icon'
 import { chatroomDetailRoute } from '../../data/chatroom/routes'
 import type { ColumnProps } from '@arco-design/web-react/es/Table'
 import { chatroomApiPost } from '../../data/chatroom/management'
 import { waitForBatchDownload } from '../../data/chatroom/downloadBatch'
+import './AiConversationBatch.css'
 
 const { Paragraph, Text } = Typography
 const TERMINAL = new Set(['completed', 'partial_failure', 'failed', 'timed_out', 'validation_failed'])
@@ -198,7 +199,7 @@ export default function AiConversationBatch() {
   </div>
 
   return (
-    <div className="chatroom-page" style={{ padding: 24, maxWidth: 1120, margin: '0 auto', textAlign: 'left' }}>
+    <div className="chatroom-page" style={{ padding: 24, width: '100%', minWidth: 0, boxSizing: 'border-box', maxWidth: 1120, margin: '0 auto', textAlign: 'left' }}>
       <Button icon={<IconArrowLeft />} href={`#${chatroomDetailRoute(batch.chatroom_id)}`} style={{ marginBottom: 16 }}>
         Back to chatroom
       </Button>
@@ -223,24 +224,26 @@ export default function AiConversationBatch() {
         </Space>
       </div>
 
-      <Descriptions
-        style={{ marginTop: 24 }}
-        column={{ xs: 1, sm: 2, md: 4 }}
-        data={[
+      <section className="batch-summary" aria-label="Batch summary">
+        <dl className="batch-metrics batch-metrics-progress">{[
           { label: 'Status', value: <Tag color={statusColor(batch.status)}>{batch.status.replace(/_/g, ' ')}</Tag> },
-          { label: 'Total', value: batch.batch_count },
+          { label: 'Conversations', value: batch.batch_count },
           { label: 'Completed', value: batch.completed_count },
-          { label: 'Failed', value: batch.failed_count + batch.timed_out_count },
           { label: 'Running', value: batch.running_count },
           { label: 'Queued', value: batch.queued_count },
-          { label: 'Started', value: new Date(batch.created_at).toLocaleString() },
-          { label: 'Deadline', value: new Date(batch.deadline_at).toLocaleString() },
+          { label: 'Failed / timed out', value: batch.failed_count + batch.timed_out_count },
+        ].map(item => <div key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl>
+        <dl className="batch-metrics batch-metrics-usage">{[
           { label: 'Input tokens', value: batch.usage?.input_tokens.toLocaleString() ?? 'Unavailable' },
           { label: 'Output tokens', value: batch.usage?.output_tokens.toLocaleString() ?? 'Unavailable' },
-          { label: 'Approx. cost (USD)', value: batch.usage ? `$${Number(batch.usage.estimated_cost_usd).toFixed(6)}` : 'Unavailable' },
           { label: 'Recorded inferences', value: batch.usage?.inference_count.toLocaleString() ?? 'Unavailable' },
-        ]}
-      />
+          { label: 'Approx. cost (USD)', value: batch.usage ? `$${Number(batch.usage.estimated_cost_usd).toFixed(6)}` : 'Unavailable' },
+        ].map(item => <div key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl>
+        <dl className="batch-metrics batch-metrics-dates">{[
+          { label: 'Started', value: new Date(batch.created_at).toLocaleString() },
+          { label: 'Deadline', value: new Date(batch.deadline_at).toLocaleString() },
+        ].map(item => <div key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl>
+      </section>
 
       <Text type="secondary">Recorded usage includes silent and discarded responses. Estimated provider cost, not the final bill; recently completed inferences may take time to appear.</Text>
 
@@ -251,9 +254,17 @@ export default function AiConversationBatch() {
         data={batch.conversations}
         pagination={false}
         scroll={{ x: 600 }}
-        rowClassName={(record) => record.conversation_id === selectedConversationId ? 'arco-table-tr-checked' : ''}
+        rowClassName={(record) => record.conversation_id === selectedConversationId ? 'batch-conversation-selected' : ''}
         onRow={(record) => ({
           style: { cursor: 'pointer' },
+          'aria-selected': record.conversation_id === selectedConversationId,
+          tabIndex: 0,
+          onKeyDown: (event: React.KeyboardEvent<HTMLTableRowElement>) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault()
+              setSelectedConversationId(record.conversation_id)
+            }
+          },
           onClick: () => setSelectedConversationId(record.conversation_id),
         })}
       />

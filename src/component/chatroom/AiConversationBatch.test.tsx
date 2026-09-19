@@ -37,6 +37,26 @@ beforeEach(() => {
   })) })
 })
 
+test('selected row follows the displayed history by click and keyboard', async () => {
+  ;(chatroomApiPost as jest.Mock).mockImplementation(async (path: string) => path.includes('History')
+    ? { events: [{ event_key: path, type: 'message', sender: 'AI', content: path, timestamp: 1 }], has_more: false }
+    : { ...batch, status: 'completed', reconciliation_pending: false, conversations: [
+      { conversation_id: 'first', batch_index: 0, status: 'completed' },
+      { conversation_id: 'second', batch_index: 1, status: 'completed' },
+    ] })
+  render(<AiConversationBatch />)
+  await screen.findByText('/api/getAiConversationHistory/first')
+  const rows = screen.getAllByRole('row').filter(row => row.hasAttribute('aria-selected'))
+  expect(rows[0]).toHaveClass('batch-conversation-selected')
+  fireEvent.click(rows[1])
+  await screen.findByText('/api/getAiConversationHistory/second')
+  expect(rows[1]).toHaveAttribute('aria-selected', 'true')
+  expect(rows[0]).not.toHaveClass('batch-conversation-selected')
+  fireEvent.keyDown(rows[0], { key: 'Enter' })
+  await screen.findByText('/api/getAiConversationHistory/first')
+  expect(rows[0]).toHaveAttribute('aria-selected', 'true')
+})
+
 test('keeps polling a terminal batch while conversation reconciliation is pending', async () => {
   jest.useFakeTimers()
   let repaired = false
