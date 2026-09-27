@@ -248,17 +248,16 @@ const MODEL_GROUPS: { label: string; options: ModelOption[] }[] = [
   ]},
   { label: 'Amazon Nova', options: [
     { label: 'Nova 2 Lite', value: 'global.amazon.nova-2-lite-v1:0', supportsPromptCaching: true },
-    { label: 'Nova Premier', value: 'us.amazon.nova-premier-v1:0', supportsPromptCaching: true },
     { label: 'Nova Pro', value: 'us.amazon.nova-pro-v1:0', supportsPromptCaching: true },
     { label: 'Nova Lite', value: 'us.amazon.nova-lite-v1:0', supportsPromptCaching: true },
     { label: 'Nova Micro', value: 'us.amazon.nova-micro-v1:0', supportsPromptCaching: true },
   ]},
   { label: 'Meta Llama', options: [
-    { label: 'Llama 4 Maverick 17B', value: 'us.meta.llama4-maverick-17b-instruct-v1:0' },
+    { label: 'Llama 4 Maverick 17B (unstable)', value: 'us.meta.llama4-maverick-17b-instruct-v1:0' },
     { label: 'Llama 4 Scout 17B', value: 'us.meta.llama4-scout-17b-instruct-v1:0' },
-    { label: 'Llama 3.3 70B', value: 'us.meta.llama3-3-70b-instruct-v1:0' },
-    { label: 'Llama 3.1 70B', value: 'us.meta.llama3-1-70b-instruct-v1:0' },
-    { label: 'Llama 3.1 8B', value: 'us.meta.llama3-1-8b-instruct-v1:0' },
+    { label: 'Llama 3.3 70B (unstable)', value: 'us.meta.llama3-3-70b-instruct-v1:0' },
+    { label: 'Llama 3.1 70B (unstable)', value: 'us.meta.llama3-1-70b-instruct-v1:0' },
+    { label: 'Llama 3.1 8B (unstable)', value: 'us.meta.llama3-1-8b-instruct-v1:0' },
   ]},
   { label: 'DeepSeek', options: [
     { label: 'DeepSeek V3.2', value: 'deepseek.v3.2' },
@@ -273,7 +272,7 @@ const MODEL_GROUPS: { label: string; options: ModelOption[] }[] = [
   { label: 'Google', options: [
     { label: 'Gemma 3 27B', value: 'google.gemma-3-27b-it' },
     { label: 'Gemma 3 12B', value: 'google.gemma-3-12b-it' },
-    { label: 'Gemma 3 4B', value: 'google.gemma-3-4b-it' },
+    { label: 'Gemma 3 4B (unstable)', value: 'google.gemma-3-4b-it' },
   ]},
   { label: 'Mistral', options: [
     { label: 'Mistral Large 3 675B', value: 'mistral.mistral-large-3-675b-instruct' },
@@ -902,7 +901,7 @@ avoid talking about politics; keep messages under 12 words.
               <FormItem
                 label="Max message length"
                 field="max_message_chars"
-                extra="Optional prompt guidance, not a hard limit. Leave blank to let the model or your prompt decide."
+                extra="Optional message-length guidance, up to 1,000 characters. Each AI response is capped at 2,048 output tokens, including tool-call formatting, even when this field is blank. Longer responses may be truncated."
                 rules={[{
                   type: 'number',
                   min: VALIDATION_LIMITS.maxMessageCharsMin,

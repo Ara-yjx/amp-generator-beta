@@ -107,6 +107,18 @@ describe('validateChatroomSetting', () => {
     expect(denormalizeForSave(setting).max_message_chars).toBeNull()
   })
 
+  it('allows up to 1000 characters without silently clamping older settings', () => {
+    const setting = defaultSettingForMode('ai_only')
+    for (const value of [1, 1000]) {
+      expect(validateChatroomSetting({ ...setting, max_message_chars: value }).errors.max_message_chars).toBeUndefined()
+    }
+    for (const value of [1001, 4000]) {
+      const existing = { ...setting, max_message_chars: value }
+      expect(validateChatroomSetting(existing).errors.max_message_chars).toBeDefined()
+      expect(denormalizeForSave(existing).max_message_chars).toBe(value)
+    }
+  })
+
   it.each(['max_message_chars', 'max_total_chars', 'max_turns'] as const)(
     'rejects invalid batch limit %s',
     (field) => {

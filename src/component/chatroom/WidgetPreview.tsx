@@ -44,6 +44,7 @@ export function buildPreviewHtml({
     chatroomId,
     ...(resumable ? { resumable: true } : {}),
     beta: true,
+    debug: true,
     apiBaseUrl,
   }
 
