@@ -13,6 +13,7 @@ describe('chatroom embed configuration', () => {
     expect(script).toContain(`apiBaseUrl: "${CHATROOM_RUNTIME_API_BASE}"`);
     expect(script).toContain('chatroomId: "scid_123"');
     expect(script).toContain('resumable: true');
+    expect(script).not.toContain('debug:');
   });
 
   it('only enables the widget participant-ID prompt for resumable rooms', () => {
@@ -31,5 +32,7 @@ describe('chatroom embed configuration', () => {
 
     expect(resumable).toContain('"resumable":true');
     expect(ordinary).not.toContain('"resumable":true');
+    expect(ordinary).toContain('"debug":true');
+    expect(resumable).toContain('"debug":true');
   });
 });

@@ -97,7 +97,7 @@ export const VALIDATION_LIMITS = {
   targetHumanCountMin: 1,
   aiOnlyCountMin: 2,
   maxMessageCharsMin: 1,
-  maxMessageCharsMax: 4000,
+  maxMessageCharsMax: 1000,
   maxTotalCharsMin: 1,
   maxTotalCharsMax: 500000,
   maxTurnsMin: 1,
