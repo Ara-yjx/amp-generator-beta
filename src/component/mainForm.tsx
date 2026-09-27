@@ -190,10 +190,11 @@ const MainFormContent: React.FC<{
                 <Tooltip content={<p>
                   When using qualtrics "Reference Survey" to include another survey into this survey, you need to distinguish the Embedded Data of two surveys so that they don't mix up.<br />
                   To do so, you can add different "Survey Identifier" for each survey. The Embedded Data will have Survey Identifier as suffix.<br />
-                  For example, if the Survey Identifier is set to "111", Embedded Data "stimuliItems" will become "stimuliItems:111" instead.<br />
+                  For example, if the Survey Identifier is set to "111", Embedded Data "stimuliItems" will become "__js_stimuliItems:111" instead.<br />
+                  Qualtrics requires the "__js_" prefix on every embedded data field used by the trial JavaScript.<br />
                   <Divider />
                   If you need to run additional trial after finishing the referenced survey,
-                  you need to manually add a Embedded Data block in Qualtrics Survey Flow that sets "sptSurveyIdentifier" to <i>the identifier of your main survey</i> before the trial block.
+                  you need to manually add a Embedded Data block in Qualtrics Survey Flow that sets "__js_sptSurveyIdentifier" to <i>the identifier of your main survey</i> before the trial block.
                 </p>
                 }>
                   <IconQuestionCircle />

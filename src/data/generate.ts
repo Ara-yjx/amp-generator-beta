@@ -11,6 +11,25 @@ interface EmbeddedDataTemplate {
   Type: string;
   Value?: string;
 }
+
+/**
+ * Qualtrics New Survey Taking Experience only lets question JavaScript
+ * read and write embedded data whose survey-flow name starts with this prefix.
+ * Calls use getJSEmbeddedData/setJSEmbeddedData with the name without the prefix.
+ * https://www.qualtrics.com/support/survey-platform/survey-module/survey-flow/standard-elements/embedded-data/
+ */
+const JS_EMBEDDED_DATA_PREFIX = '__js_';
+
+function prefixJsEmbeddedData(list: EmbeddedDataTemplate[]) {
+  for (const ed of list) {
+    if (!ed.Field.startsWith(JS_EMBEDDED_DATA_PREFIX)) {
+      ed.Field = JS_EMBEDDED_DATA_PREFIX + ed.Field;
+    }
+    if (typeof ed.Description === 'string' && !ed.Description.startsWith(JS_EMBEDDED_DATA_PREFIX)) {
+      ed.Description = JS_EMBEDDED_DATA_PREFIX + ed.Description;
+    }
+  }
+}
 export function hydrateQsf(params: AmpParams) {
   const template = cloneDeep(qsfTemplate);
 
@@ -90,6 +109,10 @@ export function hydrateQsf(params: AmpParams) {
 
   addOutputEdForMouseTracking(params, template);
   addSurveyIdentifier(params, template);
+  /* @ts-ignore */
+  prefixJsEmbeddedData(template.SurveyElements[1].Payload.Flow[0].EmbeddedData);
+  /* @ts-ignore */
+  prefixJsEmbeddedData(template.SurveyElements[1].Payload.Flow[1].EmbeddedData);
 
   // Render trial html
 
