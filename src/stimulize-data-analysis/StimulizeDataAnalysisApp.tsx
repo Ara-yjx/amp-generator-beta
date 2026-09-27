@@ -1,8 +1,8 @@
 import { Modal } from '@arco-design/web-react';
-import React, { useState, useRef, ChangeEvent } from 'react';
+import { useState, useRef, ChangeEvent } from 'react';
 import Papa from 'papaparse';
 import { saveAs } from 'file-saver';
-import { getMissingRequiredVars, REQUIRED_CSV_VARS } from './constants';
+import { canonicalCsvColumn, getMissingRequiredVars, REQUIRED_CSV_VARS } from './constants';
 import DataTab from './components/DataTab';
 import AnalysisTab from './components/AnalysisTab';
 import PlotTab from './components/PlotTab';
@@ -92,9 +92,21 @@ export function StimulizeDataAnalysisApp() {
 
           const ignoreVars = ['stimuliItems', 'timeline', 'primes'];
           const cleanedData = data.map((row) => {
-            const newRow = { ...row };
-            ignoreVars.forEach((varName) => {
-              delete newRow[varName];
+            const newRow: CsvRow = {};
+            // Unprefixed columns first, then js-prefixed ones, so either form is accepted
+            // and a prefixed empty cell does not wipe a value that already arrived without the prefix.
+            const entries = Object.entries(row).sort(([a], [b]) => {
+              const aPrefixed = a !== canonicalCsvColumn(a);
+              const bPrefixed = b !== canonicalCsvColumn(b);
+              return Number(aPrefixed) - Number(bPrefixed);
+            });
+            entries.forEach(([key, value]) => {
+              const column = canonicalCsvColumn(key);
+              if (ignoreVars.includes(column)) return;
+              const incomingEmpty = value === undefined || value === null || value === '';
+              const existing = newRow[column];
+              if (existing !== undefined && existing !== '' && incomingEmpty) return;
+              newRow[column] = value;
             });
             return newRow;
           });
