@@ -451,7 +451,7 @@ export default function ChatroomEditor() {
       max_turns: values.max_turns,
     })
     const result = validateChatroomSetting(settingToValidate)
-    if ((values.prompt_attachment_ids?.length || values.ai_personas.some(p => p.prompt_attachment_ids?.length)) && attachmentLibrary.visible) {
+    if (values.prompt_attachment_ids?.length || values.ai_personas.some(p => p.prompt_attachment_ids?.length)) {
       if (attachmentLibrary.error) throw new Error(attachmentLibrary.error)
       if (attachmentLibrary.loading || !attachmentLibrary.caps) throw new Error('Please wait for attachments to finish loading.')
       if (attachmentError) throw new Error(attachmentError)

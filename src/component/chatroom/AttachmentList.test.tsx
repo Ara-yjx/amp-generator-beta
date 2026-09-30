@@ -17,7 +17,7 @@ test('persona inheritance follows common changes without storing inherited IDs',
     { id: 'new', original_name: 'new.txt', byte_size: 4, format: 'txt', created_at: '2026-09-19' },
     { id: 'old', original_name: 'old.txt', byte_size: 4, format: 'txt', created_at: '2026-09-18' },
   ]
-  const library = { assets, caps, loading: false, error: '', roomId: 'room', visible: true, refresh: jest.fn() }
+  const library = { assets, caps, loading: false, error: '', roomId: 'room', refresh: jest.fn() }
   const onChange = jest.fn()
   const { rerender } = render(<AttachmentList inheritedIds={['old']} library={library} onChange={onChange} modelError="" />)
   expect(screen.getByRole('button', { name: 'Manage attachments' })).toHaveTextContent('Upload attachments')
@@ -72,7 +72,7 @@ test('attachment model badges describe enabled backend capabilities only', () =>
 
 test('modal prevents combined overflow while still allowing deselection', async () => {
   const assets = Array.from({ length: 6 }, (_, i) => ({ id: String(i), original_name: `${i}.txt`, byte_size: 1000, format: 'txt' }))
-  const library = { assets, caps, loading: false, error: '', roomId: 'room', visible: true, refresh: jest.fn() }
+  const library = { assets, caps, loading: false, error: '', roomId: 'room', refresh: jest.fn() }
   render(<ControlledAttachments value={['3', '4']} otherScopes={[[ '0', '1', '2' ]]}
     library={library} modelError="" />)
   fireEvent.click(screen.getByRole('button', { name: 'Manage attachments' }))
@@ -87,7 +87,7 @@ test('upload immediately selects the new asset and preserves selection without c
   const assets = [{ id: 'existing', original_name: 'existing.txt', byte_size: 4, format: 'txt' }]
   const uploaded = { id: 'new', original_name: 'new.txt', byte_size: 4, format: 'txt' }
   const onChange = jest.fn()
-  const library = { assets, caps, error: '', loading: false, roomId: 'room', visible: true, refresh: jest.fn() }
+  const library = { assets, caps, error: '', loading: false, roomId: 'room', refresh: jest.fn() }
   render(<ControlledAttachments value={['existing']} onChange={onChange} library={library} modelError="" />)
   ;(apiUploadAt as jest.Mock).mockResolvedValue({ data: { asset: uploaded } })
   fireEvent.click(screen.getByRole('button', { name: 'Manage attachments' }))
@@ -108,7 +108,7 @@ test('all persona effective models must support files, even unselected ones', ()
 
 test('multi-upload preserves selections, skips invalid files and continues after a failed request', async () => {
   const error = jest.spyOn(Message, 'error').mockImplementation(() => () => {})
-  const library = { assets: [], caps, error: '', loading: false, roomId: 'room', visible: true, refresh: jest.fn() }
+  const library = { assets: [], caps, error: '', loading: false, roomId: 'room', refresh: jest.fn() }
   const onChange = jest.fn()
   ;(apiUploadAt as jest.Mock).mockReset().mockImplementation(async (_base, _path, body: FormData) => {
     const file = body.get('file') as File
@@ -132,7 +132,7 @@ test('multi-upload preserves selections, skips invalid files and continues after
 test('switching rooms stops queued uploads and ignores the old response', async () => {
   let resolve!: (value: unknown) => void
   ;(apiUploadAt as jest.Mock).mockReset().mockReturnValue(new Promise(r => { resolve = r }))
-  const library = { assets: [], caps, error: '', loading: false, roomId: 'old', visible: true, refresh: jest.fn() }
+  const library = { assets: [], caps, error: '', loading: false, roomId: 'old', refresh: jest.fn() }
   const onChange = jest.fn()
   const { rerender } = render(<AttachmentList library={library} onChange={onChange} modelError="" />)
   fireEvent.click(screen.getByRole('button', { name: 'Manage attachments' }))
@@ -144,7 +144,7 @@ test('switching rooms stops queued uploads and ignores the old response', async 
 })
 
 test('pending capabilities do not show an error or enable upload/confirmation', () => {
-  const library = { assets: [], caps: undefined, loading: true, error: '', roomId: 'room', visible: true, refresh: jest.fn() }
+  const library = { assets: [], caps: undefined, loading: true, error: '', roomId: 'room', refresh: jest.fn() }
   render(<AttachmentList value={['pending']} library={library} modelError="" />)
   expect(screen.getByText('Loading attachment...')).toBeInTheDocument()
   expect(screen.queryByRole('alert')).not.toBeInTheDocument()
@@ -156,7 +156,7 @@ test('pending capabilities do not show an error or enable upload/confirmation', 
 
 test('request failure is distinct from disabled capabilities and offers retry', () => {
   const refresh = jest.fn()
-  const library = { assets: [], caps, loading: false, error: 'Network unavailable', roomId: 'room', visible: true, refresh }
+  const library = { assets: [], caps, loading: false, error: 'Network unavailable', roomId: 'room', refresh }
   render(<AttachmentList library={library} modelError="" />)
   expect(screen.getByRole('alert')).toHaveTextContent('Network unavailable')
   fireEvent.click(screen.getByRole('button', { name: 'Retry loading attachments' }))
@@ -168,14 +168,8 @@ test('request failure is distinct from disabled capabilities and offers retry', 
 })
 
 describe('attachment library loading lifecycle', () => {
-  const previousFlag = process.env.REACT_APP_CHATROOM_ATTACHMENTS_ENABLED
   beforeEach(() => {
-    process.env.REACT_APP_CHATROOM_ATTACHMENTS_ENABLED = 'true'
     ;(chatroomApiPost as jest.Mock).mockReset()
-  })
-  afterEach(() => {
-    if (previousFlag === undefined) delete process.env.REACT_APP_CHATROOM_ATTACHMENTS_ENABLED
-    else process.env.REACT_APP_CHATROOM_ATTACHMENTS_ENABLED = previousFlag
   })
 
   test('keeps known capabilities on list failure and recovers on retry', async () => {

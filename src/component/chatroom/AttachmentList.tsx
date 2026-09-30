@@ -54,13 +54,12 @@ export function attachmentModelError(model: string, personas: AiPersonaSetting[]
 }
 
 export function useAttachmentLibrary(roomId?: string) {
-  const visible = process.env.REACT_APP_CHATROOM_ATTACHMENTS_ENABLED === 'true'
   const [state, setState] = useState<{
     roomId?: string; assets: Asset[]; caps?: Capabilities; error: string; loading: boolean
   }>({ assets: [], error: '', loading: true })
   const generation = useRef(0)
   const refresh = useCallback(async () => {
-    if (!visible || !roomId) return
+    if (!roomId) return
     const current = ++generation.current
     setState(previous => ({ roomId, assets: previous.roomId === roomId ? previous.assets : [],
       caps: previous.roomId === roomId ? previous.caps : undefined, error: '', loading: true }))
@@ -77,14 +76,14 @@ export function useAttachmentLibrary(roomId?: string) {
     } catch (e) {
       if (generation.current === current) setState(previous => ({ ...previous, error: (e as Error).message, loading: false }))
     }
-  }, [roomId, visible])
+  }, [roomId])
   useEffect(() => {
     void refresh()
     return () => { generation.current++ }
   }, [refresh])
   // Never render another room's cached capabilities or assets, even before effects run.
-  const current = state.roomId === roomId && visible ? state : { assets: [], caps: undefined, error: '', loading: true }
-  return { ...current, loading: !!roomId && visible && current.loading, refresh, roomId, visible }
+  const current = state.roomId === roomId ? state : { assets: [], caps: undefined, error: '', loading: true }
+  return { ...current, loading: !!roomId && current.loading, refresh, roomId }
 }
 
 export type AttachmentLibrary = ReturnType<typeof useAttachmentLibrary>
@@ -100,7 +99,6 @@ export default function AttachmentList({ value = [], onChange, library, modelErr
   const latest = useRef({ value, onChange, inheritedIds, roomId: library.roomId })
   latest.current = { value, onChange, inheritedIds, roomId: library.roomId }
   useEffect(() => { setUploadedAssets([]); setOpen(false) }, [library.roomId])
-  if (!library.visible) return null
   const busy = library.loading || uploading
   const blocked = busy || !library.caps?.enabled || !!library.error || !!modelError
   const error = library.error || (!library.loading ? modelError : '')
