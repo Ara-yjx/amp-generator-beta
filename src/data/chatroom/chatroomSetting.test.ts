@@ -259,6 +259,15 @@ describe('validateChatroomSetting', () => {
   })
 })
 
+test('early completion defaults on and survives explicit disabling without boolean coercion', () => {
+  const setting = defaultSettingForMode('ai_only')
+  expect(setting.allow_early_completion).toBe(true)
+  expect(denormalizeForSave({ ...setting, allow_early_completion: false }).allow_early_completion).toBe(false)
+  for (const invalid of [null, 'false', 0, 1]) {
+    expect(validateChatroomSetting({ ...setting, allow_early_completion: invalid as unknown as boolean }).errors.allow_early_completion).toBeDefined()
+  }
+})
+
 describe('denormalizeForSave', () => {
   it('derives fixed runtime values for one-human one-ai and preserves max_duration_seconds', () => {
     const input: ChatroomSetting = {

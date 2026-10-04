@@ -17,6 +17,7 @@ interface ConversationSummary {
   conversation_id: string
   batch_index: number
   status: string
+  completion_reason?: string | null
   message_count?: number
   total_chars?: number
   last_error?: string
@@ -189,6 +190,20 @@ export default function AiConversationBatch() {
     },
     { title: 'Messages', dataIndex: 'message_count', width: 100 },
     { title: 'Characters', dataIndex: 'total_chars', width: 110 },
+    {
+      title: 'Completion', dataIndex: 'completion_reason', width: 200,
+      render: (value, row) => {
+        // Older completed batches have no reason; do not infer a limit or consent.
+        const labels: Record<string, string> = {
+          all_ai_agreed_to_end: 'All AI participants agreed to end',
+          max_messages: 'Maximum messages reached',
+          max_characters: 'Maximum characters reached',
+        }
+        return <span style={{ wordBreak: 'normal' }}>
+          {row.status === 'completed' ? labels[String(value)] || 'Completed' : '-'}
+        </span>
+      },
+    },
     { title: 'Error', dataIndex: 'last_error', ellipsis: true },
   ], [])
 

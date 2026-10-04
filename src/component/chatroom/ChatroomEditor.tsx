@@ -320,6 +320,8 @@ function normalizeLoadedSetting(setting: Partial<ChatroomSetting> | undefined): 
   return {
     ...defaults,
     ...setting,
+    // New-room defaults must not opt existing rooms into early completion on save.
+    allow_early_completion: setting?.allow_early_completion === undefined ? false : setting.allow_early_completion,
     ai_personas: normalizeAiPersonas(setting?.ai_personas),
     mimic_human: typeof setting?.mimic_human === 'boolean' ? setting.mimic_human : defaults.mimic_human,
     resumable: typeof setting?.resumable === 'boolean' ? setting.resumable : defaults.resumable,
@@ -449,6 +451,7 @@ export default function ChatroomEditor() {
       max_message_chars: values.max_message_chars ?? null,
       max_total_chars: values.max_total_chars,
       max_turns: values.max_turns,
+      allow_early_completion: values.allow_early_completion,
     })
     const result = validateChatroomSetting(settingToValidate)
     if (values.prompt_attachment_ids?.length || values.ai_personas.some(p => p.prompt_attachment_ids?.length)) {
@@ -901,7 +904,7 @@ avoid talking about politics; keep messages under 12 words.
               <FormItem
                 label="Max message length"
                 field="max_message_chars"
-                extra="Optional message-length guidance, up to 1,000 characters. Each AI response is capped at 2,048 output tokens, including tool-call formatting, even when this field is blank. Longer responses may be truncated."
+                extra="Optional message-length guidance, up to 1,000 characters. If left blank, the AI decides how long each message should be. Each AI response is capped at 2,048 output tokens, including tool-call formatting, even when this field is blank. Longer responses may be truncated."
                 rules={[{
                   type: 'number',
                   min: VALIDATION_LIMITS.maxMessageCharsMin,
@@ -937,6 +940,17 @@ avoid talking about politics; keep messages under 12 words.
             extra="Server-managed lobby duration before a one-human mimic-human chat starts."
           >
             <InputNumber min={0} precision={0} style={{ width: '100%' }} />
+          </FormItem>}
+
+          {isAiOnly && <FormItem
+            extra="The conversation can end early when all AI participants agree they are ready to conclude."
+          >
+            <Space align="center">
+              <FormItem field="allow_early_completion" triggerPropName="checked" noStyle>
+                <Switch id="allow-early-completion" aria-labelledby="early-completion-label" />
+              </FormItem>
+              <label id="early-completion-label" htmlFor="allow-early-completion" style={{ color: '#4e5969' }}>Allow early completion</label>
+            </Space>
           </FormItem>}
         </Form>
 

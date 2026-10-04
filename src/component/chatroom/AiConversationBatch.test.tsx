@@ -30,6 +30,20 @@ test('shows recorded usage and estimated cost', async () => {
   expect(screen.getByText('$0.001234')).toBeInTheDocument()
 })
 
+test('shows completion reasons without guessing a reason for older conversations', async () => {
+  ;(chatroomApiPost as jest.Mock).mockImplementation(async (path: string) => path.includes('History')
+    ? { events: [], has_more: false } : { ...batch, status: 'completed', reconciliation_pending: false,
+      conversations: ['all_ai_agreed_to_end', 'max_messages', 'max_characters', null].map((reason, index) => ({
+        conversation_id: `c-${index}`, batch_index: index, status: 'completed', completion_reason: reason,
+      })),
+    })
+  render(<AiConversationBatch />)
+  await screen.findByText('All AI participants agreed to end')
+  expect(screen.getByText('Maximum messages reached')).toBeInTheDocument()
+  expect(screen.getByText('Maximum characters reached')).toBeInTheDocument()
+  expect(screen.getByRole('cell', { name: 'Completed' })).toBeInTheDocument()
+})
+
 beforeEach(() => {
   Object.defineProperty(window, 'matchMedia', { configurable: true, value: jest.fn().mockImplementation((query) => ({
     matches: false, media: query, addListener: jest.fn(), removeListener: jest.fn(),
