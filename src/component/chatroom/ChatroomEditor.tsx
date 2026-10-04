@@ -449,6 +449,7 @@ export default function ChatroomEditor() {
       max_message_chars: values.max_message_chars ?? null,
       max_total_chars: values.max_total_chars,
       max_turns: values.max_turns,
+      allow_early_completion: values.allow_early_completion,
     })
     const result = validateChatroomSetting(settingToValidate)
     if (values.prompt_attachment_ids?.length || values.ai_personas.some(p => p.prompt_attachment_ids?.length)) {
@@ -868,6 +869,9 @@ avoid talking about politics; keep messages under 12 words.
 
           {isAiOnly ? (
             <>
+              <FormItem label="Allow early completion" field="allow_early_completion" triggerPropName="checked">
+                <Switch />
+              </FormItem>
               <Row>
                 <FormItem
                   label="Max messages"

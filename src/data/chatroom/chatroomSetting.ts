@@ -78,6 +78,8 @@ export interface ChatroomSetting {
   max_message_chars: number | null
   max_total_chars: number
   max_turns: number
+  /** AI-only: all participants must explicitly agree against the latest history. */
+  allow_early_completion: boolean
 }
 
 /** One-on-one denormalized fixed values per low-level design. */
@@ -189,6 +191,10 @@ export function deriveMaxDurationSeconds(timerMaxMinutes: number | null): number
  */
 export function validateChatroomSetting(setting: ChatroomSetting): ValidationResult {
   const errors: Record<string, string> = {}
+
+  if (typeof setting.allow_early_completion !== 'boolean') {
+    errors.allow_early_completion = 'Allow early completion must be a boolean'
+  }
 
   if (isReservedParticipantNickname(setting.ai_nickname)) {
     errors.ai_nickname = 'AI nickname cannot be You or Participant'
@@ -378,6 +384,7 @@ export function defaultChatroomSetting(): ChatroomSetting {
     max_message_chars: null,
     max_total_chars: 20000,
     max_turns: 100,
+    allow_early_completion: true,
   }
 
   return {
