@@ -869,9 +869,6 @@ avoid talking about politics; keep messages under 12 words.
 
           {isAiOnly ? (
             <>
-              <FormItem label="Allow early completion" field="allow_early_completion" triggerPropName="checked">
-                <Switch />
-              </FormItem>
               <Row>
                 <FormItem
                   label="Max messages"
@@ -905,7 +902,7 @@ avoid talking about politics; keep messages under 12 words.
               <FormItem
                 label="Max message length"
                 field="max_message_chars"
-                extra="Optional message-length guidance, up to 1,000 characters. Each AI response is capped at 2,048 output tokens, including tool-call formatting, even when this field is blank. Longer responses may be truncated."
+                extra="Optional message-length guidance, up to 1,000 characters. If left blank, the AI decides how long each message should be. Each AI response is capped at 2,048 output tokens, including tool-call formatting, even when this field is blank. Longer responses may be truncated."
                 rules={[{
                   type: 'number',
                   min: VALIDATION_LIMITS.maxMessageCharsMin,
@@ -941,6 +938,17 @@ avoid talking about politics; keep messages under 12 words.
             extra="Server-managed lobby duration before a one-human mimic-human chat starts."
           >
             <InputNumber min={0} precision={0} style={{ width: '100%' }} />
+          </FormItem>}
+
+          {isAiOnly && <FormItem
+            extra="The conversation can end early when all AI participants agree they are ready to conclude."
+          >
+            <Space align="center">
+              <FormItem field="allow_early_completion" triggerPropName="checked" noStyle>
+                <Switch id="allow-early-completion" aria-labelledby="early-completion-label" />
+              </FormItem>
+              <label id="early-completion-label" htmlFor="allow-early-completion">Allow early completion</label>
+            </Space>
           </FormItem>}
         </Form>
 

@@ -199,7 +199,9 @@ export default function AiConversationBatch() {
           max_messages: 'Maximum messages reached',
           max_characters: 'Maximum characters reached',
         }
-        return row.status === 'completed' ? labels[String(value)] || 'Completed' : '-'
+        return <span style={{ wordBreak: 'normal' }}>
+          {row.status === 'completed' ? labels[String(value)] || 'Completed' : '-'}
+        </span>
       },
     },
     { title: 'Error', dataIndex: 'last_error', ellipsis: true },
