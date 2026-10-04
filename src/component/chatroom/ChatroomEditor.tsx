@@ -320,6 +320,8 @@ function normalizeLoadedSetting(setting: Partial<ChatroomSetting> | undefined): 
   return {
     ...defaults,
     ...setting,
+    // New-room defaults must not opt existing rooms into early completion on save.
+    allow_early_completion: setting?.allow_early_completion === undefined ? false : setting.allow_early_completion,
     ai_personas: normalizeAiPersonas(setting?.ai_personas),
     mimic_human: typeof setting?.mimic_human === 'boolean' ? setting.mimic_human : defaults.mimic_human,
     resumable: typeof setting?.resumable === 'boolean' ? setting.resumable : defaults.resumable,
@@ -947,7 +949,7 @@ avoid talking about politics; keep messages under 12 words.
               <FormItem field="allow_early_completion" triggerPropName="checked" noStyle>
                 <Switch id="allow-early-completion" aria-labelledby="early-completion-label" />
               </FormItem>
-              <label id="early-completion-label" htmlFor="allow-early-completion">Allow early completion</label>
+              <label id="early-completion-label" htmlFor="allow-early-completion" style={{ color: '#4e5969' }}>Allow early completion</label>
             </Space>
           </FormItem>}
         </Form>
