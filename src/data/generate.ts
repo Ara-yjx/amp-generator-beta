@@ -17,7 +17,8 @@ export function hydrateQsf(params: AmpParams) {
   /* @ts-ignore */
   const embeddedData = template.SurveyElements[1].Payload.Flow[0].EmbeddedData as EmbeddedDataTemplate[];
   function setEd(name: string, value: any) {
-    const ed = embeddedData.find(ed => ed.Field === name);
+    // Qualtrics New Survey Taking Experience: JS-accessible fields are named __js_<name>.
+    const ed = embeddedData.find(ed => ed.Field === `__js_${name}` || ed.Field === name);
     if (ed) {
       if (value === null) {
         ed.Type = 'Recipient';
