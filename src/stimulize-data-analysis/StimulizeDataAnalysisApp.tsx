@@ -1,4 +1,4 @@
-import { Modal } from '@arco-design/web-react';
+import { Alert, Modal } from '@arco-design/web-react';
 import { useState, useRef, ChangeEvent } from 'react';
 import Papa from 'papaparse';
 import { saveAs } from 'file-saver';
@@ -245,6 +245,11 @@ export function StimulizeDataAnalysisApp() {
         <p style={{ whiteSpace: 'pre-line', margin: 0, textAlign: 'left' }}>{validationError}</p>
       </Modal>
       <div className="app">
+        <Alert
+          type="warning"
+          className="beta-disclaimer"
+          content="Beta feature: data analysis has not been fully verified. Please review the results before relying on them."
+        />
         <div className="tab-container">
           <div className="tabs">
             <button
