@@ -7,6 +7,7 @@ import {
 } from '@arco-design/web-react';
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { useState } from 'react';
+import { usdToCredits } from '../../data/payment/creditDisplay';
 import { paymentApi } from '../../data/payment/paymentApi';
 
 const { Paragraph, Text } = Typography;
@@ -26,6 +27,32 @@ const createRequestId = () => {
 
 const delay = (milliseconds: number) =>
   new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+
+type StripePaymentIntentLike = {
+  status?: string;
+  last_payment_error?: { message?: string } | null;
+};
+
+const confirmationErrorMessage = (
+  error?: { message?: string; payment_intent?: StripePaymentIntentLike } | null,
+  paymentIntent?: StripePaymentIntentLike | null,
+) => {
+  const intent = paymentIntent || error?.payment_intent;
+  const lastError = intent?.last_payment_error?.message;
+  if (error?.message) {
+    return error.message;
+  }
+  if (lastError) {
+    return lastError;
+  }
+  if (intent?.status === 'requires_payment_method') {
+    return 'Card confirmation did not complete, so prepaid credits were not added. Check the card details and try again.';
+  }
+  if (intent?.status) {
+    return `Payment is ${intent.status}.`;
+  }
+  return 'Stripe could not confirm payment.';
+};
 
 const TopUpForm: React.FC<TopUpFormProps> = ({ onSuccess, onCancel }) => {
   const stripe = useStripe();
@@ -55,27 +82,43 @@ const TopUpForm: React.FC<TopUpFormProps> = ({ onSuccess, onCancel }) => {
 
     const amountCents = Math.round(amount * 100);
     if (!Number.isFinite(amount) || amountCents < 500 || amountCents > 50_000) {
-      Message.warning('Choose an amount between $5.00 and $500.00.');
+      Message.warning(
+        'Choose between 500 and 50,000 credits ($5.00–$500.00).',
+      );
       return;
     }
 
     setSubmitting(true);
     try {
+      const { error: paymentMethodError, paymentMethod } =
+        await stripe.createPaymentMethod({
+          type: 'card',
+          card,
+        });
+      if (paymentMethodError || !paymentMethod) {
+        throw new Error(
+          paymentMethodError?.message || 'Unable to create payment method.',
+        );
+      }
+
       const intent = await paymentApi.createTopUpIntent(
         amountCents,
         createRequestId(),
       );
       const result = await stripe.confirmCardPayment(intent.client_secret, {
-        payment_method: { card },
+        payment_method: paymentMethod.id,
+        return_url: window.location.href,
       });
 
       if (result.error) {
-        throw new Error(result.error.message || 'Stripe could not confirm payment.');
-      }
-      if (result.paymentIntent?.status !== 'succeeded') {
         throw new Error(
-          `Payment is ${result.paymentIntent?.status || 'not complete'}.`,
+          confirmationErrorMessage(result.error, result.paymentIntent),
         );
+      }
+
+      const status = result.paymentIntent?.status;
+      if (status !== 'succeeded' && status !== 'processing') {
+        throw new Error(confirmationErrorMessage(null, result.paymentIntent));
       }
 
       const settled = await waitForWebhookSettlement(intent.payment_intent_id);
@@ -97,10 +140,10 @@ const TopUpForm: React.FC<TopUpFormProps> = ({ onSuccess, onCancel }) => {
   return (
     <div className="payment-checkout">
       <Paragraph>
-        Add prepaid funds for future AI chatbot usage.
+        Add prepaid AI credits. 100 credits = $1.00, charged in US dollars.
       </Paragraph>
 
-      <Text bold>Top-up amount</Text>
+      <Text bold>Credits to add</Text>
       <Space wrap className="topup-presets">
         {PRESET_AMOUNTS.map((preset) => (
           <Button
@@ -108,7 +151,7 @@ const TopUpForm: React.FC<TopUpFormProps> = ({ onSuccess, onCancel }) => {
             type={amount === preset ? 'primary' : 'secondary'}
             onClick={() => setAmount(preset)}
           >
-            ${preset}
+            {usdToCredits(preset).toLocaleString()} credits
           </Button>
         ))}
         <InputNumber
@@ -118,9 +161,13 @@ const TopUpForm: React.FC<TopUpFormProps> = ({ onSuccess, onCancel }) => {
           prefix="$"
           value={amount}
           onChange={(value) => setAmount(Number(value || 0))}
-          aria-label="Custom top-up amount"
+          aria-label="Custom top-up amount in dollars"
         />
       </Space>
+      <Paragraph type="secondary">
+        {usdToCredits(amount).toLocaleString()} credits, charged as $
+        {amount.toFixed(2)}.
+      </Paragraph>
 
       <div className="payment-card-element">
         <CardElement
@@ -150,7 +197,8 @@ const TopUpForm: React.FC<TopUpFormProps> = ({ onSuccess, onCancel }) => {
           disabled={!stripe}
           onClick={submit}
         >
-          Add ${amount.toFixed(2)}
+          Pay ${amount.toFixed(2)} for {usdToCredits(amount).toLocaleString()}{' '}
+          credits
         </Button>
       </Space>
     </div>

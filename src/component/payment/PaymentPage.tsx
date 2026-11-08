@@ -20,6 +20,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import CheckoutForm from './CheckoutForm';
 import TopUpForm from './TopUpForm';
+import { formatCredits } from '../../data/payment/creditDisplay';
 import {
   BillingCycle,
   BillingHistory,
@@ -52,13 +53,6 @@ const formatMoney = (amount: number, currency: string) =>
     currency: currency.toUpperCase(),
   }).format(amount / 100);
 
-const formatCreditAmount = (amount: number, currency: string) =>
-  new Intl.NumberFormat(undefined, {
-    style: 'currency',
-    currency: currency.toUpperCase(),
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 6,
-  }).format(amount);
 
 const PaymentPage: React.FC = () => {
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -244,14 +238,14 @@ const PaymentPage: React.FC = () => {
             }}
           >
             {record.amount_micros >= 0 ? '+' : ''}
-            {formatCreditAmount(record.amount, record.currency)}
+            {formatCredits(record.amount)}
           </Text>
         ),
       },
       {
         title: 'Balance after',
         render: (_: unknown, record: CreditHistory['transactions'][number]) =>
-          formatCreditAmount(record.balance_after, record.currency),
+          formatCredits(record.balance_after),
       },
       {
         title: 'Status',
@@ -290,13 +284,10 @@ const PaymentPage: React.FC = () => {
           <Col xs={24} md={16}>
             <Text type="secondary">Prepaid AI credit balance</Text>
             <div className="credit-balance-value">
-              {formatCreditAmount(
-                wallet?.balance || 0,
-                wallet?.currency || 'usd',
-              )}
+              {formatCredits(wallet?.balance || 0)}
             </div>
             <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-              Add funds now for future token-based chatbot usage.
+              100 credits = $1.00. Add funds for AI chatbot usage.
             </Paragraph>
           </Col>
           <Col xs={24} md={8} className="payment-current-actions">
