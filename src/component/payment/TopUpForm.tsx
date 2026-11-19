@@ -7,13 +7,14 @@ import {
 } from '@arco-design/web-react';
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { useState } from 'react';
+import { usdToCredits } from '../../data/payment/creditDisplay';
 import { paymentApi } from '../../data/payment/paymentApi';
 
-const { Paragraph, Text } = Typography;
+const { Text } = Typography;
 const PRESET_AMOUNTS = [10, 25, 50];
 
 type TopUpFormProps = {
-  onSuccess: () => void | Promise<void>;
+  onSubmitted: () => void | Promise<void>;
   onCancel: () => void;
 };
 
@@ -27,11 +28,39 @@ const createRequestId = () => {
 const delay = (milliseconds: number) =>
   new Promise((resolve) => window.setTimeout(resolve, milliseconds));
 
-const TopUpForm: React.FC<TopUpFormProps> = ({ onSuccess, onCancel }) => {
+type StripePaymentIntentLike = {
+  status?: string;
+  last_payment_error?: { message?: string } | null;
+};
+
+const confirmationErrorMessage = (
+  error?: { message?: string; payment_intent?: StripePaymentIntentLike } | null,
+  paymentIntent?: StripePaymentIntentLike | null,
+) => {
+  const intent = paymentIntent || error?.payment_intent;
+  const lastError = intent?.last_payment_error?.message;
+  if (error?.message) {
+    return error.message;
+  }
+  if (lastError) {
+    return lastError;
+  }
+  if (intent?.status === 'requires_payment_method') {
+    return 'Card confirmation did not complete, so prepaid credits were not added. Check the card details and try again.';
+  }
+  if (intent?.status) {
+    return `Payment is ${intent.status}.`;
+  }
+  return 'Stripe could not confirm payment.';
+};
+
+const TopUpForm: React.FC<TopUpFormProps> = ({ onSubmitted, onCancel }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [amount, setAmount] = useState<number>(25);
   const [submitting, setSubmitting] = useState(false);
+  const amountCents = Math.round(amount * 100);
+  const credits = usdToCredits(amountCents / 100).toLocaleString();
 
   const waitForWebhookSettlement = async (paymentIntentId: string) => {
     for (let attempt = 0; attempt < 8; attempt += 1) {
@@ -53,32 +82,52 @@ const TopUpForm: React.FC<TopUpFormProps> = ({ onSuccess, onCancel }) => {
     const card = elements?.getElement(CardElement);
     if (!stripe || !card) return;
 
-    const amountCents = Math.round(amount * 100);
     if (!Number.isFinite(amount) || amountCents < 500 || amountCents > 50_000) {
-      Message.warning('Choose an amount between $5.00 and $500.00.');
+      Message.warning(
+        'Choose a top-up amount between $5.00 and $500.00.',
+      );
       return;
     }
 
     setSubmitting(true);
     try {
+      const { error: paymentMethodError, paymentMethod } =
+        await stripe.createPaymentMethod({
+          type: 'card',
+          card,
+        });
+      if (paymentMethodError || !paymentMethod) {
+        throw new Error(
+          paymentMethodError?.message || 'Unable to create payment method.',
+        );
+      }
+
       const intent = await paymentApi.createTopUpIntent(
         amountCents,
         createRequestId(),
       );
       const result = await stripe.confirmCardPayment(intent.client_secret, {
-        payment_method: { card },
+        payment_method: paymentMethod.id,
+        return_url: window.location.href,
       });
 
       if (result.error) {
-        throw new Error(result.error.message || 'Stripe could not confirm payment.');
-      }
-      if (result.paymentIntent?.status !== 'succeeded') {
         throw new Error(
-          `Payment is ${result.paymentIntent?.status || 'not complete'}.`,
+          confirmationErrorMessage(result.error, result.paymentIntent),
         );
       }
 
-      const settled = await waitForWebhookSettlement(intent.payment_intent_id);
+      const status = result.paymentIntent?.status;
+      if (status === 'processing') {
+        Message.info('Payment is processing. Check your credit history later.');
+        await onSubmitted();
+        return;
+      }
+      if (status !== 'succeeded') {
+        throw new Error(confirmationErrorMessage(null, result.paymentIntent));
+      }
+
+      const settled = await waitForWebhookSettlement(intent.payment_intent_id).catch(() => false);
       if (settled) {
         Message.success('AI credits added successfully.');
       } else {
@@ -86,7 +135,7 @@ const TopUpForm: React.FC<TopUpFormProps> = ({ onSuccess, onCancel }) => {
           'Payment succeeded. Stripe is still updating your credit balance.',
         );
       }
-      await onSuccess();
+      await onSubmitted();
     } catch (error) {
       Message.error(error instanceof Error ? error.message : 'Top-up failed.');
     } finally {
@@ -96,11 +145,12 @@ const TopUpForm: React.FC<TopUpFormProps> = ({ onSuccess, onCancel }) => {
 
   return (
     <div className="payment-checkout">
-      <Paragraph>
-        Add prepaid funds for future AI chatbot usage.
-      </Paragraph>
+      <ul>
+        <li>100 credits = $1.00, charged in US dollars.</li>
+        <li>Minimum $5.00, maximum $500.00 per top-up.</li>
+      </ul>
 
-      <Text bold>Top-up amount</Text>
+      <Text bold>Top-up amount (USD)</Text>
       <Space wrap className="topup-presets">
         {PRESET_AMOUNTS.map((preset) => (
           <Button
@@ -115,11 +165,13 @@ const TopUpForm: React.FC<TopUpFormProps> = ({ onSuccess, onCancel }) => {
           min={5}
           max={500}
           precision={2}
+          step={0.01}
           prefix="$"
           value={amount}
           onChange={(value) => setAmount(Number(value || 0))}
-          aria-label="Custom top-up amount"
+          aria-label="Custom top-up amount in dollars"
         />
+        <Text type="secondary">{credits} credits</Text>
       </Space>
 
       <div className="payment-card-element">
@@ -150,7 +202,7 @@ const TopUpForm: React.FC<TopUpFormProps> = ({ onSuccess, onCancel }) => {
           disabled={!stripe}
           onClick={submit}
         >
-          Add ${amount.toFixed(2)}
+          Pay ${(amountCents / 100).toFixed(2)} for {credits} credits
         </Button>
       </Space>
     </div>
