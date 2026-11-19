@@ -509,7 +509,7 @@ const PaymentPage: React.FC = () => {
           <Elements stripe={stripePromise}>
             <TopUpForm
               onCancel={() => setTopUpVisible(false)}
-              onSuccess={async () => {
+              onSubmitted={async () => {
                 setTopUpVisible(false);
                 await loadBilling();
               }}

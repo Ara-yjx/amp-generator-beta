@@ -14,7 +14,7 @@ const { Paragraph, Text } = Typography;
 const PRESET_AMOUNTS = [10, 25, 50];
 
 type TopUpFormProps = {
-  onSuccess: () => void | Promise<void>;
+  onSubmitted: () => void | Promise<void>;
   onCancel: () => void;
 };
 
@@ -54,11 +54,13 @@ const confirmationErrorMessage = (
   return 'Stripe could not confirm payment.';
 };
 
-const TopUpForm: React.FC<TopUpFormProps> = ({ onSuccess, onCancel }) => {
+const TopUpForm: React.FC<TopUpFormProps> = ({ onSubmitted, onCancel }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [amount, setAmount] = useState<number>(25);
   const [submitting, setSubmitting] = useState(false);
+  const amountCents = Math.round(amount * 100);
+  const credits = usdToCredits(amountCents / 100).toLocaleString();
 
   const waitForWebhookSettlement = async (paymentIntentId: string) => {
     for (let attempt = 0; attempt < 8; attempt += 1) {
@@ -80,10 +82,9 @@ const TopUpForm: React.FC<TopUpFormProps> = ({ onSuccess, onCancel }) => {
     const card = elements?.getElement(CardElement);
     if (!stripe || !card) return;
 
-    const amountCents = Math.round(amount * 100);
     if (!Number.isFinite(amount) || amountCents < 500 || amountCents > 50_000) {
       Message.warning(
-        'Choose between 500 and 50,000 credits ($5.00–$500.00).',
+        'Choose a top-up amount between $5.00 and $500.00.',
       );
       return;
     }
@@ -117,11 +118,16 @@ const TopUpForm: React.FC<TopUpFormProps> = ({ onSuccess, onCancel }) => {
       }
 
       const status = result.paymentIntent?.status;
-      if (status !== 'succeeded' && status !== 'processing') {
+      if (status === 'processing') {
+        Message.info('Payment is processing. Check your credit history later.');
+        await onSubmitted();
+        return;
+      }
+      if (status !== 'succeeded') {
         throw new Error(confirmationErrorMessage(null, result.paymentIntent));
       }
 
-      const settled = await waitForWebhookSettlement(intent.payment_intent_id);
+      const settled = await waitForWebhookSettlement(intent.payment_intent_id).catch(() => false);
       if (settled) {
         Message.success('AI credits added successfully.');
       } else {
@@ -129,7 +135,7 @@ const TopUpForm: React.FC<TopUpFormProps> = ({ onSuccess, onCancel }) => {
           'Payment succeeded. Stripe is still updating your credit balance.',
         );
       }
-      await onSuccess();
+      await onSubmitted();
     } catch (error) {
       Message.error(error instanceof Error ? error.message : 'Top-up failed.');
     } finally {
@@ -143,7 +149,7 @@ const TopUpForm: React.FC<TopUpFormProps> = ({ onSuccess, onCancel }) => {
         Add prepaid AI credits. 100 credits = $1.00, charged in US dollars.
       </Paragraph>
 
-      <Text bold>Credits to add</Text>
+      <Text bold>Top-up amount (USD)</Text>
       <Space wrap className="topup-presets">
         {PRESET_AMOUNTS.map((preset) => (
           <Button
@@ -151,23 +157,21 @@ const TopUpForm: React.FC<TopUpFormProps> = ({ onSuccess, onCancel }) => {
             type={amount === preset ? 'primary' : 'secondary'}
             onClick={() => setAmount(preset)}
           >
-            {usdToCredits(preset).toLocaleString()} credits
+            ${preset}
           </Button>
         ))}
         <InputNumber
           min={5}
           max={500}
           precision={2}
+          step={0.01}
           prefix="$"
           value={amount}
           onChange={(value) => setAmount(Number(value || 0))}
           aria-label="Custom top-up amount in dollars"
         />
+        <Text type="secondary">{credits} credits</Text>
       </Space>
-      <Paragraph type="secondary">
-        {usdToCredits(amount).toLocaleString()} credits, charged as $
-        {amount.toFixed(2)}.
-      </Paragraph>
 
       <div className="payment-card-element">
         <CardElement
@@ -197,8 +201,7 @@ const TopUpForm: React.FC<TopUpFormProps> = ({ onSuccess, onCancel }) => {
           disabled={!stripe}
           onClick={submit}
         >
-          Pay ${amount.toFixed(2)} for {usdToCredits(amount).toLocaleString()}{' '}
-          credits
+          Pay ${(amountCents / 100).toFixed(2)} for {credits} credits
         </Button>
       </Space>
     </div>
