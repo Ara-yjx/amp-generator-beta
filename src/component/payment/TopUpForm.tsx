@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { usdToCredits } from '../../data/payment/creditDisplay';
 import { paymentApi } from '../../data/payment/paymentApi';
 
-const { Paragraph, Text } = Typography;
+const { Text } = Typography;
 const PRESET_AMOUNTS = [10, 25, 50];
 
 type TopUpFormProps = {
@@ -145,9 +145,10 @@ const TopUpForm: React.FC<TopUpFormProps> = ({ onSubmitted, onCancel }) => {
 
   return (
     <div className="payment-checkout">
-      <Paragraph>
-        Add prepaid AI credits. 100 credits = $1.00, charged in US dollars.
-      </Paragraph>
+      <ul>
+        <li>100 credits = $1.00, charged in US dollars.</li>
+        <li>Minimum $5.00, maximum $500.00 per top-up.</li>
+      </ul>
 
       <Text bold>Top-up amount (USD)</Text>
       <Space wrap className="topup-presets">
