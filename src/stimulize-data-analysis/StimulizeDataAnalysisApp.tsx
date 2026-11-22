@@ -248,7 +248,7 @@ export function StimulizeDataAnalysisApp() {
         <Alert
           type="warning"
           className="beta-disclaimer"
-          content="Beta feature: data analysis has not been fully verified. Please review the results before relying on them."
+          content="Disclaimer: The Data Analysis feature is currently in testing and supports only a limited set of predefined analysis formats. Users are advised to independently verify the data and results, and should not rely solely on the information provided by this app."
         />
         <div className="tab-container">
           <div className="tabs">
