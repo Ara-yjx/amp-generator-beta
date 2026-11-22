@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button, Checkbox, Message, Modal, Spin, Tooltip } from '@arco-design/web-react'
-import { IconDownload, IconUpload, IconRefresh } from '@arco-design/web-react/icon'
+import { IconClose, IconDownload, IconUpload, IconRefresh } from '@arco-design/web-react/icon'
 import { chatroomApiPost } from '../../data/chatroom/management'
 import { apiUploadAt } from '../../data/backend'
 import { CHATROOM_MANAGEMENT_API_BASE } from '../../data/chatroom/config'
@@ -152,6 +152,8 @@ export default function AttachmentList({ value = [], onChange, library, modelErr
       if (added.length) await library.refresh()
     } finally { uploadInFlight.current = false; setUploading(false) }
   }
+  if (library.caps?.enabled === false && !busy && !library.error && !ownSelected.length) return null
+
   return <div style={{ marginTop: 8, minWidth: 0 }}>
     <div style={{ marginBottom: 8, fontWeight: 500 }}>Attachments</div>
     <button type="button" aria-label="Manage attachments" aria-haspopup="dialog" disabled={!library.roomId}
@@ -170,7 +172,7 @@ export default function AttachmentList({ value = [], onChange, library, modelErr
         <div style={{ marginTop: 12, maxHeight: 360, overflowY: 'auto' }}>
           {assets.map(asset => <div key={asset.id} style={{ padding: '10px 0', borderBottom: '1px solid #eee', display: 'flex', gap: 8, alignItems: 'center' }}>
             <Checkbox style={{ minWidth: 0, flex: 1 }} checked={selected.includes(asset.id)}
-              disabled={blocked || inheritedIds.includes(asset.id) || (!selected.includes(asset.id) && !!attachmentSelectionError([...selected, asset.id], otherScopes, { ...library, assets }))}
+              disabled={busy || inheritedIds.includes(asset.id) || (!selected.includes(asset.id) && (blocked || !!attachmentSelectionError([...selected, asset.id], otherScopes, { ...library, assets })))}
               onChange={checked => onChange?.((checked ? [...new Set([...value, asset.id])] : value.filter(id => id !== asset.id)).filter(id => !inheritedIds.includes(id)))}>
               <span style={{ overflowWrap: 'anywhere' }}>{asset.original_name}</span>
             </Checkbox>
@@ -178,7 +180,16 @@ export default function AttachmentList({ value = [], onChange, library, modelErr
             <span style={{ marginLeft: 'auto', whiteSpace: 'nowrap' }}>{(asset.byte_size / 1000).toFixed(1)} KB</span>
             <Tooltip content="Download"><Button aria-label={`Download ${asset.original_name}`} icon={<IconDownload />} onClick={() => download(asset.id)} /></Tooltip>
           </div>)}
-          {!assets.length && !library.loading && !library.error && library.caps?.enabled && <div>No uploaded attachments.</div>}
+          {!busy && ownSelected.filter(id => !assets.some(a => a.id === id)).map(id => (
+            <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 8, overflowWrap: 'anywhere' }}>
+              <span>Unavailable attachment: {id}</span>
+              <Tooltip content="Remove from this selection">
+                <Button aria-label={`Remove attachment ${id}`} icon={<IconClose />}
+                  onClick={() => onChange?.(ownSelected.filter(other => other !== id))} />
+              </Tooltip>
+            </div>
+          ))}
+          {!assets.length && !ownSelected.length && !library.loading && !library.error && library.caps?.enabled && <div>No uploaded attachments.</div>}
         </div>
       </Spin>
       <Button style={{ marginTop: 16 }} icon={<IconUpload />} loading={uploading} disabled={blocked} onClick={() => fileInput.current?.click()}>Upload new</Button>

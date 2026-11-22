@@ -48,6 +48,35 @@ function ControlledAttachments(props: React.ComponentProps<typeof AttachmentList
   return <AttachmentList {...props} value={value} onChange={ids => { setValue(ids); props.onChange?.(ids) }} />
 }
 
+test('disabled endpoint hides unused controls but keeps saved references removable in their own scope', () => {
+  const library = { assets: [], caps: { ...caps, enabled: false }, loading: false, error: '', roomId: 'room', refresh: jest.fn() }
+  const modelError = attachmentModelError('supported', [], library.caps)
+  const onChange = jest.fn()
+  const { rerender } = render(<AttachmentList library={library} modelError={modelError} />)
+  expect(screen.queryByText('Attachments')).not.toBeInTheDocument()
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  rerender(<ControlledAttachments library={library} modelError={modelError} value={['personal']} inheritedIds={['common']} onChange={onChange} />)
+  expect(screen.getByText(modelError)).toBeVisible()
+  expect(onChange).not.toHaveBeenCalled()
+  fireEvent.click(screen.getByRole('button', { name: 'Manage attachments' }))
+  expect(screen.getByRole('button', { name: 'Upload new' })).toBeDisabled()
+  expect(screen.queryByRole('button', { name: 'Remove attachment common' })).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'Remove attachment personal' }))
+  expect(onChange).toHaveBeenCalledWith([])
+  expect(screen.queryByText('Attachments')).not.toBeInTheDocument()
+})
+
+test('an incompatible model prevents adding files but not deselecting a saved file', () => {
+  const assets = ['a', 'b'].map(id => ({ id, original_name: id + '.txt', byte_size: 5, format: 'txt' }))
+  const library = { assets, caps, loading: false, error: '', roomId: 'room', refresh: jest.fn() }
+  const onChange = jest.fn()
+  render(<ControlledAttachments library={library} value={['a']} modelError={attachmentModelError('unsupported', [], caps)} onChange={onChange} />)
+  fireEvent.click(screen.getByRole('button', { name: 'Manage attachments' }))
+  expect(screen.getByRole('checkbox', { name: 'b.txt' })).toBeDisabled()
+  fireEvent.click(screen.getByRole('checkbox', { name: 'a.txt' }))
+  expect(onChange).toHaveBeenCalledWith([])
+})
+
 test('effective limits count shared plus one persona, reusing IDs once', () => {
   const assets = Array.from({ length: 6 }, (_, i) => ({ id: String(i), original_name: `${i}.txt`, byte_size: 1000, format: 'txt' }))
   const library = { assets, caps, loading: false }
