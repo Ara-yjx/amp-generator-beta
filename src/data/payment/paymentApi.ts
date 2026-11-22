@@ -83,12 +83,38 @@ export type CreditHistory = {
   pages: number;
 };
 
+export type BillingAddress = {
+  line1: string;
+  line2?: string | null;
+  city: string;
+  state?: string | null;
+  postal_code: string;
+  country: string;
+};
+
+export type TaxPreview = {
+  subtotal_cents: number;
+  tax_cents: number;
+  total_cents: number;
+  currency: string;
+  calculation_id?: string | null;
+};
+
 export type TopUpIntent = {
   client_secret: string;
   payment_intent_id: string;
   amount_cents: number;
+  subtotal_cents?: number;
+  tax_cents?: number;
   currency: string;
 };
+
+export function formatCents(cents: number, currency = 'usd') {
+  return new Intl.NumberFormat(undefined, {
+    style: 'currency',
+    currency: currency.toUpperCase(),
+  }).format(cents / 100);
+}
 
 async function request<T>(
   path: string,
@@ -126,6 +152,7 @@ export const paymentApi = {
     planId: number,
     paymentMethodId: string,
     billingCycle: BillingCycle,
+    address: BillingAddress,
   ) =>
     request<{ subscription: Subscription }>('/api/payment/create-subscription', {
       method: 'POST',
@@ -133,6 +160,7 @@ export const paymentApi = {
         plan_id: planId,
         payment_method_id: paymentMethodId,
         billing_cycle: billingCycle,
+        address,
       }),
     }),
 
@@ -174,12 +202,29 @@ export const paymentApi = {
       body: JSON.stringify({ code }),
     }),
 
-  createTopUpIntent: (amountCents: number, requestId: string) =>
+  previewTax: (payload: {
+    kind: 'topup' | 'subscription';
+    address: BillingAddress;
+    amount_cents?: number;
+    plan_id?: number;
+    billing_cycle?: BillingCycle;
+  }) =>
+    request<TaxPreview>('/api/payment/preview-tax', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  createTopUpIntent: (
+    amountCents: number,
+    requestId: string,
+    address: BillingAddress,
+  ) =>
     request<TopUpIntent>('/api/payment/create-top-up-intent', {
       method: 'POST',
       body: JSON.stringify({
         amount_cents: amountCents,
         request_id: requestId,
+        address,
       }),
     }),
 

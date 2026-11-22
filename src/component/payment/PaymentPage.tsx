@@ -359,7 +359,10 @@ const PaymentPage: React.FC = () => {
         <div className="payment-section-heading">
           <div>
             <Title heading={4}>Choose a plan</Title>
-            <Paragraph>Change plans at any time. Stripe calculates prorations.</Paragraph>
+            <Paragraph>
+              Change plans at any time. Listed prices are before tax; Stripe Tax
+              is added at checkout.
+            </Paragraph>
           </div>
           <Radio.Group
             type="button"
@@ -392,7 +395,7 @@ const PaymentPage: React.FC = () => {
                 >
                   <div className="payment-price">
                     <span>${price.toFixed(2)}</span>
-                    <small>/{billingCycle === 'monthly' ? 'month' : 'year'}</small>
+                    <small>/{billingCycle === 'monthly' ? 'month' : 'year'} + tax</small>
                   </div>
                   <ul className="payment-features">
                     <li>{plan.max_projects < 0 ? 'Unlimited' : plan.max_projects} projects</li>
@@ -503,6 +506,7 @@ const PaymentPage: React.FC = () => {
         title="Add prepaid AI credits"
         footer={null}
         unmountOnExit
+        style={{ width: 640 }}
         onCancel={() => setTopUpVisible(false)}
       >
         {topUpVisible && stripePromise && (
@@ -523,6 +527,7 @@ const PaymentPage: React.FC = () => {
         title="Secure checkout"
         footer={null}
         unmountOnExit
+        style={{ width: 640 }}
         onCancel={() => setCheckoutPlan(null)}
       >
         {checkoutPlan && stripePromise && (

@@ -6,9 +6,15 @@ import {
   Typography,
 } from '@arco-design/web-react';
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import BillingAddress, { BillingDetails } from './BillingAddress';
+import TaxSummary from './TaxSummary';
 import { usdToCredits } from '../../data/payment/creditDisplay';
-import { paymentApi } from '../../data/payment/paymentApi';
+import {
+  formatCents,
+  paymentApi,
+  TaxPreview,
+} from '../../data/payment/paymentApi';
 
 const { Text } = Typography;
 const PRESET_AMOUNTS = [10, 25, 50];
@@ -59,8 +65,54 @@ const TopUpForm: React.FC<TopUpFormProps> = ({ onSubmitted, onCancel }) => {
   const elements = useElements();
   const [amount, setAmount] = useState<number>(25);
   const [submitting, setSubmitting] = useState(false);
+  const [billing, setBilling] = useState<BillingDetails | null>(null);
+  const [taxPreview, setTaxPreview] = useState<TaxPreview | null>(null);
+  const [taxLoading, setTaxLoading] = useState(false);
+
   const amountCents = Math.round(amount * 100);
+  const amountIsValid =
+    Number.isFinite(amount) && amountCents >= 500 && amountCents <= 50_000;
   const credits = usdToCredits(amountCents / 100).toLocaleString();
+
+  useEffect(() => {
+    if (!billing?.address || !amountIsValid) {
+      setTaxPreview(null);
+      return undefined;
+    }
+
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      setTaxLoading(true);
+      try {
+        const preview = await paymentApi.previewTax({
+          kind: 'topup',
+          amount_cents: amountCents,
+          address: billing.address,
+        });
+        if (!cancelled) {
+          setTaxPreview(preview);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setTaxPreview(null);
+          Message.error(
+            error instanceof Error
+              ? error.message
+              : 'Unable to calculate tax for this address.',
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setTaxLoading(false);
+        }
+      }
+    }, 400);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [amountCents, amountIsValid, billing]);
 
   const waitForWebhookSettlement = async (paymentIntentId: string) => {
     for (let attempt = 0; attempt < 8; attempt += 1) {
@@ -80,9 +132,9 @@ const TopUpForm: React.FC<TopUpFormProps> = ({ onSubmitted, onCancel }) => {
 
   const submit = async () => {
     const card = elements?.getElement(CardElement);
-    if (!stripe || !card) return;
+    if (!stripe || !card || !billing) return;
 
-    if (!Number.isFinite(amount) || amountCents < 500 || amountCents > 50_000) {
+    if (!amountIsValid) {
       Message.warning(
         'Choose a top-up amount between $5.00 and $500.00.',
       );
@@ -95,6 +147,10 @@ const TopUpForm: React.FC<TopUpFormProps> = ({ onSubmitted, onCancel }) => {
         await stripe.createPaymentMethod({
           type: 'card',
           card,
+          billing_details: {
+            name: billing.name,
+            address: billing.address,
+          },
         });
       if (paymentMethodError || !paymentMethod) {
         throw new Error(
@@ -105,6 +161,7 @@ const TopUpForm: React.FC<TopUpFormProps> = ({ onSubmitted, onCancel }) => {
       const intent = await paymentApi.createTopUpIntent(
         amountCents,
         createRequestId(),
+        billing.address,
       );
       const result = await stripe.confirmCardPayment(intent.client_secret, {
         payment_method: paymentMethod.id,
@@ -143,11 +200,16 @@ const TopUpForm: React.FC<TopUpFormProps> = ({ onSubmitted, onCancel }) => {
     }
   };
 
+  const payLabel = taxPreview
+    ? `Pay ${formatCents(taxPreview.total_cents, taxPreview.currency)} for ${credits} credits`
+    : `Pay $${amount.toFixed(2)} for ${credits} credits`;
+
   return (
     <div className="payment-checkout">
       <ul>
         <li>100 credits = $1.00, charged in US dollars.</li>
         <li>Minimum $5.00, maximum $500.00 per top-up.</li>
+        <li>Tax is added on top of the credit amount from your billing address.</li>
       </ul>
 
       <Text bold>Top-up amount (USD)</Text>
@@ -174,10 +236,13 @@ const TopUpForm: React.FC<TopUpFormProps> = ({ onSubmitted, onCancel }) => {
         <Text type="secondary">{credits} credits</Text>
       </Space>
 
+      <BillingAddress onChange={setBilling} />
+      <TaxSummary preview={taxPreview} loading={taxLoading} />
+
       <div className="payment-card-element">
         <CardElement
           options={{
-            hidePostalCode: false,
+            hidePostalCode: true,
             style: {
               base: {
                 color: '#1d2129',
@@ -199,10 +264,10 @@ const TopUpForm: React.FC<TopUpFormProps> = ({ onSubmitted, onCancel }) => {
         <Button
           type="primary"
           loading={submitting}
-          disabled={!stripe}
+          disabled={!stripe || !billing || taxLoading || !amountIsValid}
           onClick={submit}
         >
-          Pay ${(amountCents / 100).toFixed(2)} for {credits} credits
+          {payLabel}
         </Button>
       </Space>
     </div>

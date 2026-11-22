@@ -107,6 +107,37 @@
   place-items: center;
 }
 
+.payment-address-element {
+  margin: 16px 0 8px;
+}
+
+.payment-tax-note {
+  display: block;
+  margin: 8px 0 4px;
+}
+
+.payment-tax-summary {
+  margin: 12px 0 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-neutral-3);
+  border-radius: 4px;
+  background: var(--color-fill-1);
+}
+
+.payment-tax-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 4px 0;
+}
+
+.payment-tax-total {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--color-neutral-3);
+  font-weight: 600;
+}
+
 .payment-card-element {
   margin: 20px 0;
   padding: 16px;
