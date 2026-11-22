@@ -18,7 +18,6 @@
             <button type="button" class="menu-toggle" id="menuToggleBtn" aria-expanded="true" aria-controls="manualMenuList">Hide menu</button>
             <ul id="manualMenuList">
                 <li><a href="index.html">Overview</a></li>
-                <li><a href="tutorial.html">Video Tutorial</a></li>
                 <li><a href="stimuli.html">Set Your Stimuli Pool</a></li>
                 <li><a href="priming.html">Priming</a></li>
                 <li><a href="trial.html">Design Your Trial Flow</a></li>
@@ -81,6 +80,31 @@
                     For instance, if you have four stimuli with five counts each in Stimuli Pool 1, your total trial count can’t exceed 20. <br><br>
                     <b>Add more rounds:</b> If you want another copy of one round, just enable this button. <br>
                     <b>Note:</b> When embedding this survey into Qualtrics, you need to add another copy of our design block to include another round.
+                </p>
+            </div>
+
+            <b class="expandable-title">Setting Logic Between Trials</b>
+            <div class="expandable-content">
+                <p>
+                    For experiments in which the information shown next depends on participants’ responses, SP-Builder allows researchers to set logic between trials. Here, we use the term “page” to refer to a single page within a trial, which may contain multiple stimuli. Users should first select “Concurrent+conditional” as the mode in the Trial Timeline.
+                </p>
+                <div class="picture_container">
+                    <img src="Assets/concurrent+conditional.gif" id="small_picture" alt="Switch Trial Timeline mode to Concurrent+conditional"/>
+                </div>
+                <p>
+                    Users can then open a page and specify the conditions under which it will be displayed. A page with conditional logic cannot be the first page because no participant response is available before the first page appears.
+                </p>
+                <div class="picture_container">
+                    <img src="Assets/page_condition.gif" id="small_picture_2" alt="Open a page to edit its display condition"/>
+                </div>
+                <p>
+                    Users can determine whether the current page is shown based on the participant’s response on the previous page, the stimuli presented on the previous page, or both.
+                </p>
+                <div class="picture_container">
+                    <img src="Assets/trial_question.gif" id="small_picture_2" alt="Set page conditions and choose stimuli from multiple pools"/>
+                </div>
+                <p>
+                    In this mode, users can also select candidate stimuli from multiple stimulus pools within a single window. Together, these functions allow researchers to implement conditional trial flows, such as displaying a reminder when a participant’s response on the previous page does not meet a specified criterion or is considered incorrect.
                 </p>
             </div>
 
