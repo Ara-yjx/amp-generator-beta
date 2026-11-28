@@ -37,10 +37,7 @@ type ModelOption = {
   label: string
   value: string
   supportsPromptCaching?: boolean
-  rateExpiresAt?: number
 }
-
-const isRateExpired = (opt: ModelOption) => opt.rateExpiresAt !== undefined && Date.now() >= opt.rateExpiresAt
 
 
 /** Section heading inside the form. Compact, uppercase tracking, separator above. */
@@ -163,9 +160,7 @@ function PersonaListEditor({
                     {MODEL_GROUPS.map((group) => (
                       <OptGroup key={group.label} label={group.label}>
                         {group.options.map((opt) => (
-                          <Option key={opt.value} value={opt.value} disabled={isRateExpired(opt)}>
-                            {formatModelOptionLabel(opt, library.caps)}{isRateExpired(opt) ? ' (awaiting updated pricing)' : ''}
-                          </Option>
+                          <Option key={opt.value} value={opt.value}>{formatModelOptionLabel(opt, library.caps)}</Option>
                         ))}
                       </OptGroup>
                     ))}
@@ -249,8 +244,7 @@ const MODEL_GROUPS: { label: string; options: ModelOption[] }[] = [
     { label: 'GPT-6 Sol', value: 'openai/gpt-6-sol', supportsPromptCaching: true },
     { label: 'GPT-5.6 Luna', value: 'openai/gpt-5.6-luna', supportsPromptCaching: true },
     { label: 'GPT-5.6 Terra', value: 'openai/gpt-5.6-terra', supportsPromptCaching: true },
-    { label: 'GPT-5.6 Sol', value: 'openai/gpt-5.6-sol', supportsPromptCaching: true,
-      rateExpiresAt: Date.UTC(2026, 11, 1) },
+    { label: 'GPT-5.6 Sol', value: 'openai/gpt-5.6-sol', supportsPromptCaching: true },
   ] }] : []),
   { label: 'Anthropic', options: [
     { label: 'Claude Opus 4.7', value: 'global.anthropic.claude-opus-4-7', supportsPromptCaching: true },
@@ -747,9 +741,7 @@ export default function ChatroomEditor() {
                 {MODEL_GROUPS.map((group) => (
                   <OptGroup key={group.label} label={group.label}>
                     {group.options.map((opt) => (
-                      <Option key={opt.value} value={opt.value} disabled={isRateExpired(opt)}>
-                        {formatModelOptionLabel(opt, attachmentLibrary.caps)}{isRateExpired(opt) ? ' (awaiting updated pricing)' : ''}
-                      </Option>
+                      <Option key={opt.value} value={opt.value}>{formatModelOptionLabel(opt, attachmentLibrary.caps)}</Option>
                     ))}
                   </OptGroup>
                 ))}
