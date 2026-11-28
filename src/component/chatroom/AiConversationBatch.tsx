@@ -25,7 +25,7 @@ interface ConversationSummary {
 }
 
 interface BatchDetail {
-  usage?: { input_tokens: number; output_tokens: number; estimated_cost_usd: string; inference_count: number }
+  usage?: { input_tokens: number; total_input_tokens?: number; total_tokens?: number; output_tokens: number; estimated_cost_usd: string; inference_count: number }
   last_error?: string
   batch_job_id: string
   chatroom_id: string
@@ -249,7 +249,8 @@ export default function AiConversationBatch() {
           { label: 'Failed / timed out', value: batch.failed_count + batch.timed_out_count },
         ].map(item => <div key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl>
         <dl className="batch-metrics batch-metrics-usage">{[
-          { label: 'Input tokens', value: batch.usage?.input_tokens.toLocaleString() ?? 'Unavailable' },
+          { label: 'Input tokens', value: (batch.usage?.total_input_tokens ?? batch.usage?.input_tokens)?.toLocaleString() ?? 'Unavailable' },
+          { label: 'Total tokens', value: batch.usage ? (batch.usage.total_tokens ?? ((batch.usage.total_input_tokens ?? batch.usage.input_tokens) + batch.usage.output_tokens)).toLocaleString() : 'Unavailable' },
           { label: 'Output tokens', value: batch.usage?.output_tokens.toLocaleString() ?? 'Unavailable' },
           { label: 'Recorded inferences', value: batch.usage?.inference_count.toLocaleString() ?? 'Unavailable' },
           { label: 'Approx. cost (USD)', value: batch.usage ? `$${Number(batch.usage.estimated_cost_usd).toFixed(6)}` : 'Unavailable' },
