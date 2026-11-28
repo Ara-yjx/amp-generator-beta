@@ -17,6 +17,8 @@ type UsagePeriod = 'day' | 'week' | 'month'
 
 interface UsageTotals {
   input_tokens: number
+  total_input_tokens?: number
+  total_tokens?: number
   output_tokens: number
   estimated_cost_usd: number
 }
@@ -45,6 +47,14 @@ const PERIOD_OPTIONS: { label: string; value: UsagePeriod }[] = [
   { label: 'Monthly', value: 'month' },
 ]
 
+function inputCount(row: UsageTotals): number {
+  return row.total_input_tokens ?? row.input_tokens
+}
+
+function tokenCount(row: UsageTotals): number {
+  return row.total_tokens ?? (inputCount(row) + row.output_tokens)
+}
+
 function formatUsd(value: number): string {
   return `$${value.toFixed(6)}`
 }
@@ -63,7 +73,7 @@ function UsageBarChart({
   rows: UsageSeriesBucket[]
   period: UsagePeriod
 }) {
-  const maxValue = Math.max(...rows.map((row) => row.input_tokens + row.output_tokens), 0)
+  const maxValue = Math.max(...rows.map(tokenCount), 0)
 
   if (rows.length === 0) {
     return (
@@ -94,7 +104,7 @@ function UsageBarChart({
       overflowX: 'auto',
     }}>
       {rows.map((row) => {
-        const totalTokens = row.input_tokens + row.output_tokens
+        const totalTokens = tokenCount(row)
         const height = maxValue > 0 ? Math.max(8, Math.round((totalTokens / maxValue) * 150)) : 8
         return (
           <div key={row.period_start} style={{
@@ -152,7 +162,7 @@ export default function ChatroomUsage() {
 
   const totalTokens = useMemo(() => {
     if (!usage) return 0
-    return usage.totals.input_tokens + usage.totals.output_tokens
+    return tokenCount(usage.totals)
   }, [usage])
 
   const columns: ColumnProps<UsageSeriesBucket>[] = [
@@ -164,7 +174,7 @@ export default function ChatroomUsage() {
     {
       title: 'Input Tokens',
       dataIndex: 'input_tokens',
-      render: (_, record) => record.input_tokens.toLocaleString(),
+      render: (_, record) => inputCount(record).toLocaleString(),
     },
     {
       title: 'Output Tokens',
@@ -173,7 +183,7 @@ export default function ChatroomUsage() {
     },
     {
       title: 'Total Tokens',
-      render: (_, record) => (record.input_tokens + record.output_tokens).toLocaleString(),
+      render: (_, record) => tokenCount(record).toLocaleString(),
     },
     {
       title: 'Approx. USD',

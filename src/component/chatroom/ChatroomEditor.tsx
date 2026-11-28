@@ -238,6 +238,14 @@ function PersonaListEditor({
 }
 
 const MODEL_GROUPS: { label: string; options: ModelOption[] }[] = [
+  ...(process.env.REACT_APP_NATIVE_OPENAI === 'true' ? [{ label: 'OpenAI (native API)', options: [
+    { label: 'GPT-6 Luna', value: 'openai/gpt-6-luna', supportsPromptCaching: true },
+    { label: 'GPT-6.1 Terra', value: 'openai/gpt-6.1-terra', supportsPromptCaching: true },
+    { label: 'GPT-6 Sol', value: 'openai/gpt-6-sol', supportsPromptCaching: true },
+    { label: 'GPT-5.6 Luna', value: 'openai/gpt-5.6-luna', supportsPromptCaching: true },
+    { label: 'GPT-5.6 Terra', value: 'openai/gpt-5.6-terra', supportsPromptCaching: true },
+    { label: 'GPT-5.6 Sol', value: 'openai/gpt-5.6-sol', supportsPromptCaching: true },
+  ] }] : []),
   { label: 'Anthropic', options: [
     { label: 'Claude Opus 4.7', value: 'global.anthropic.claude-opus-4-7', supportsPromptCaching: true },
     { label: 'Claude Opus 4.6', value: 'global.anthropic.claude-opus-4-6-v1', supportsPromptCaching: true },
